@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 5; versionName = "3.5.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 6; versionName = "4.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -76,13 +76,11 @@ jobs:
           </resources>
           EOF
 
-          # ملفات الأيقونة
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
               <path android:fillColor="#0A0C10" android:pathData="M0,0h108v108h-108z"/>
           </vector>
           EOF
-
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_foreground.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
               <path android:fillColor="#00000000" android:pathData="M0,0h108v108h-108z"/>
@@ -90,7 +88,6 @@ jobs:
               <path android:fillColor="#34D399" android:pathData="M75,25 C75,32 68,37 60,37 C68,37 75,44 75,52 C75,44 82,37 90,37 C82,37 75,32 75,25 Z"/>
           </vector>
           EOF
-          
           cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           <?xml version="1.0" encoding="utf-8"?>
           <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
@@ -106,6 +103,7 @@ jobs:
           </input-method>
           EOF
 
+          # ---- تطبيق الإعدادات المطور ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
           package com.aikeyboard.pro
           import android.content.Context
@@ -125,12 +123,13 @@ jobs:
                   super.onCreate(savedInstanceState)
                   val prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
                   
+                  val scrollView = ScrollView(this).apply { setBackgroundColor(Color.parseColor("#0A0C10")) }
                   val root = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
                       gravity = Gravity.CENTER_HORIZONTAL
-                      setBackgroundColor(Color.parseColor("#0A0C10"))
-                      setPadding(60, 100, 60, 60)
+                      setPadding(60, 100, 60, 100)
                   }
+                  scrollView.addView(root)
 
                   val title = TextView(this).apply {
                       text = "إعدادات AI Keyboard ✨"
@@ -143,54 +142,64 @@ jobs:
                   
                   fun createButton(textStr: String, colorStr: String, action: () -> Unit) {
                       val btn = Button(this).apply {
-                          text = textStr
-                          setTextColor(Color.parseColor("#0A0C10"))
-                          textSize = 16f
-                          background = GradientDrawable().apply {
-                              shape = GradientDrawable.RECTANGLE; cornerRadius = 100f; setColor(Color.parseColor(colorStr))
-                          }
+                          text = textStr; setTextColor(Color.parseColor("#0A0C10")); textSize = 16f
+                          background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 100f; setColor(Color.parseColor(colorStr)) }
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 150).apply { setMargins(0, 0, 0, 40) }
                           setOnClickListener { action() }
                       }
                       root.addView(btn)
                   }
 
-                  createButton("1. تفعيل لوحة المفاتيح", "#9ECAFF") { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
-                  createButton("2. اختيار اللوحة", "#34D399") { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
+                  createButton("1. تفعيل اللوحة (Activer)", "#9ECAFF") { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
+                  createButton("2. اختيار اللوحة (Sélectionner)", "#34D399") { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
 
                   val settingsCard = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
-                      background = GradientDrawable().apply {
-                          shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#14171E"))
-                      }
+                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#14171E")) }
                       setPadding(50, 50, 50, 50)
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 40, 0, 0) }
                   }
 
                   fun createSwitch(title: String, key: String, default: Boolean) {
-                      val row = LinearLayout(this).apply {
-                          orientation = LinearLayout.HORIZONTAL
-                          gravity = Gravity.CENTER_VERTICAL
-                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 120)
-                      }
+                      val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 120) }
                       val tv = TextView(this).apply { text = title; setTextColor(Color.WHITE); textSize = 16f; layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f) }
                       val sw = Switch(this).apply {
                           isChecked = prefs.getBoolean(key, default)
                           setOnCheckedChangeListener { _, isChecked -> prefs.edit().putBoolean(key, isChecked).apply() }
                       }
-                      row.addView(tv); row.addView(sw)
-                      settingsCard.addView(row)
+                      row.addView(tv); row.addView(sw); settingsCard.addView(row)
                   }
 
-                  createSwitch("اهتزاز عند الضغط (Vibreur)", "vibrate", true)
-                  createSwitch("انبثاق الحرف (Pop-up de touche)", "popup", true)
+                  createSwitch("المظهر الفاتح (Thème Clair)", "light_theme", false)
+                  createSwitch("اهتزاز (Vibreur)", "vibrate", true)
+                  createSwitch("انبثاق الحرف (Pop-up)", "popup", true)
+
+                  // شريط التحكم بالحجم
+                  val sizeLabel = TextView(this).apply {
+                      text = "حجم اللوحة (Taille du clavier)"; setTextColor(Color.WHITE); textSize = 16f; setPadding(0, 40, 0, 20)
+                  }
+                  settingsCard.addView(sizeLabel)
+
+                  val sizeSeekBar = SeekBar(this).apply {
+                      max = 4 // 0 to 4 (2 is default/normal)
+                      progress = prefs.getInt("kb_size", 2)
+                      setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                          override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                              prefs.edit().putInt("kb_size", progress).apply()
+                          }
+                          override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                          override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                      })
+                  }
+                  settingsCard.addView(sizeSeekBar)
 
                   root.addView(settingsCard)
-                  setContentView(root)
+                  setContentView(scrollView)
               }
           }
           EOF
 
+          # ---- لوحة المفاتيح المطورة ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           import android.content.Context
@@ -219,24 +228,37 @@ jobs:
               private var currentPopup: PopupWindow? = null
               private lateinit var vibrator: Vibrator
 
+              // Theme Variables
+              private var isLight = false
+              private var bgColor = ""
+              private var keyNormalColor = ""
+              private var keySpecialColor = ""
+              private var textColor = ""
+
               override fun onCreateInputView(): View {
                   vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                   val density = resources.displayMetrics.density
+                  val prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
                   
-                  window?.window?.navigationBarColor = Color.parseColor("#0A0C10")
+                  // Load Theme
+                  isLight = prefs.getBoolean("light_theme", false)
+                  bgColor = if (isLight) "#D1D4D9" else "#0A0C10" // خلفية رمادية فاتحة لـ iOS Light أو أسود
+                  keyNormalColor = if (isLight) "#FFFFFF" else "#43464D"
+                  keySpecialColor = if (isLight) "#B3B8C1" else "#2C2F36"
+                  textColor = if (isLight) "#000000" else "#FFFFFF"
+
+                  window?.window?.navigationBarColor = Color.parseColor(bgColor)
 
                   rootLayout = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
                       background = GradientDrawable().apply {
                           shape = GradientDrawable.RECTANGLE
-                          setColor(Color.parseColor("#0A0C10"))
-                          // تقليل الانحناء (24 بدلا من 50)
+                          setColor(Color.parseColor(bgColor))
                           cornerRadii = floatArrayOf(24f*density, 24f*density, 24f*density, 24f*density, 0f, 0f, 0f, 0f)
                       }
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
 
-                  // شريط الاقتراحات والأدوات
                   val suggestionsBar = HorizontalScrollView(this).apply {
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * density).toInt())
                       isFillViewport = true
@@ -249,41 +271,24 @@ jobs:
                       setPadding(20, 0, 20, 0)
                   }
                   
-                  // إضافة أيقونة الإعدادات (⚙️) كزر في بداية الشريط
                   val settingsBtn = TextView(this).apply {
-                      text = "⚙️"
-                      textSize = 18f
-                      setPadding(40, 0, 40, 0)
-                      gravity = Gravity.CENTER
+                      text = "⚙️"; textSize = 18f; setPadding(40, 0, 40, 0); gravity = Gravity.CENTER
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
                       setOnClickListener {
                           vibrate()
-                          // فتح تطبيق الإعدادات عند الضغط
-                          val intent = Intent(this@KeyboardService, MainActivity::class.java).apply {
-                              addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                          }
+                          val intent = Intent(this@KeyboardService, MainActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
                           startActivity(intent)
                       }
                   }
                   suggestionsContainer.addView(settingsBtn)
                   
-                  // فاصل
-                  val divider = View(this).apply {
-                      layoutParams = LinearLayout.LayoutParams((1 * density).toInt(), (20 * density).toInt()).apply { setMargins(10, 0, 10, 0) }
-                      setBackgroundColor(Color.parseColor("#222731"))
-                  }
-                  suggestionsContainer.addView(divider)
-
                   val dummySuggestions = listOf("مرحباً", "كيف حالك؟", "أنا قادم", "✨ AI Reply")
                   for (word in dummySuggestions) {
                       val tv = TextView(this).apply {
-                          text = word; setTextColor(Color.parseColor(if(word.contains("✨")) "#34D399" else "#F0F3FA")); textSize = 15f
+                          text = word; setTextColor(Color.parseColor(if(word.contains("✨")) "#34D399" else textColor)); textSize = 15f
                           setPadding(40, 0, 40, 0); gravity = Gravity.CENTER
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                          setOnClickListener { 
-                              vibrate()
-                              currentInputConnection?.commitText("$word ", 1) 
-                          }
+                          setOnClickListener { vibrate(); currentInputConnection?.commitText("$word ", 1) }
                       }
                       suggestionsContainer.addView(tv)
                   }
@@ -303,11 +308,8 @@ jobs:
               private fun vibrate() {
                   val prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
                   if (prefs.getBoolean("vibrate", true)) {
-                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          vibrator.vibrate(VibrationEffect.createOneShot(20, 100))
-                      } else {
-                          vibrator.vibrate(20)
-                      }
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) vibrator.vibrate(VibrationEffect.createOneShot(20, 100))
+                      else vibrator.vibrate(20)
                   }
               }
 
@@ -316,8 +318,8 @@ jobs:
                   if (!prefs.getBoolean("popup", true) || text.length > 1) return
 
                   val popupView = TextView(this).apply {
-                      this.text = text; textSize = 36f; setTextColor(Color.WHITE); gravity = Gravity.CENTER
-                      background = GradientDrawable().apply { setColor(Color.parseColor("#3B3E45")); cornerRadius = 16f * density }
+                      this.text = text; textSize = 36f; setTextColor(Color.parseColor(textColor)); gravity = Gravity.CENTER
+                      background = GradientDrawable().apply { setColor(Color.parseColor(keyNormalColor)); cornerRadius = 16f * density }
                       elevation = 10f
                   }
                   currentPopup = PopupWindow(popupView, (keyView.width * 1.5).toInt(), (keyView.height * 1.5).toInt()).apply {
@@ -329,6 +331,11 @@ jobs:
               private fun buildKeys() {
                   keysContainer?.removeAllViews()
                   val density = resources.displayMetrics.density
+                  val prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
+                  
+                  // حساب حجم الأزرار بناءً على الإعدادات (0 = صغير جداً, 2 = طبيعي, 4 = كبير جداً)
+                  val sizeMultiplier = 0.8f + (prefs.getInt("kb_size", 2) * 0.1f)
+                  val baseKeyHeight = (62 * density * sizeMultiplier).toInt()
 
                   val rows = if (isSymbols) {
                       listOf(
@@ -363,31 +370,42 @@ jobs:
                   for (rowKeys in rows) {
                       val rowLayout = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER
-                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (62 * density).toInt())
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, baseKeyHeight)
                       }
                       for (key in rowKeys) {
                           val keyView = TextView(this).apply {
-                              val finalLetter = if (isCaps && !isSymbols && currentLang != "AR") key.uppercase() else key
-                              text = finalLetter
-                              textSize = if (key.length > 1 || key == "🌐") 15f else 24f
+                              // تحويل النصوص إلى أيقونات iOS
+                              val displayText = when (key) {
+                                  "SHIFT" -> if (isCaps) "⇪" else "⇧"
+                                  "DEL" -> "⌫"
+                                  "ENTER" -> "⏎"
+                                  else -> if (isCaps && !isSymbols && currentLang != "AR") key.uppercase() else key
+                              }
+
+                              text = displayText
+                              textSize = if (key == "AI ✨" || key == "🌐" || key == "?123" || key == "ABC") 15f else 24f
                               gravity = Gravity.CENTER
                               
-                              val isSpecial = key.length > 1 || key == "🌐"
-                              val keyBgColorStr = when (key) { "AI ✨" -> "#1C202B"; "ENTER" -> "#007AFF"; else -> if (isSpecial) "#2C2F36" else "#43464D" }
+                              val isSpecial = key.length > 1 || key == "🌐" || key == "DEL" || key == "SHIFT"
+                              val keyBgColorStr = when (key) { 
+                                  "AI ✨" -> if(isLight) "#FFFFFF" else "#1C202B"
+                                  "ENTER" -> "#007AFF"
+                                  else -> if (isSpecial) keySpecialColor else keyNormalColor 
+                              }
                               val keyBgColor = Color.parseColor(keyBgColorStr)
 
-                              setTextColor(Color.parseColor(if(key == "AI ✨") "#34D399" else "#FFFFFF"))
+                              setTextColor(Color.parseColor(if(key == "AI ✨") "#34D399" else if(key == "ENTER") "#FFFFFF" else textColor))
                               background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 12f * density; setColor(keyBgColor) }
 
                               val weight = when (key) { "SPACE" -> 4f; "ENTER" -> 1.8f; "SHIFT", "DEL", "?123", "ABC" -> 1.5f; "AI ✨", "🌐" -> 1.2f; else -> 1f }
                               val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, weight)
-                              lp.setMargins(6, 8, 6, 8); layoutParams = lp; isClickable = true
+                              lp.setMargins(6, (8*sizeMultiplier).toInt(), 6, (8*sizeMultiplier).toInt()); layoutParams = lp; isClickable = true
 
                               setOnTouchListener { v, event ->
                                   when (event.action) {
                                       MotionEvent.ACTION_DOWN -> {
-                                          vibrate(); showPopup(v, finalLetter, density)
-                                          (v.background as GradientDrawable).setColor(Color.parseColor("#5A5D66"))
+                                          vibrate(); showPopup(v, displayText, density)
+                                          (v.background as GradientDrawable).setColor(Color.parseColor(if(isLight) "#B3B8C1" else "#5A5D66"))
                                           true
                                       }
                                       MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -449,21 +467,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase3.5.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase4.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase3.5.apk
+          path: release-output/AI-Keyboard-Pro-Phase4.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v3.5
-          name: "AI Keyboard Pro - Phase 3.5 (Design Refinements)"
-          body: "1. تقليل الانحناء العلوي للوحة المفاتيح لتبدو أنيقة وناعمة (24dp).\n2. إضافة زر الإعدادات (⚙️) في شريط الاقتراحات لفتح تطبيق التحكم بسرعة."
-          files: release-output/AI-Keyboard-Pro-Phase3.5.apk
+          tag_name: aikeyboard-v4.0
+          name: "AI Keyboard Pro - Phase 4 (iOS Icons & Pro Settings)"
+          body: "1. تحويل النصوص (SHIFT, DEL, ENTER) إلى أيقونات iOS (⇧, ⌫, ⏎).\n2. إضافة الثيم الفاتح (Light Theme) بألوان iOS.\n3. إضافة شريط للتحكم بحجم اللوحة وتكبيرها."
+          files: release-output/AI-Keyboard-Pro-Phase4.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
