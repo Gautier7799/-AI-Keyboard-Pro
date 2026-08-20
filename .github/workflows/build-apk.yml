@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 8; versionName = "5.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 9; versionName = "6.1.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -67,6 +67,7 @@ jobs:
               implementation("androidx.core:core-ktx:1.12.0")
               implementation("androidx.appcompat:appcompat:1.6.1")
               implementation("com.google.android.material:material:1.11.0")
+              implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
           }
           EOF
 
@@ -112,7 +113,7 @@ jobs:
           </input-method>
           EOF
 
-          # ---- تطبيق الإعدادات (تصميم مطابق للنظام iOS/Android) ----
+          # ---- تطبيق الإعدادات ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
           package com.aikeyboard.pro
           import android.content.Context
@@ -122,6 +123,7 @@ jobs:
           import android.os.Bundle
           import android.provider.Settings
           import android.view.Gravity
+          import android.view.View
           import android.view.ViewGroup
           import android.view.inputmethod.InputMethodManager
           import android.widget.*
@@ -140,13 +142,7 @@ jobs:
                   }
                   scrollView.addView(root)
 
-                  val title = TextView(this).apply {
-                      text = "Préférences"
-                      setTextColor(Color.parseColor("#1C1C1E"))
-                      textSize = 28f
-                      setPadding(20, 0, 0, 60)
-                      paintFlags = paintFlags or android.graphics.Paint.FAKE_BOLD_TEXT_FLAG
-                  }
+                  val title = TextView(this).apply { text = "Préférences"; setTextColor(Color.parseColor("#1C1C1E")); textSize = 28f; setPadding(20, 0, 0, 60); paintFlags = paintFlags or android.graphics.Paint.FAKE_BOLD_TEXT_FLAG }
                   root.addView(title)
                   
                   fun createButton(textStr: String, action: () -> Unit) {
@@ -162,13 +158,44 @@ jobs:
                   createButton("1. Activer le clavier") { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
                   createButton("2. Sélectionner le clavier") { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
 
+                  // --- قسم إعداد Gemini API ---
+                  val apiTitle = TextView(this).apply { text = "Intelligence Artificielle (Gemini)"; setTextColor(Color.parseColor("#6E6E73")); textSize = 14f; setPadding(20, 40, 0, 10) }
+                  root.addView(apiTitle)
+
+                  val apiCard = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.WHITE) }
+                      setPadding(40, 40, 40, 40)
+                  }
+                  
+                  val apiInput = EditText(this).apply {
+                      hint = "Collez votre clé Gemini API ici..."
+                      setText(prefs.getString("api_key", ""))
+                      textSize = 14f
+                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 16f; setColor(Color.parseColor("#F2F2F7")) }
+                      setPadding(30, 30, 30, 30)
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, 30) }
+                  }
+                  apiCard.addView(apiInput)
+
+                  val saveApiBtn = Button(this).apply {
+                      text = "Enregistrer la clé API"; setTextColor(Color.WHITE); isAllCaps = false
+                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 24f; setColor(Color.parseColor("#34D399")) }
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 120)
+                      setOnClickListener {
+                          prefs.edit().putString("api_key", apiInput.text.toString().trim()).apply()
+                          Toast.makeText(this@MainActivity, "Clé enregistrée avec succès! ✨", Toast.LENGTH_SHORT).show()
+                      }
+                  }
+                  apiCard.addView(saveApiBtn)
+                  root.addView(apiCard)
+                  // ------------------------------
+
                   val settingsTitle = TextView(this).apply { text = "Apparence et Clavier"; setTextColor(Color.parseColor("#6E6E73")); textSize = 14f; setPadding(20, 40, 0, 10) }
                   root.addView(settingsTitle)
 
                   val settingsCard = LinearLayout(this).apply {
-                      orientation = LinearLayout.VERTICAL
-                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.WHITE) }
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      orientation = LinearLayout.VERTICAL; background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.WHITE) }
                   }
 
                   fun createSwitch(title: String, subtitle: String, key: String, default: Boolean, isLast: Boolean = false) {
@@ -177,17 +204,12 @@ jobs:
                       val tvTitle = TextView(this).apply { text = title; setTextColor(Color.parseColor("#1C1C1E")); textSize = 16f }
                       val tvSub = TextView(this).apply { text = subtitle; setTextColor(Color.parseColor("#8E8E93")); textSize = 12f }
                       textLayout.addView(tvTitle); textLayout.addView(tvSub)
-                      
                       val sw = Switch(this).apply {
                           isChecked = prefs.getBoolean(key, default)
                           setOnCheckedChangeListener { _, isChecked -> prefs.edit().putBoolean(key, isChecked).apply() }
                       }
                       row.addView(textLayout); row.addView(sw); settingsCard.addView(row)
-                      
-                      if(!isLast) {
-                          val divider = View(this).apply { layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 2).apply{ setMargins(40,0,0,0) }; setBackgroundColor(Color.parseColor("#E5E5EA")) }
-                          settingsCard.addView(divider)
-                      }
+                      if(!isLast) settingsCard.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 2).apply{ setMargins(40,0,0,0) }; setBackgroundColor(Color.parseColor("#E5E5EA")) })
                   }
 
                   createSwitch("Thème Clair", "Utiliser les couleurs claires", "light_theme", false)
@@ -199,14 +221,11 @@ jobs:
                   root.addView(sizeTitle)
 
                   val sizeCard = LinearLayout(this).apply {
-                      orientation = LinearLayout.VERTICAL
-                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.WHITE) }
-                      setPadding(40, 40, 40, 40)
+                      orientation = LinearLayout.VERTICAL; background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.WHITE) }; setPadding(40, 40, 40, 40)
                   }
                   
                   val sizeSeekBar = SeekBar(this).apply {
-                      max = 4
-                      progress = prefs.getInt("kb_size", 2)
+                      max = 4; progress = prefs.getInt("kb_size", 2)
                       setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                           override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) { prefs.edit().putInt("kb_size", progress).apply() }
                           override fun onStartTrackingTouch(seekBar: SeekBar?) {}
@@ -221,7 +240,7 @@ jobs:
           }
           EOF
 
-          # ---- لوحة المفاتيح: إصلاح الأداء، شريط الأدوات، والإيموجي ----
+          # ---- لوحة المفاتيح ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           import android.content.ClipboardManager
@@ -242,6 +261,12 @@ jobs:
           import android.view.KeyEvent
           import android.widget.HorizontalScrollView
           import android.widget.PopupWindow
+          import android.widget.Toast
+          import kotlinx.coroutines.*
+          import org.json.JSONObject
+          import java.net.HttpURLConnection
+          import java.net.URL
+          import java.io.OutputStreamWriter
 
           class KeyboardService : InputMethodService() {
               private var isCaps = false
@@ -252,8 +277,10 @@ jobs:
               private var keysContainer: LinearLayout? = null
               private var currentPopup: PopupWindow? = null
               private lateinit var vibrator: Vibrator
+              
+              private var aiButton: TextView? = null
+              private val scope = CoroutineScope(Dispatchers.Main + Job())
 
-              // Optimization: Store key views to update them without rebuilding
               private val letterKeyViews = mutableListOf<TextView>()
 
               private var isLight = false
@@ -285,7 +312,6 @@ jobs:
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
 
-                  // ---- شريط الأدوات الاحترافي ----
                   val toolbar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * density).toInt())
@@ -301,39 +327,28 @@ jobs:
                       toolbar.addView(btn)
                   }
 
-                  addToolIcon("⚙️", 1f) {
-                      val intent = Intent(this, MainActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-                      startActivity(intent)
-                  }
+                  addToolIcon("⚙️", 1f) { startActivity(Intent(this, MainActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) }
                   addToolIcon("📋", 1f) {
                       val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                       val textToPaste = clipboard.primaryClip?.getItemAt(0)?.text
                       if (textToPaste != null) currentInputConnection?.commitText(textToPaste, 1)
                   }
-                  addToolIcon("😊", 1f) {
-                      isEmojiMode = !isEmojiMode
-                      buildKeys()
-                  }
+                  addToolIcon("😊", 1f) { isEmojiMode = !isEmojiMode; buildKeys() }
                   
-                  // مسافة مرنة
                   toolbar.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) })
                   
-                  // زر الذكاء الاصطناعي الواضح
-                  val aiBtn = TextView(this).apply {
+                  aiButton = TextView(this).apply {
                       text = "✨ AI Reply"
-                      setTextColor(Color.parseColor("#0A0C10"))
-                      textSize = 14f
-                      paintFlags = paintFlags or android.graphics.Paint.FAKE_BOLD_TEXT_FLAG
-                      gravity = Gravity.CENTER
+                      setTextColor(Color.parseColor("#0A0C10")); textSize = 14f; paintFlags = paintFlags or android.graphics.Paint.FAKE_BOLD_TEXT_FLAG; gravity = Gravity.CENTER
                       background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#34D399")) }
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (32 * density).toInt()).apply { setMargins(0,0,(10*density).toInt(),0) }
                       setPadding((15*density).toInt(), 0, (15*density).toInt(), 0)
                       setOnClickListener { 
                           vibrate()
-                          currentInputConnection?.commitText("\n[AI Reply Generating...]\n", 1) 
+                          generateAiResponse()
                       }
                   }
-                  toolbar.addView(aiBtn)
+                  toolbar.addView(aiButton)
                   rootLayout?.addView(toolbar)
 
                   keysContainer = LinearLayout(this).apply {
@@ -344,6 +359,79 @@ jobs:
 
                   buildKeys()
                   return rootLayout!!
+              }
+
+              private fun generateAiResponse() {
+                  val prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
+                  val apiKey = prefs.getString("api_key", "")
+                  
+                  if (apiKey.isNullOrEmpty()) {
+                      Toast.makeText(this, "⚠️ Please enter your API Key in settings!", Toast.LENGTH_LONG).show()
+                      return
+                  }
+
+                  val ic = currentInputConnection ?: return
+                  val extractedText = ic.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)?.text?.toString() ?: ""
+
+                  aiButton?.text = "⏳ Typing..."
+                  aiButton?.isEnabled = false
+                  aiButton?.alpha = 0.7f
+
+                  scope.launch {
+                      try {
+                          val responseStr = withContext(Dispatchers.IO) {
+                              val url = URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey")
+                              val conn = url.openConnection() as HttpURLConnection
+                              conn.requestMethod = "POST"
+                              conn.setRequestProperty("Content-Type", "application/json")
+                              conn.doOutput = true
+
+                              val prompt = if (extractedText.isNotBlank()) {
+                                  "You are an AI keyboard assistant. Read the following text and write a natural, friendly, and concise reply in the same language. Text: $extractedText"
+                              } else {
+                                  "Write a nice short greeting or icebreaker."
+                              }
+
+                              val payload = JSONObject().apply {
+                                  put("contents", org.json.JSONArray().apply {
+                                      put(JSONObject().apply {
+                                          put("parts", org.json.JSONArray().apply {
+                                              put(JSONObject().apply { put("text", prompt) })
+                                          })
+                                      })
+                                  })
+                              }
+
+                              OutputStreamWriter(conn.outputStream).use { it.write(payload.toString()) }
+                              conn.inputStream.bufferedReader().use { it.readText() }
+                          }
+
+                          val reply = JSONObject(responseStr)
+                              .getJSONArray("candidates")
+                              .getJSONObject(0)
+                              .getJSONObject("content")
+                              .getJSONArray("parts")
+                              .getJSONObject(0)
+                              .getString("text")
+
+                          withContext(Dispatchers.Main) {
+                              ic.commitText("\n" + reply.trim() + " ✨\n", 1)
+                          }
+                      } catch (e: Exception) {
+                          withContext(Dispatchers.Main) {
+                              ic.commitText("\n[AI Error: Check API Key or Connection]\n", 1)
+                          }
+                      } finally {
+                          aiButton?.text = "✨ AI Reply"
+                          aiButton?.isEnabled = true
+                          aiButton?.alpha = 1.0f
+                      }
+                  }
+              }
+
+              override fun onDestroy() {
+                  super.onDestroy()
+                  scope.cancel()
               }
 
               private fun vibrate() {
@@ -357,7 +445,6 @@ jobs:
               private fun showPopup(keyView: View, text: String) {
                   val prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
                   if (!prefs.getBoolean("popup", true) || text.length > 1 || isEmojiMode) return
-
                   val popupView = TextView(this).apply {
                       this.text = text; textSize = 36f; setTextColor(Color.parseColor(textColor)); gravity = Gravity.CENTER
                       background = GradientDrawable().apply { setColor(Color.parseColor(keyNormalColor)); cornerRadius = 16f * density }
@@ -369,15 +456,11 @@ jobs:
                   }
               }
 
-              // Optimization: Update text instead of rebuilding to prevent lag!
               private fun updateKeysTextForShift() {
                   for (tv in letterKeyViews) {
                       val key = tv.tag as? String ?: continue
-                      if (key.length == 1 && key.first().isLetter()) {
-                          tv.text = if (isCaps && currentLang != "AR") key.uppercase() else key
-                      } else if (key == "SHIFT") {
-                          tv.text = if (isCaps) "⇪" else "⇧"
-                      }
+                      if (key.length == 1 && key.first().isLetter()) tv.text = if (isCaps && currentLang != "AR") key.uppercase() else key
+                      else if (key == "SHIFT") tv.text = if (isCaps) "⇪" else "⇧"
                   }
               }
 
@@ -431,7 +514,7 @@ jobs:
                       }
                       for (key in rowKeys) {
                           val keyView = TextView(this).apply {
-                              tag = key // Store original key string
+                              tag = key
                               val displayText = when (key) {
                                   "SHIFT" -> if (isCaps) "⇪" else "⇧"
                                   "DEL" -> "⌫"
@@ -444,10 +527,7 @@ jobs:
                               gravity = Gravity.CENTER
                               
                               val isSpecial = key.length > 2 || key == "🌐" || key == "DEL" || key == "SHIFT"
-                              val keyBgColorStr = when (key) { 
-                                  "ENTER" -> "#007AFF"
-                                  else -> if (isSpecial) keySpecialColor else keyNormalColor 
-                              }
+                              val keyBgColorStr = when (key) { "ENTER" -> "#007AFF"; else -> if (isSpecial) keySpecialColor else keyNormalColor }
                               val keyBgColor = Color.parseColor(keyBgColorStr)
 
                               setTextColor(Color.parseColor(if(key == "ENTER") "#FFFFFF" else textColor))
@@ -474,7 +554,7 @@ jobs:
                                   }
                               }
                           }
-                          letterKeyViews.add(keyView) // Add to list for fast updates
+                          letterKeyViews.add(keyView)
                           rowLayout.addView(keyView)
                       }
                       keysContainer?.addView(rowLayout)
@@ -484,19 +564,10 @@ jobs:
               private fun handleKeyClick(key: String) {
                   val ic = currentInputConnection ?: return
                   when (key) {
-                      "DEL" -> {
-                          ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
-                          ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL))
-                      }
+                      "DEL" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL)) }
                       "SPACE" -> ic.commitText(" ", 1)
-                      "ENTER" -> {
-                          ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
-                          ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER))
-                      }
-                      "SHIFT" -> { 
-                          isCaps = !isCaps
-                          updateKeysTextForShift() // Fast update without lag!
-                      }
+                      "ENTER" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)) }
+                      "SHIFT" -> { isCaps = !isCaps; updateKeysTextForShift() }
                       "?123" -> { isSymbols = true; isEmojiMode = false; buildKeys() }
                       "ABC" -> { isSymbols = false; isEmojiMode = false; buildKeys() }
                       "🌐" -> { currentLang = when(currentLang) { "EN" -> "AR"; "AR" -> "FR"; else -> "EN" }; buildKeys() }
@@ -512,6 +583,7 @@ jobs:
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.VIBRATE" />
               <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:theme="@style/Theme.AppCompat.NoActionBar">
                   <activity android:name=".MainActivity" android:exported="true">
@@ -532,21 +604,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase5.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase6.1.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase5.apk
+          path: release-output/AI-Keyboard-Pro-Phase6.1.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v5.0
-          name: "AI Keyboard Pro - Phase 5 (Zero Lag + Native UI + Emoji)"
-          body: "1. حل مشكلة اللاج جذرياً عبر تحديث النصوص فقط دون إعادة بناء اللوحة.\n2. تصميم واجهة إعدادات قياسية واحترافية مطابقة لنظام أندرويد/iOS.\n3. إضافة شريط أدوات يحتوي على (إعدادات، نسخ، إيموجي، وزر AI المخصص).\n4. إضافة لوحة إيموجي أساسية."
-          files: release-output/AI-Keyboard-Pro-Phase5.apk
+          tag_name: aikeyboard-v6.1
+          name: "AI Keyboard Pro - Phase 6.1 (Bug Fix)"
+          body: "إصلاح خطأ استدعاء المكتبة View. التطبيق جاهز الآن مع عقل الذكاء الاصطناعي."
+          files: release-output/AI-Keyboard-Pro-Phase6.1.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
