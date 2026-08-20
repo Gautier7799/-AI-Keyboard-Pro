@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 2; versionName = "1.1.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 3; versionName = "2.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -112,9 +112,10 @@ jobs:
                   }
 
                   val title = TextView(this).apply {
-                      text = "AI Keyboard Pro ✨"
+                      text = "AI Keyboard Pro ✨\n(iOS Style & Languages)"
                       setTextColor(Color.WHITE)
-                      textSize = 28f
+                      textSize = 24f
+                      gravity = Gravity.CENTER
                       setPadding(0, 0, 0, 100)
                   }
                   
@@ -159,22 +160,38 @@ jobs:
 
           class KeyboardService : InputMethodService() {
               private var isCaps = false
+              private var isSymbols = false
+              private var currentLang = "EN" // EN, AR, FR
               private var rootLayout: LinearLayout? = null
+              private var keysContainer: LinearLayout? = null
 
               override fun onCreateInputView(): View {
+                  val density = resources.displayMetrics.density
+
                   rootLayout = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
-                      setBackgroundColor(Color.parseColor("#0A0C10"))
-                      setPadding(0, 0, 0, 20) // مسافة سفلية مريحة
+                      // تصميم iOS: زوايا علوية دائرية فقط، وأسفل مسطح
+                      background = GradientDrawable().apply {
+                          shape = GradientDrawable.RECTANGLE
+                          setColor(Color.parseColor("#0A0C10"))
+                          cornerRadii = floatArrayOf(
+                              50f * density, 50f * density, // أعلى اليسار
+                              50f * density, 50f * density, // أعلى اليمين
+                              0f, 0f, // أسفل اليمين
+                              0f, 0f  // أسفل اليسار
+                          )
+                      }
+                      // إزالة المسافة السفلية ليلتصق بالشاشة
+                      setPadding(0, 20, 0, 0) 
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
 
-                  // 🌟 إضافة شريط الاقتراحات الذكي (Suggestions Bar) في الأعلى 🌟
+                  // شريط الاقتراحات (Suggestions Bar) شفاف ومندمج
                   val suggestionsBar = HorizontalScrollView(this).apply {
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * resources.displayMetrics.density).toInt())
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * density).toInt())
                       isFillViewport = true
                       isHorizontalScrollBarEnabled = false
-                      setBackgroundColor(Color.parseColor("#0F1218")) // لون أغمق قليلاً لتمييزه
+                      setBackgroundColor(Color.TRANSPARENT)
                   }
                   
                   val suggestionsContainer = LinearLayout(this).apply {
@@ -184,7 +201,6 @@ jobs:
                       setPadding(20, 0, 20, 0)
                   }
                   
-                  // كلمات تجريبية حتى نربطها بالذكاء الاصطناعي لاحقاً
                   val dummySuggestions = listOf("مرحباً", "كيف حالك؟", "أنا قادم", "✨ AI Reply")
                   for (word in dummySuggestions) {
                       val tv = TextView(this).apply {
@@ -200,19 +216,12 @@ jobs:
                               it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                           }
                       }
-                      
-                      val isAiBtn = word.contains("✨")
-                      if(isAiBtn) {
-                          tv.setTextColor(Color.parseColor("#34D399"))
-                      }
-
+                      if(word.contains("✨")) tv.setTextColor(Color.parseColor("#34D399"))
                       suggestionsContainer.addView(tv)
                       
                       if (word != dummySuggestions.last()) {
                           val divider = View(this).apply {
-                              layoutParams = LinearLayout.LayoutParams((1 * resources.displayMetrics.density).toInt(), (20 * resources.displayMetrics.density).toInt()).apply {
-                                  setMargins(10, 0, 10, 0)
-                              }
+                              layoutParams = LinearLayout.LayoutParams((1 * density).toInt(), (20 * density).toInt()).apply { setMargins(10, 0, 10, 0) }
                               setBackgroundColor(Color.parseColor("#222731"))
                           }
                           suggestionsContainer.addView(divider)
@@ -220,55 +229,96 @@ jobs:
                   }
                   suggestionsBar.addView(suggestionsContainer)
                   rootLayout?.addView(suggestionsBar)
-                  // ------------------------------------------------
 
-                  // الحروف الإنجليزية
-                  val rows = listOf(
-                      listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
-                      listOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
-                      listOf("SHIFT", "z", "x", "c", "v", "b", "n", "m", "DEL"),
-                      listOf("?123", "AI ✨", "SPACE", ".", "ENTER")
-                  )
+                  keysContainer = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                          setMargins(10, 20, 10, 10)
+                      }
+                  }
+                  rootLayout?.addView(keysContainer)
+
+                  buildKeys()
+                  return rootLayout!!
+              }
+
+              private fun buildKeys() {
+                  keysContainer?.removeAllViews()
+                  val density = resources.displayMetrics.density
+
+                  val rows = if (isSymbols) {
+                      // لوحة الأرقام والرموز
+                      listOf(
+                          listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
+                          listOf("@", "#", "$", "_", "&", "-", "+", "(", ")", "/"),
+                          listOf("=", "*", "\"", "'", ":", ";", "!", "?", "DEL"),
+                          listOf("ABC", "🌐", "AI ✨", "SPACE", ".", "ENTER")
+                      )
+                  } else {
+                      when (currentLang) {
+                          "AR" -> listOf(
+                              listOf("ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج", "د"),
+                              listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط"),
+                              listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"),
+                              listOf("?123", "🌐", "AI ✨", "SPACE", ".", "ENTER")
+                          )
+                          "FR" -> listOf( // AZERTY
+                              listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p"),
+                              listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m"),
+                              listOf("SHIFT", "w", "x", "c", "v", "b", "n", "DEL"),
+                              listOf("?123", "🌐", "AI ✨", "SPACE", ".", "ENTER")
+                          )
+                          else -> listOf( // EN QWERTY
+                              listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
+                              listOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
+                              listOf("SHIFT", "z", "x", "c", "v", "b", "n", "m", "DEL"),
+                              listOf("?123", "🌐", "AI ✨", "SPACE", ".", "ENTER")
+                          )
+                      }
+                  }
 
                   for (rowKeys in rows) {
                       val rowLayout = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL
                           gravity = Gravity.CENTER
-                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (56 * resources.displayMetrics.density).toInt())
+                          // تكبير حجم الأزرار (أطول قليلاً)
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (62 * density).toInt())
                       }
                       for (key in rowKeys) {
                           val keyView = TextView(this).apply {
-                              text = key
-                              textSize = if (key.length > 1) 14f else 22f
+                              text = if (isCaps && !isSymbols && currentLang != "AR") key.uppercase() else key
+                              textSize = if (key.length > 1 || key == "🌐") 15f else 22f
                               gravity = Gravity.CENTER
                               
-                              val isSpecial = key.length > 1
+                              val isSpecial = key.length > 1 || key == "🌐"
                               val keyBgColor = when (key) {
                                   "AI ✨" -> Color.parseColor("#1C202B")
-                                  "ENTER" -> Color.parseColor("#9ECAFF")
-                                  else -> if (isSpecial) Color.parseColor("#14171E") else Color.parseColor("#222731")
+                                  "ENTER" -> Color.parseColor("#007AFF") // أزرق ساطع مثل iOS
+                                  else -> if (isSpecial) Color.parseColor("#2C2F36") else Color.parseColor("#43464D")
                               }
                               val keyTextColor = when (key) {
                                   "AI ✨" -> Color.parseColor("#34D399")
-                                  "ENTER" -> Color.parseColor("#003258")
-                                  else -> Color.parseColor("#F0F3FA")
+                                  else -> Color.parseColor("#FFFFFF")
                               }
 
                               setTextColor(keyTextColor)
                               background = GradientDrawable().apply {
                                   shape = GradientDrawable.RECTANGLE
-                                  cornerRadius = 24f * resources.displayMetrics.density
+                                  // حواف مربعة ناعمة (12dp) مثل iOS بدلاً من الحبوب
+                                  cornerRadius = 12f * density
                                   setColor(keyBgColor)
                               }
 
                               val weight = when (key) {
                                   "SPACE" -> 4f
-                                  "AI ✨", "ENTER", "SHIFT", "DEL", "?123" -> 1.5f
+                                  "ENTER" -> 1.8f
+                                  "SHIFT", "DEL", "?123", "ABC" -> 1.5f
+                                  "AI ✨", "🌐" -> 1.2f
                                   else -> 1f
                               }
                               
                               val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, weight)
-                              lp.setMargins(8, 10, 8, 10) 
+                              lp.setMargins(6, 8, 6, 8) 
                               layoutParams = lp
                               isClickable = true
 
@@ -279,9 +329,8 @@ jobs:
                           }
                           rowLayout.addView(keyView)
                       }
-                      rootLayout?.addView(rowLayout)
+                      keysContainer?.addView(rowLayout)
                   }
-                  return rootLayout!!
               }
 
               private fun handleKeyClick(key: String) {
@@ -293,11 +342,20 @@ jobs:
                           ic.performEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_GO)
                           ic.commitText("\n", 1)
                       }
-                      "SHIFT" -> { isCaps = !isCaps }
-                      "?123" -> { /* سيتم برمجتها لإظهار الأرقام */ }
+                      "SHIFT" -> { isCaps = !isCaps; buildKeys() }
+                      "?123" -> { isSymbols = true; buildKeys() }
+                      "ABC" -> { isSymbols = false; buildKeys() }
+                      "🌐" -> {
+                          currentLang = when(currentLang) {
+                              "EN" -> "AR"
+                              "AR" -> "FR"
+                              else -> "EN"
+                          }
+                          buildKeys() // إعادة بناء اللوحة باللغة الجديدة
+                      }
                       "AI ✨" -> { ic.commitText(" [AI Magic!] ", 1) }
                       else -> {
-                          val letter = if (isCaps) key.uppercase() else key
+                          val letter = if (isCaps && !isSymbols && currentLang != "AR") key.uppercase() else key
                           ic.commitText(letter, 1)
                       }
                   }
@@ -315,10 +373,7 @@ jobs:
                           <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
                   </activity>
-                  <service android:name=".KeyboardService"
-                      android:label="@string/ime_name"
-                      android:permission="android.permission.BIND_INPUT_METHOD"
-                      android:exported="true">
+                  <service android:name=".KeyboardService" android:label="@string/ime_name" android:permission="android.permission.BIND_INPUT_METHOD" android:exported="true">
                       <intent-filter><action android:name="android.view.InputMethod" /></intent-filter>
                       <meta-data android:name="android.view.im" android:resource="@xml/method" />
                   </service>
@@ -330,21 +385,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase1.5.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase2.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase1.5.apk
+          path: release-output/AI-Keyboard-Pro-Phase2.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v1.5
-          name: "AI Keyboard Pro - Phase 1.5 (Suggestions Bar)"
-          body: "إضافة شريط الاقتراحات الذكي (Suggestions Bar) في أعلى لوحة المفاتيح."
-          files: release-output/AI-Keyboard-Pro-Phase1.5.apk
+          tag_name: aikeyboard-v2.0
+          name: "AI Keyboard Pro - Phase 2 (iOS Style)"
+          body: "1. زوايا علوية دائرية وأسفل مسطح.\n2. أزرار مستطيلة بحواف ناعمة (12dp) وتكبير حجم اللوحة.\n3. إضافة لغات (عربية، فرنسية AZERTY، إنجليزية).\n4. إضافة لوحة الأرقام والرموز (?123)."
+          files: release-output/AI-Keyboard-Pro-Phase2.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
