@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 11; versionName = "7.1.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 12; versionName = "7.2.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -78,16 +78,17 @@ jobs:
           </resources>
           EOF
           
-          # ثيم Material 3 الجديد الذي يأخذ ألوان الهاتف تلقائياً
+          # إصلاح الثيم (ضمان ظهور النصوص والألوان)
           cat << 'EOF' > app/src/main/res/values/themes.xml
           <resources>
               <style name="Theme.AIKeyboard" parent="Theme.Material3.DayNight.NoActionBar">
                   <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
+                  <item name="colorPrimary">@android:color/holo_blue_dark</item>
+                  <item name="colorOnPrimary">@android:color/white</item>
               </style>
           </resources>
           EOF
 
-          # --- الأكواد التي نسيناها في النسخة السابقة! ---
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
               <path android:fillColor="#0A0C10" android:pathData="M0,0h108v108h-108z"/>
@@ -114,23 +115,23 @@ jobs:
               <subtype android:imeSubtypeLocale="en_US" android:imeSubtypeMode="keyboard" />
           </input-method>
           EOF
-          # ----------------------------------------------
 
-          # تصميم الإعدادات باستخدام XML ليدعم Material You
+          # تصميم الإعدادات باستخدام XML مع فرض ألوان النصوص لتكون واضحة!
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="?android:attr/colorBackground">
               <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
+                  
                   <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" text="Préférences" android:textSize="32sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary" android:layout_marginBottom="24dp"/>
 
-                  <com.google.android.material.button.MaterialButton android:id="@+id/btnActiver" android:layout_width="match_parent" android:layout_height="60dp" text="1. Activer le clavier" app:cornerRadius="16dp"/>
-                  <com.google.android.material.button.MaterialButton android:id="@+id/btnSelect" android:layout_width="match_parent" android:layout_height="60dp" text="2. Sélectionner le clavier" app:cornerRadius="16dp" android:layout_marginBottom="24dp"/>
+                  <com.google.android.material.button.MaterialButton android:id="@+id/btnActiver" android:layout_width="match_parent" android:layout_height="60dp" text="1. Activer le clavier" android:textColor="?attr/colorOnPrimary" app:cornerRadius="16dp"/>
+                  <com.google.android.material.button.MaterialButton android:id="@+id/btnSelect" android:layout_width="match_parent" android:layout_height="60dp" text="2. Sélectionner le clavier" android:textColor="?attr/colorOnPrimary" app:cornerRadius="16dp" android:layout_marginBottom="24dp"/>
 
                   <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" text="Intelligence Artificielle (Gemini)" android:textColor="?android:attr/textColorSecondary" android:layout_marginBottom="8dp"/>
                   <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" app:cardCornerRadius="24dp" app:cardElevation="0dp" app:cardBackgroundColor="?attr/colorSurfaceVariant" android:layout_marginBottom="24dp">
                       <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
-                          <EditText android:id="@+id/apiInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Clé Gemini API..." android:background="@android:color/transparent" android:padding="8dp" android:textColor="?android:attr/textColorPrimary"/>
-                          <com.google.android.material.button.MaterialButton android:id="@+id/btnSaveApi" android:layout_width="match_parent" android:layout_height="50dp" text="Enregistrer la clé" app:cornerRadius="12dp" android:layout_marginTop="12dp"/>
+                          <EditText android:id="@+id/apiInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Clé Gemini API..." android:background="@android:color/transparent" android:padding="8dp" android:textColor="?android:attr/textColorPrimary" android:textColorHint="?android:attr/textColorSecondary"/>
+                          <com.google.android.material.button.MaterialButton android:id="@+id/btnSaveApi" android:layout_width="match_parent" android:layout_height="50dp" text="Enregistrer la clé" android:textColor="?attr/colorOnPrimary" app:cornerRadius="12dp" android:layout_marginTop="12dp"/>
                       </LinearLayout>
                   </com.google.android.material.card.MaterialCardView>
 
@@ -511,21 +512,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase7.1.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase7.2.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase7.1.apk
+          path: release-output/AI-Keyboard-Pro-Phase7.2.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v7.1
-          name: "AI Keyboard Pro - Phase 7.1 (Bug Fix - Missing XMLs)"
-          body: "إصلاح خطأ اختفاء ملفات الأيقونة والإعدادات."
-          files: release-output/AI-Keyboard-Pro-Phase7.1.apk
+          tag_name: aikeyboard-v7.2
+          name: "AI Keyboard Pro - Phase 7.2 (Fix Hidden Text in Material You)"
+          body: "إصلاح مشكلة اختفاء النصوص والألوان في الإعدادات بسبب خطأ في توافق Material You."
+          files: release-output/AI-Keyboard-Pro-Phase7.2.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
