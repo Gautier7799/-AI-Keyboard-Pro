@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 15; versionName = "8.1.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 16; versionName = "9.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -113,7 +113,7 @@ jobs:
           </input-method>
           EOF
 
-          # ---- تطبيق الإعدادات (تم إصلاح خطأ window) ----
+          # ---- تطبيق الإعدادات ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
           package com.aikeyboard.pro
           import android.content.Context
@@ -251,7 +251,7 @@ jobs:
           }
           EOF
 
-          # ---- لوحة المفاتيح الصاروخية (تم حل الـ Lag عبر إلغاء حسابات الألوان داخل اللمس) ----
+          # ---- لوحة المفاتيح الفخمة جداً (أحرف ضخمة، شريط iOS كبسولي، حروف عربية مكتملة) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           import android.content.ClipboardManager
@@ -317,19 +317,36 @@ jobs:
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
 
+                  // 💎 شريط الأدوات الكبسولي الفاخر 💎
+                  val toolbarContainer = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { 
+                          setMargins((10*density).toInt(), (10*density).toInt(), (10*density).toInt(), (5*density).toInt()) 
+                      }
+                  }
+
+                  val toolbarBgColor = if (isLight) "#FFFFFF" else "#1C1C1E"
                   val toolbar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * density).toInt())
+                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f * density; setColor(Color.parseColor(toolbarBgColor)) }
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (48 * density).toInt())
+                      if (isLight) elevation = 2f * density
                       setPadding((10*density).toInt(), 0, (10*density).toInt(), 0)
                   }
+                  toolbarContainer.addView(toolbar)
+                  rootLayout?.addView(toolbarContainer)
                   
                   fun addToolIcon(icon: String, action: () -> Unit) {
+                      val btnContainer = LinearLayout(this).apply {
+                          gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+                      }
                       val btn = TextView(this).apply {
-                          text = icon; textSize = 20f; gravity = Gravity.CENTER
-                          layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+                          text = icon; textSize = 22f; gravity = Gravity.CENTER
+                          layoutParams = LinearLayout.LayoutParams((40*density).toInt(), (40*density).toInt())
                           setOnClickListener { vibrate(); action() }
                       }
-                      toolbar.addView(btn)
+                      btnContainer.addView(btn)
+                      toolbar.addView(btnContainer)
                   }
 
                   addToolIcon("⚙️") { startActivity(Intent(this, MainActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) }
@@ -341,20 +358,20 @@ jobs:
                   addToolIcon("😊") { isEmojiMode = !isEmojiMode; forceBuildKeys() }
                   toolbar.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) })
                   
+                  // زر الذكاء الاصطناعي الأنيق داخل الكبسولة
                   aiButton = TextView(this).apply {
                       text = "✨ AI Reply"
-                      setTextColor(Color.parseColor("#0A0C10")); textSize = 14f; paintFlags = paintFlags or android.graphics.Paint.FAKE_BOLD_TEXT_FLAG; gravity = Gravity.CENTER
-                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#34D399")) }
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (32 * density).toInt()).apply { setMargins(0,0,(10*density).toInt(),0) }
-                      setPadding((15*density).toInt(), 0, (15*density).toInt(), 0)
+                      setTextColor(Color.WHITE); textSize = 14f; paintFlags = paintFlags or android.graphics.Paint.FAKE_BOLD_TEXT_FLAG; gravity = Gravity.CENTER
+                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#007AFF")) }
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (36 * density).toInt()).apply { setMargins(0,0,(5*density).toInt(),0) }
+                      setPadding((16*density).toInt(), 0, (16*density).toInt(), 0)
                       setOnClickListener { vibrate(); generateAiResponse() }
                   }
                   toolbar.addView(aiButton)
-                  rootLayout?.addView(toolbar)
 
                   keysContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(10, 10, 10, 10) }
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(10, 5, 10, 10) }
                   }
                   rootLayout?.addView(keysContainer)
 
@@ -375,10 +392,11 @@ jobs:
                   keysContainer?.removeAllViews()
                   letterKeyViews.clear()
                   val prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
-                  val sizeMultiplier = 0.8f + (prefs.getInt("kb_size", 2) * 0.1f)
-                  val baseKeyHeight = (58 * density * sizeMultiplier).toInt()
+                  
+                  // 🔎 تكبير الأحرف بشكل ملحوظ ليكون مريحاً لأصحاب النظارات 👓
+                  val sizeMultiplier = 0.9f + (prefs.getInt("kb_size", 2) * 0.15f) 
+                  val baseKeyHeight = (64 * density * sizeMultiplier).toInt() // مفاتيح أطول وأكبر
 
-                  // 🚀 هنا يكمن السر: ترجمة الألوان إلى أرقام مرة واحدة فقط وليس مع كل لمسة!
                   val keyNormalColorStr = if (isLight) "#FFFFFF" else "#2C2C2E"
                   val keySpecialColorStr = if (isLight) "#B3B8C1" else "#1C1C1E"
                   val textColorStr = if (isLight) "#000000" else "#FFFFFF"
@@ -402,15 +420,16 @@ jobs:
                       )
                   } else {
                       when (currentLang) {
+                          // ✅ تم إصلاح الحروف العربية وتضمين حرف (ذ) و (ئ) بترتيب مثالي
                           "AR" -> if (isCaps) listOf(
                               listOf("َ", "ً", "ُ", "ٌ", "ِ", "ٍ", "ّ", "ْ", "أ", "إ", "آ", "د"),
                               listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط"),
-                              listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"),
+                              listOf("SHIFT", "ذ", "ئ", "ء", "ؤ", "ر", "ى", "ة", "و", "ز", "ظ", "DEL"),
                               listOf("?123", "🌐", "SPACE", ".", "ENTER")
                           ) else listOf(
                               listOf("ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج", "د"),
                               listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط"),
-                              listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"),
+                              listOf("SHIFT", "ذ", "ئ", "ء", "ؤ", "ر", "ى", "ة", "و", "ز", "ظ", "DEL"),
                               listOf("?123", "🌐", "SPACE", ".", "ENTER")
                           )
                           "FR" -> listOf(
@@ -441,7 +460,8 @@ jobs:
                               }
 
                               text = displayText
-                              textSize = if (isEmojiMode && key.length == 2) 28f else if (key == "🌐" || key == "?123" || key == "ABC") 15f else 22f
+                              // 🔎 خط ضخم جداً للرؤية المريحة
+                              textSize = if (isEmojiMode && key.length == 2) 32f else if (key == "🌐" || key == "?123" || key == "ABC") 16f else 26f
                               gravity = Gravity.CENTER
                               
                               val isSpecial = key.length > 2 || key == "🌐" || key == "DEL" || key == "SHIFT"
@@ -450,7 +470,8 @@ jobs:
                               
                               setTextColor(if(key == "ENTER") Color.WHITE else textColorInt)
                               
-                              background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 10f * density; setColor(normalColorInt) }
+                              background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 12f * density; setColor(normalColorInt) }
+                              if (isLight) elevation = 1f * density
 
                               val weight = when (key) { "SPACE" -> 4f; "ENTER" -> 1.8f; "SHIFT", "DEL", "?123", "ABC" -> 1.5f; "🌐" -> 1.2f; else -> 1f }
                               val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, weight).apply { setMargins(6, (6*sizeMultiplier).toInt(), 6, (6*sizeMultiplier).toInt()) }
@@ -486,8 +507,8 @@ jobs:
                   val prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
                   if (!prefs.getBoolean("popup", true) || text.length > 1 || isEmojiMode) return
                   val popupView = TextView(this).apply {
-                      this.text = text; textSize = 36f; setTextColor(txtColorInt); gravity = Gravity.CENTER
-                      background = GradientDrawable().apply { setColor(normalColorInt); cornerRadius = 12f * density }
+                      this.text = text; textSize = 38f; setTextColor(txtColorInt); gravity = Gravity.CENTER // تكبير البوب-أب أيضاً
+                      background = GradientDrawable().apply { setColor(normalColorInt); cornerRadius = 14f * density }
                   }
                   currentPopup = PopupWindow(popupView, (keyView.width * 1.5).toInt(), (keyView.height * 1.5).toInt()).apply { isClippingEnabled = false; showAsDropDown(keyView, -(keyView.width * 0.25).toInt(), -(keyView.height * 2.2).toInt()) }
               }
@@ -576,21 +597,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase8.1.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase9.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase8.1.apk
+          path: release-output/AI-Keyboard-Pro-Phase9.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v8.1
-          name: "AI Keyboard Pro - Phase 8.1 (Lag Fixed 🚀 & UI Clear)"
-          body: "1. إصلاح خطأ الشاشة في الإعدادات لتظهر بشكل مثالي.\n2. إزالة حسابات الألوان من اللمس (Touch Listener) ليصبح الكيبورد طلقة وبدون أي Lag."
-          files: release-output/AI-Keyboard-Pro-Phase8.1.apk
+          tag_name: aikeyboard-v9.0
+          name: "AI Keyboard Pro - Phase 9 (Premium UI 💎 & Reading Glasses Mode 👓)"
+          body: "1. إضافة شريط أدوات (Toolbar) كبسولي مستدير يطفو بأناقة فوق الأزرار على طريقة iOS و Gboard.\n2. تكبير الأحرف بشكل افتراضي لتكون مقروءة وواضحة جداً للعين.\n3. إكمال الحروف العربية الناقصة (ذ، ئ) وترتيبها بمقاسات مريحة للكتابة."
+          files: release-output/AI-Keyboard-Pro-Phase9.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
