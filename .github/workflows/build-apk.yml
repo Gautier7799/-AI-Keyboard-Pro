@@ -1,0 +1,350 @@
+name: Build AI Keyboard Pro
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Generate Android APK for AI Keyboard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+          cache-disabled: true
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build AI Keyboard Pro
+        run: |
+          rm -rf app/src/main/res app/src/main/java
+          mkdir -p app/src/main/res/values app/src/main/res/drawable app/src/main/res/xml app/src/main/java/com/aikeyboard/pro
+
+          cat << 'EOF' > gradle.properties
+          android.useAndroidX=true
+          android.enableJetifier=true
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          EOF
+
+          cat << 'EOF' > settings.gradle.kts
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+          rootProject.name = "AIKeyboardPro"
+          include(":app")
+          EOF
+
+          cat << 'EOF' > build.gradle.kts
+          plugins { id("com.android.application") version "8.2.2" apply false; id("org.jetbrains.kotlin.android") version "1.9.22" apply false }
+          EOF
+
+          cat << 'EOF' > app/build.gradle.kts
+          plugins { id("com.android.application"); id("org.jetbrains.kotlin.android") }
+          android {
+              namespace = "com.aikeyboard.pro"
+              compileSdk = 34
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 2; versionName = "1.1.0" }
+              compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
+              kotlinOptions { jvmTarget = "17" }
+          }
+          dependencies {
+              implementation("androidx.core:core-ktx:1.12.0")
+              implementation("androidx.appcompat:appcompat:1.6.1")
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/res/values/strings.xml
+          <resources>
+              <string name="app_name">AI Keyboard Pro</string>
+              <string name="ime_name">AI Keyboard Pro</string>
+          </resources>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/xml/method.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <input-method xmlns:android="http://schemas.android.com/apk/res/android"
+              android:supportsInlineSuggestions="true">
+              <subtype android:imeSubtypeLocale="en_US" android:imeSubtypeMode="keyboard" />
+          </input-method>
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
+          package com.aikeyboard.pro
+          import android.content.Context
+          import android.content.Intent
+          import android.graphics.Color
+          import android.graphics.drawable.GradientDrawable
+          import android.os.Bundle
+          import android.provider.Settings
+          import android.view.Gravity
+          import android.view.ViewGroup
+          import android.view.inputmethod.InputMethodManager
+          import android.widget.Button
+          import android.widget.LinearLayout
+          import android.widget.TextView
+          import androidx.appcompat.app.AppCompatActivity
+
+          class MainActivity : AppCompatActivity() {
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  
+                  val root = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      gravity = Gravity.CENTER
+                      setBackgroundColor(Color.parseColor("#0A0C10"))
+                      setPadding(60, 60, 60, 60)
+                  }
+
+                  val title = TextView(this).apply {
+                      text = "AI Keyboard Pro ✨"
+                      setTextColor(Color.WHITE)
+                      textSize = 28f
+                      setPadding(0, 0, 0, 100)
+                  }
+                  
+                  fun createButton(textStr: String, action: () -> Unit): Button {
+                      return Button(this).apply {
+                          text = textStr
+                          setTextColor(Color.parseColor("#003258"))
+                          textSize = 16f
+                          background = GradientDrawable().apply {
+                              shape = GradientDrawable.RECTANGLE
+                              cornerRadius = 100f
+                              setColor(Color.parseColor("#9ECAFF"))
+                          }
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 160).apply {
+                              setMargins(0, 0, 0, 40)
+                          }
+                          setOnClickListener { action() }
+                      }
+                  }
+
+                  val btnEnable = createButton("1. تفعيل لوحة المفاتيح") { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
+                  val btnSelect = createButton("2. اختيار اللوحة الآن") { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
+
+                  root.addView(title); root.addView(btnEnable); root.addView(btnSelect)
+                  setContentView(root)
+              }
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
+          package com.aikeyboard.pro
+          import android.inputmethodservice.InputMethodService
+          import android.view.View
+          import android.view.ViewGroup
+          import android.widget.LinearLayout
+          import android.widget.TextView
+          import android.graphics.Color
+          import android.graphics.drawable.GradientDrawable
+          import android.view.Gravity
+          import android.view.HapticFeedbackConstants
+          import android.widget.HorizontalScrollView
+
+          class KeyboardService : InputMethodService() {
+              private var isCaps = false
+              private var rootLayout: LinearLayout? = null
+
+              override fun onCreateInputView(): View {
+                  rootLayout = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setBackgroundColor(Color.parseColor("#0A0C10"))
+                      setPadding(0, 0, 0, 20) // مسافة سفلية مريحة
+                      layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                  }
+
+                  // 🌟 إضافة شريط الاقتراحات الذكي (Suggestions Bar) في الأعلى 🌟
+                  val suggestionsBar = HorizontalScrollView(this).apply {
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * resources.displayMetrics.density).toInt())
+                      isFillViewport = true
+                      isHorizontalScrollBarEnabled = false
+                      setBackgroundColor(Color.parseColor("#0F1218")) // لون أغمق قليلاً لتمييزه
+                  }
+                  
+                  val suggestionsContainer = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      gravity = Gravity.CENTER_VERTICAL
+                      layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                      setPadding(20, 0, 20, 0)
+                  }
+                  
+                  // كلمات تجريبية حتى نربطها بالذكاء الاصطناعي لاحقاً
+                  val dummySuggestions = listOf("مرحباً", "كيف حالك؟", "أنا قادم", "✨ AI Reply")
+                  for (word in dummySuggestions) {
+                      val tv = TextView(this).apply {
+                          text = word
+                          setTextColor(Color.parseColor("#F0F3FA"))
+                          textSize = 15f
+                          setPadding(40, 0, 40, 0)
+                          gravity = Gravity.CENTER
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                          isClickable = true
+                          setOnClickListener {
+                              currentInputConnection?.commitText("$word ", 1)
+                              it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                          }
+                      }
+                      
+                      val isAiBtn = word.contains("✨")
+                      if(isAiBtn) {
+                          tv.setTextColor(Color.parseColor("#34D399"))
+                      }
+
+                      suggestionsContainer.addView(tv)
+                      
+                      if (word != dummySuggestions.last()) {
+                          val divider = View(this).apply {
+                              layoutParams = LinearLayout.LayoutParams((1 * resources.displayMetrics.density).toInt(), (20 * resources.displayMetrics.density).toInt()).apply {
+                                  setMargins(10, 0, 10, 0)
+                              }
+                              setBackgroundColor(Color.parseColor("#222731"))
+                          }
+                          suggestionsContainer.addView(divider)
+                      }
+                  }
+                  suggestionsBar.addView(suggestionsContainer)
+                  rootLayout?.addView(suggestionsBar)
+                  // ------------------------------------------------
+
+                  // الحروف الإنجليزية
+                  val rows = listOf(
+                      listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
+                      listOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
+                      listOf("SHIFT", "z", "x", "c", "v", "b", "n", "m", "DEL"),
+                      listOf("?123", "AI ✨", "SPACE", ".", "ENTER")
+                  )
+
+                  for (rowKeys in rows) {
+                      val rowLayout = LinearLayout(this).apply {
+                          orientation = LinearLayout.HORIZONTAL
+                          gravity = Gravity.CENTER
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (56 * resources.displayMetrics.density).toInt())
+                      }
+                      for (key in rowKeys) {
+                          val keyView = TextView(this).apply {
+                              text = key
+                              textSize = if (key.length > 1) 14f else 22f
+                              gravity = Gravity.CENTER
+                              
+                              val isSpecial = key.length > 1
+                              val keyBgColor = when (key) {
+                                  "AI ✨" -> Color.parseColor("#1C202B")
+                                  "ENTER" -> Color.parseColor("#9ECAFF")
+                                  else -> if (isSpecial) Color.parseColor("#14171E") else Color.parseColor("#222731")
+                              }
+                              val keyTextColor = when (key) {
+                                  "AI ✨" -> Color.parseColor("#34D399")
+                                  "ENTER" -> Color.parseColor("#003258")
+                                  else -> Color.parseColor("#F0F3FA")
+                              }
+
+                              setTextColor(keyTextColor)
+                              background = GradientDrawable().apply {
+                                  shape = GradientDrawable.RECTANGLE
+                                  cornerRadius = 24f * resources.displayMetrics.density
+                                  setColor(keyBgColor)
+                              }
+
+                              val weight = when (key) {
+                                  "SPACE" -> 4f
+                                  "AI ✨", "ENTER", "SHIFT", "DEL", "?123" -> 1.5f
+                                  else -> 1f
+                              }
+                              
+                              val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, weight)
+                              lp.setMargins(8, 10, 8, 10) 
+                              layoutParams = lp
+                              isClickable = true
+
+                              setOnClickListener {
+                                  it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                  handleKeyClick(key)
+                              }
+                          }
+                          rowLayout.addView(keyView)
+                      }
+                      rootLayout?.addView(rowLayout)
+                  }
+                  return rootLayout!!
+              }
+
+              private fun handleKeyClick(key: String) {
+                  val ic = currentInputConnection ?: return
+                  when (key) {
+                      "DEL" -> ic.deleteSurroundingText(1, 0)
+                      "SPACE" -> ic.commitText(" ", 1)
+                      "ENTER" -> {
+                          ic.performEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_GO)
+                          ic.commitText("\n", 1)
+                      }
+                      "SHIFT" -> { isCaps = !isCaps }
+                      "?123" -> { /* سيتم برمجتها لإظهار الأرقام */ }
+                      "AI ✨" -> { ic.commitText(" [AI Magic!] ", 1) }
+                      else -> {
+                          val letter = if (isCaps) key.uppercase() else key
+                          ic.commitText(letter, 1)
+                      }
+                  }
+              }
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application android:label="@string/app_name" android:theme="@style/Theme.AppCompat.NoActionBar">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+                  <service android:name=".KeyboardService"
+                      android:label="@string/ime_name"
+                      android:permission="android.permission.BIND_INPUT_METHOD"
+                      android:exported="true">
+                      <intent-filter><action android:name="android.view.InputMethod" /></intent-filter>
+                      <meta-data android:name="android.view.im" android:resource="@xml/method" />
+                  </service>
+              </application>
+          </manifest>
+          EOF
+
+      - name: Build APK
+        run: |
+          gradle assembleDebug -x test -x lint
+          mkdir -p release-output
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase1.5.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Keyboard-Pro
+          path: release-output/AI-Keyboard-Pro-Phase1.5.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: aikeyboard-v1.5
+          name: "AI Keyboard Pro - Phase 1.5 (Suggestions Bar)"
+          body: "إضافة شريط الاقتراحات الذكي (Suggestions Bar) في أعلى لوحة المفاتيح."
+          files: release-output/AI-Keyboard-Pro-Phase1.5.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
