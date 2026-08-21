@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 48; versionName = "41.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 49; versionName = "42.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -133,8 +133,7 @@ jobs:
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="10dp"/><stroke android:width="0.5dp" android:color="#33000000"/></shape>
           EOF
 
-          # ---- الأيقونات والنظام ----
-          # (تم الاحتفاظ بجميع الأيقونات السابقة)
+          # ---- الأيقونات (Material You + Golden Star) ----
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#131314" android:pathData="M0,0h108v108h-108z"/></vector>
           EOF
@@ -166,7 +165,80 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?><input-method xmlns:android="http://schemas.android.com/apk/res/android" android:supportsInlineSuggestions="true"><subtype android:imeSubtypeLocale="en_US" android:imeSubtypeMode="keyboard" /></input-method>
           EOF
 
-          # ---- ملف الكيبورد الرئيسي (المساحات والضغط المطول) ----
+          # ---- ملفات الـ Slider (Slider Track, Thumb, Tick) ----
+          cat << 'EOF' > app/src/main/res/drawable/slider_track_bg.xml
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+              <item android:id="@android:id/background" android:gravity="center_vertical"><shape><corners android:radius="6dp"/><solid android:color="@color/slider_track"/><size android:height="12dp"/></shape></item>
+              <item android:id="@android:id/progress" android:gravity="center_vertical"><scale android:scaleWidth="100%"><shape><corners android:radius="6dp"/><solid android:color="@color/slider_progress"/><size android:height="12dp"/></shape></scale></item>
+          </layer-list>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/slider_thumb.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><corners android:radius="2dp"/><solid android:color="@color/slider_progress"/><size android:width="4dp" android:height="26dp"/></shape>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/slider_tick.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><size android:width="6dp" android:height="6dp"/><solid android:color="@color/slider_progress"/></shape>
+          EOF
+
+          # ---- واجهة الإعدادات ----
+          cat << 'EOF' > app/src/main/res/layout/activity_main.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:layout_marginBottom="24dp" android:text="إعدادات الكيبورد" android:textSize="28sp" android:textStyle="bold" />
+                  <Button android:id="@+id/btn_enable" android:layout_width="match_parent" android:layout_height="50dp" android:text="1. تفعيل الكيبورد" />
+                  <Button android:id="@+id/btn_select" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="8dp" android:layout_marginBottom="24dp" android:text="2. اختيار الكيبورد" />
+                  <EditText android:id="@+id/input_api_key" android:layout_width="match_parent" android:layout_height="50dp" android:hint="الصق مفتاح Gemini API هنا..." android:inputType="textPassword" />
+                  <Button android:id="@+id/btn_save_api" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="8dp" android:layout_marginBottom="24dp" android:text="حفظ المفتاح" />
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="المظهر (ملاحظة: أغلق الكيبورد وافتحه ليتم التغيير)" android:textColor="@color/ios_blue" android:textSize="14sp" android:textStyle="bold" android:layout_marginBottom="16dp" />
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="حجم الكيبورد (الارتفاع)" android:textSize="16sp" android:textStyle="bold" />
+                  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp" android:layout_marginBottom="24dp">
+                      <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textSize="14sp" android:textStyle="bold"/>
+                      <SeekBar android:id="@+id/seek_kb_size" style="@style/Widget.AppCompat.SeekBar.Discrete" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="6" android:progress="3" android:progressDrawable="@drawable/slider_track_bg" android:thumb="@drawable/slider_thumb" android:tickMark="@drawable/slider_tick" android:splitTrack="false" android:paddingStart="12dp" android:paddingEnd="12dp" />
+                      <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textSize="22sp" android:textStyle="bold"/>
+                  </LinearLayout>
+              </LinearLayout>
+          </ScrollView>
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
+          package com.aikeyboard.pro
+          import android.content.Context
+          import android.content.Intent
+          import android.os.Bundle
+          import android.provider.Settings
+          import android.view.inputmethod.InputMethodManager
+          import android.widget.*
+          import androidx.appcompat.app.AppCompatActivity
+
+          class MainActivity : AppCompatActivity() {
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  setContentView(R.layout.activity_main)
+                  
+                  val prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
+                  
+                  findViewById<Button>(R.id.btn_enable).setOnClickListener { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
+                  findViewById<Button>(R.id.btn_select).setOnClickListener { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
+                  
+                  val inputApi = findViewById<EditText>(R.id.input_api_key)
+                  inputApi.setText(prefs.getString("api_key", ""))
+                  findViewById<Button>(R.id.btn_save_api).setOnClickListener { 
+                      prefs.edit().putString("api_key", inputApi.text.toString()).apply()
+                      Toast.makeText(this, "تم الحفظ!", Toast.LENGTH_SHORT).show() 
+                  }
+
+                  val seekKbSize = findViewById<SeekBar>(R.id.seek_kb_size)
+                  seekKbSize.progress = prefs.getInt("kb_scale_step", 3)
+                  seekKbSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                      override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) { prefs.edit().putInt("kb_scale_step", progress).apply() }
+                      override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                      override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                  })
+              }
+          }
+          EOF
+
+          # ---- ملف الكيبورد الرئيسي (المسافات والضغط المطول وكل الميزات) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           
@@ -225,7 +297,7 @@ jobs:
               private val arDict = arrayOf("السلام", "عليكم", "مرحبا", "كيف", "حالك", "شكرا", "صباح", "الخير", "إن", "شاء", "الله")
               private val frDict = arrayOf("bonjour", "comment", "merci", "oui", "non", "salut", "bien", "avec", "pour")
 
-              // قاموس الحروف المنبثقة للضغط المطول
+              // قاموس الحروف المنبثقة
               private val altChars = mapOf(
                   "ا" to listOf("أ", "إ", "آ", "ء"),
                   "ي" to listOf("ئ", "ى"),
@@ -254,9 +326,6 @@ jobs:
                   rootFrame = FrameLayout(this).apply { layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
                   mainLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(bgColor); layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
 
-                  // ==========================================
-                  // 1. الشريط العلوي 
-                  // ==========================================
                   val toolbarWrapper = FrameLayout(this).apply { layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (48 * density).toInt()) }
                   
                   defaultToolbarView = LinearLayout(this).apply {
@@ -311,29 +380,23 @@ jobs:
                   toolbarWrapper.addView(aiToolsView)
                   mainLayout.addView(toolbarWrapper)
 
-                  // ==========================================
-                  // 2. منطقة المفاتيح
-                  // ==========================================
-                  // تم إزالة Padding العلوي لتنزل الأزرار للأسفل
+                  // منطقة المفاتيح بدون Padding علوي لتنزل للأسفل
                   keysContainer = LinearLayout(this).apply { 
                       orientation = LinearLayout.VERTICAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
                   mainLayout.addView(keysContainer)
                   
-                  // ==========================================
-                  // 3. الشريط السفلي (رفيع والأيقونات على الأطراف)
-                  // ==========================================
+                  // الشريط السفلي: رفيع والأيقونات للأطراف
                   val bottomBar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
-                      // تم تقليص الارتفاع إلى 36 وإزالة الـ Padding السفلي لينزل الكيبورد للأسفل تماماً
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (36 * density).toInt())
                       setPadding((8*density).toInt(), 0, (8*density).toInt(), 0)
                   }
                   val globeBtn = ImageView(this).apply {
                       setImageResource(R.drawable.ic_globe)
                       setColorFilter(iconColorInt)
-                      scaleType = ImageView.ScaleType.FIT_START // دفع لأقصى اليسار وتكبير
+                      scaleType = ImageView.ScaleType.FIT_START
                       layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
                       val p = (4 * density).toInt()
                       setPadding(0, p, 0, p)
@@ -345,7 +408,7 @@ jobs:
                   val micBtn = ImageView(this).apply {
                       setImageResource(R.drawable.ic_mic)
                       setColorFilter(iconColorInt)
-                      scaleType = ImageView.ScaleType.FIT_END // دفع لأقصى اليمين وتكبير
+                      scaleType = ImageView.ScaleType.FIT_END
                       layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
                       val p = (4 * density).toInt()
                       setPadding(0, p, 0, p)
@@ -370,9 +433,6 @@ jobs:
                   else { defaultToolbarView.visibility = View.VISIBLE; aiToolsView.visibility = View.GONE }
               }
 
-              // ==========================================
-              // تنظيف الكيبورد العربي (إزالة החروف المزدحمة)
-              // ==========================================
               private fun getLayoutRows(): List<List<KeyDef>> {
                   if (isSymbols) {
                       val nums = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
@@ -387,7 +447,6 @@ jobs:
                       "AR" -> listOf(
                           "ض ص ث ق ف غ ع ه خ ح ج د".split(" ").map { KeyDef(it, 1f) }, 
                           listOf(KeyDef("SPACER", 0.5f)) + "ش س ي ب ل ا ت ن م ك ط".split(" ").map { KeyDef(it, 1f) } + listOf(KeyDef("SPACER", 0.5f)),
-                          // الصف الثالث النظيف! تمت إزالة (ئ، ء، ؤ، لا) فأصبحت الأزرار عريضة جداً
                           listOf(KeyDef("SHIFT", 1.5f)) + "ذ ر ى ة و ز ظ".split(" ").map { KeyDef(it, 1.2f) } + listOf(KeyDef("DEL", 1.5f)),
                           listOf(KeyDef("?123", 1.5f), KeyDef("SPACE", 7.0f), KeyDef("ENTER", 1.5f)) 
                       )
@@ -485,7 +544,6 @@ jobs:
                                                   keyPreviewBubble.y = keyY - keyPreviewBubble.layoutParams.height
                                                   keyPreviewBubble.visibility = View.VISIBLE
                                                   
-                                                  // منطق الضغط المطول
                                                   val alternates = altChars[label.lowercase()]
                                                   if (alternates != null) {
                                                       longPressRunnable = Runnable {
@@ -494,7 +552,7 @@ jobs:
                                                           v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                                                           showAltMenu(v, alternates)
                                                       }
-                                                      handler.postDelayed(longPressRunnable!!, 400) // 400ms للضغط المطول
+                                                      handler.postDelayed(longPressRunnable!!, 400)
                                                   }
                                               }
                                               true 
@@ -596,14 +654,46 @@ jobs:
           }
           EOF
 
+          # ---- ملف الصلاحيات المفقود! (هنا كان الخطأ) ----
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.VIBRATE" />
+              <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:theme="@style/Theme.AIKeyboard">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+                  <service android:name=".KeyboardService" android:label="@string/ime_name" android:permission="android.permission.BIND_INPUT_METHOD" android:exported="true">
+                      <intent-filter><action android:name="android.view.InputMethod" /></intent-filter>
+                      <meta-data android:name="android.view.im" android:resource="@xml/method" />
+                  </service>
+              </application>
+          </manifest>
+          EOF
+
       - name: Build APK
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase41.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase42.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase41.apk
+          path: release-output/AI-Keyboard-Pro-Phase42.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: aikeyboard-v42.0
+          name: "AI Keyboard Pro - Phase 42 (The Masterpiece Fix)"
+          body: "1. 🛠️ **إصلاح حاسم:** تم إضافة ملف AndroidManifest.xml المفقود لضمان نجاح البناء.\n2. 🎨 **جميع التحديثات الجمالية محفوظة:** (الضغط المطول، الأزرار الكبيرة والمتباعدة، أيقونات Material You، شريط الإعدادات الأخضر، الأيقونة الذهبية الفاخرة، وتنزيل الكيبورد للأسفل).\n3. ⚡ الكيبورد الآن يمثل ذروة التصميم والتجاوب."
+          files: release-output/AI-Keyboard-Pro-Phase42.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
