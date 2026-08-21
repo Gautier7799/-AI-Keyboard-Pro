@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 32; versionName = "25.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 33; versionName = "26.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -211,7 +211,7 @@ jobs:
               <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
                   <ImageView android:id="@+id/logo_img" android:layout_width="96dp" android:layout_height="96dp" android:layout_gravity="center" android:layout_marginTop="24dp" android:src="@mipmap/ic_launcher" />
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:gravity="center" android:text="AI Keyboard Pro ✨" android:textColor="@color/key_text" android:textSize="26sp" android:textStyle="bold" />
-                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:layout_marginBottom="32dp" android:gravity="center" android:text="لوحة تحكم الذكاء الاصطناعي" android:textColor="#8E8E93" android:textSize="16sp" />
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:layout_marginBottom="32dp" android:gravity="center" android:text="تحديث المدير الذكي (V26)" android:textColor="#8E8E93" android:textSize="16sp" />
                   
                   <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:layout_marginStart="8dp" android:text="الخطوة الأولى: التفعيل" android:textColor="@color/key_text" android:textSize="14sp" android:textStyle="bold" />
                   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/bg_dashboard_card" android:elevation="2dp" android:orientation="vertical" android:padding="16dp">
@@ -269,7 +269,7 @@ jobs:
           }
           EOF
 
-          # ---- Keyboard Service (THE AI SUPERPOWERS UPDATE + FIXED VIBRATE) ----
+          # ---- Keyboard Service (THE MASTERPIECE UPDATE 🚀) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           import android.content.ClipboardManager
@@ -311,7 +311,11 @@ jobs:
               private lateinit var mainLayout: LinearLayout
               private lateinit var keysContainer: LinearLayout
               private lateinit var menuContainer: ScrollView
+              private lateinit var aiContainer: ScrollView
+              private lateinit var clipboardContainer: ScrollView
+              
               private lateinit var keyPreviewBubble: TextView
+              private lateinit var clipboardGrid: LinearLayout
               
               private lateinit var sug1: TextView
               private lateinit var sug2: TextView
@@ -324,13 +328,39 @@ jobs:
               
               private val keyViews = ArrayList<ArrayList<TextView>>()
               private val currentTypedWord = StringBuilder()
+              
+              // القاموس المتعلم (Self-Learning Core)
+              private var userDict = mutableSetOf<String>()
 
               private val arDict = arrayOf("السلام", "عليكم", "مرحبا", "كيف", "حالك", "شكرا", "صباح", "الخير", "مساء", "الحمد", "لله", "اليوم", "غدا", "الآن", "ممكن", "عفوا", "جميل", "جدا", "رائع", "إن", "شاء", "الله", "نعم", "لا")
               private val enDict = arrayOf("hello", "how", "are", "you", "good", "morning", "night", "thanks", "thank", "please", "what", "time", "this", "that", "there", "their", "have", "been", "would", "could", "should")
               private val frDict = arrayOf("bonjour", "comment", "merci", "salut", "bien", "très", "avec", "pour", "dans", "faire", "dire", "aller", "voir", "vouloir", "venir", "devoir", "pouvoir")
 
+              override fun onCreate() {
+                  super.onCreate()
+                  // مدير الحافظة الخفي (يتنصت على النسخ)
+                  val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                  clipboard.addPrimaryClipChangedListener {
+                      val clip = clipboard.primaryClip
+                      if (clip != null && clip.itemCount > 0) {
+                          val text = clip.getItemAt(0).text?.toString()
+                          if (!text.isNullOrEmpty()) {
+                              val p = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
+                              val historyStr = p.getString("clip_history", "") ?: ""
+                              val history = historyStr.split("|||").filter { it.isNotBlank() }.toMutableList()
+                              history.remove(text)
+                              history.add(0, text)
+                              if (history.size > 10) history.removeAt(history.size - 1) // نحفظ آخر 10 فقط
+                              p.edit().putString("clip_history", history.joinToString("|||")).apply()
+                          }
+                      }
+                  }
+              }
+
               override fun onCreateInputView(): View {
                   prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
+                  userDict = prefs.getStringSet("user_dict", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
+                  
                   density = resources.displayMetrics.density
                   vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                   
@@ -383,34 +413,21 @@ jobs:
                   suggestionContainer.addView(sug1); suggestionContainer.addView(sug2); suggestionContainer.addView(sug3)
                   toolbar.addView(suggestionContainer)
                   
-                  // ================= مركز الذكاء الاصطناعي (AI Hub) =================
-                  val aiHub = LinearLayout(this).apply {
-                      orientation = LinearLayout.HORIZONTAL
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      setPadding((4*density).toInt(), 0, 0, 0)
+                  // زر الذكاء الاصطناعي الأنيق الجديد ✨
+                  val aiButton = TextView(this).apply {
+                      text = "AI ✨"
+                      setTextColor(Color.WHITE); textSize = 12f; typeface = Typeface.DEFAULT_BOLD; gravity = Gravity.CENTER
+                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#007AFF")) }
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (30 * density).toInt()).apply { setMargins((6*density).toInt(), 0, (8*density).toInt(), 0) }
+                      setPadding((14*density).toInt(), 0, (14*density).toInt(), 0)
+                      setOnClickListener { vibrate(); toggleAiMenu() }
                   }
-                  
-                  fun createAiButton(label: String, colorHex: String, actionType: String): TextView {
-                      return TextView(this).apply {
-                          text = label
-                          setTextColor(Color.WHITE); textSize = 11f; typeface = Typeface.DEFAULT_BOLD; gravity = Gravity.CENTER
-                          background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 20f; setColor(Color.parseColor(colorHex)) }
-                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (30 * density).toInt()).apply { setMargins(0, 0, (4*density).toInt(), 0) }
-                          setPadding((10*density).toInt(), 0, (10*density).toInt(), 0)
-                          setOnClickListener { vibrate(); performAiAction(actionType, this, label) }
-                      }
-                  }
-
-                  aiHub.addView(createAiButton("📝", "#FF9500", "FIX")) // صحح
-                  aiHub.addView(createAiButton("🌍", "#007AFF", "TRANSLATE")) // ترجم
-                  aiHub.addView(createAiButton("✨رد", "#34C759", "REPLY")) // رد سريع
-
-                  toolbar.addView(aiHub)
-                  // =================================================================
+                  toolbar.addView(aiButton)
 
                   keysContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(6, 6, 6, (12*density).toInt()) } }
-                  menuContainer = ScrollView(this).apply { visibility = View.GONE; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
                   
+                  // ================= بناء قائمة الإعدادات =================
+                  menuContainer = ScrollView(this).apply { visibility = View.GONE; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
                   val menuGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding((20*density).toInt(), (10*density).toInt(), (20*density).toInt(), (20*density).toInt()) }
                   fun addMenuOption(title: String, iconRes: Int, action: () -> Unit) {
                       val row = LinearLayout(this).apply {
@@ -425,19 +442,56 @@ jobs:
                       menuGrid.addView(row)
                   }
                   
-                  addMenuOption("لصق نص من الحافظة", R.drawable.ic_paste_colored) { 
-                      val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                      val textToPaste = clipboard.primaryClip?.getItemAt(0)?.text
-                      if (textToPaste != null) currentInputConnection?.commitText(textToPaste, 1)
-                      toggleMenu()
-                  }
-                  addMenuOption("تكبير الكيبورد", R.drawable.ic_menu_size_up) { var s = prefs.getInt("kb_size", 2); if(s<4) s++; prefs.edit().putInt("kb_size", s).apply(); rebuildKeysLayout() }
-                  addMenuOption("تصغير الكيبورد", R.drawable.ic_menu_size_down) { var s = prefs.getInt("kb_size", 2); if(s>0) s--; prefs.edit().putInt("kb_size", s).apply(); rebuildKeysLayout() }
-                  addMenuOption("الرجوع للوحة", R.drawable.ic_menu_back) { toggleMenu() }
+                  addMenuOption("مدير الحافظة (النصوص المنسوخة)", R.drawable.ic_paste_colored) { toggleClipboard() }
+                  addMenuOption("تكبير حجم الكيبورد والخط", R.drawable.ic_menu_size_up) { var s = prefs.getInt("kb_size", 2); if(s<5) s++; prefs.edit().putInt("kb_size", s).apply(); rebuildKeysLayout() }
+                  addMenuOption("تصغير حجم الكيبورد والخط", R.drawable.ic_menu_size_down) { var s = prefs.getInt("kb_size", 2); if(s>0) s--; prefs.edit().putInt("kb_size", s).apply(); rebuildKeysLayout() }
+                  addMenuOption("الرجوع للكيبورد", R.drawable.ic_menu_back) { toggleMenu() }
                   menuContainer.addView(menuGrid)
                   
+                  // ================= بناء مركز الذكاء الاصطناعي (AI Menu) =================
+                  aiContainer = ScrollView(this).apply { visibility = View.GONE; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
+                  val aiGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding((16*density).toInt(), (16*density).toInt(), (16*density).toInt(), (16*density).toInt()) }
+                  
+                  fun addAiOption(title: String, desc: String, iconStr: String, colorStr: String, actionType: String) {
+                      val card = LinearLayout(this).apply {
+                          orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+                          setBackgroundResource(R.drawable.bg_dashboard_card)
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, (12*density).toInt()) }
+                          setPadding((16*density).toInt(), (16*density).toInt(), (16*density).toInt(), (16*density).toInt())
+                          setOnClickListener { vibrate(); performAiAction(actionType, this, title) }
+                      }
+                      
+                      val iconView = TextView(this).apply {
+                          text = iconStr; textSize = 24f; gravity = Gravity.CENTER
+                          background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.parseColor(colorStr)); alpha = 40 }
+                          layoutParams = LinearLayout.LayoutParams((48*density).toInt(), (48*density).toInt()).apply { setMargins(0, 0, (16*density).toInt(), 0) }
+                      }
+                      
+                      val textLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f) }
+                      textLayout.addView(TextView(this).apply { text = title; textSize = 16f; setTextColor(textColorInt); typeface = Typeface.DEFAULT_BOLD })
+                      textLayout.addView(TextView(this).apply { text = desc; textSize = 12f; setTextColor(sugColorInt) })
+                      
+                      card.addView(iconView)
+                      card.addView(textLayout)
+                      aiGrid.addView(card)
+                  }
+
+                  addAiOption("تصحيح وتدقيق 📝", "يصلح كل الأخطاء الإملائية والنحوية", "📝", "#FF9500", "FIX")
+                  addAiOption("ترجمة فورية 🌍", "يترجم النص من أو إلى الإنجليزية", "🌍", "#007AFF", "TRANSLATE")
+                  addAiOption("كتابة رد ذكي ✨", "يقرأ رسالة الطرف الآخر ويكتب رداً", "✨", "#34C759", "REPLY")
+                  
+                  aiContainer.addView(aiGrid)
+
+                  // ================= بناء مدير الحافظة (Clipboard UI) =================
+                  clipboardContainer = ScrollView(this).apply { visibility = View.GONE; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
+                  clipboardGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding((16*density).toInt(), (16*density).toInt(), (16*density).toInt(), (16*density).toInt()) }
+                  clipboardContainer.addView(clipboardGrid)
+
+
                   mainLayout.addView(keysContainer)
                   mainLayout.addView(menuContainer)
+                  mainLayout.addView(aiContainer)
+                  mainLayout.addView(clipboardContainer)
                   
                   keyPreviewBubble = TextView(this).apply {
                       textSize = 36f; setTextColor(textColorInt); gravity = Gravity.CENTER
@@ -452,10 +506,41 @@ jobs:
                   return rootFrame
               }
 
+              private fun populateClipboard() {
+                  clipboardGrid.removeAllViews()
+                  val historyStr = prefs.getString("clip_history", "") ?: ""
+                  val history = historyStr.split("|||").filter { it.isNotBlank() }
+                  
+                  if (history.isEmpty()) {
+                      clipboardGrid.addView(TextView(this).apply { text = "الحافظة فارغة حالياً"; textSize = 16f; gravity = Gravity.CENTER; setTextColor(ContextCompat.getColor(this@KeyboardService, R.color.suggestion_text)) })
+                      return
+                  }
+                  
+                  val textColorInt = ContextCompat.getColor(this, R.color.key_text)
+                  for (item in history) {
+                      val card = TextView(this).apply {
+                          text = item; textSize = 15f; setTextColor(textColorInt)
+                          setBackgroundResource(R.drawable.bg_menu_pill)
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, (8*density).toInt()) }
+                          setPadding((16*density).toInt(), (12*density).toInt(), (16*density).toInt(), (12*density).toInt())
+                          setOnClickListener { 
+                              vibrate()
+                              currentInputConnection?.commitText(item, 1)
+                              toggleClipboard() // إغلاق الحافظة بعد اللصق
+                          }
+                      }
+                      clipboardGrid.addView(card)
+                  }
+              }
+
               override fun onFinishInput() {
                   super.onFinishInput()
                   currentTypedWord.clear()
                   if(this::sug1.isInitialized) { sug1.text = ""; sug2.text = ""; sug3.text = "" }
+                  keysContainer.visibility = View.VISIBLE
+                  menuContainer.visibility = View.GONE
+                  aiContainer.visibility = View.GONE
+                  clipboardContainer.visibility = View.GONE
               }
 
               private fun updateSuggestions() {
@@ -469,12 +554,25 @@ jobs:
                   val dict = when(currentLang) { "AR" -> arDict; "FR" -> frDict; else -> enDict }
                   var count = 0
                   val matches = arrayOf("", "", "")
-                  for (item in dict) {
+                  
+                  // 1. البحث في كلماتك الخاصة أولاً (القاموس المتعلم 🧠)
+                  for (item in userDict) {
                       if (item.length > word.length && item.startsWith(word, ignoreCase = true)) {
                           matches[count] = item
                           count++; if (count == 3) break
                       }
                   }
+                  
+                  // 2. إذا لم نجد 3 كلمات، نكمل من القاموس الأساسي
+                  if (count < 3) {
+                      for (item in dict) {
+                          if (item.length > word.length && item.startsWith(word, ignoreCase = true) && !matches.contains(item)) {
+                              matches[count] = item
+                              count++; if (count == 3) break
+                          }
+                      }
+                  }
+                  
                   sug1.text = matches[0]; sug2.text = matches[1]; sug3.text = matches[2]
               }
 
@@ -488,8 +586,18 @@ jobs:
               }
 
               private fun toggleMenu() {
-                  if (keysContainer.visibility == View.VISIBLE) { keysContainer.visibility = View.GONE; menuContainer.visibility = View.VISIBLE } 
-                  else { keysContainer.visibility = View.VISIBLE; menuContainer.visibility = View.GONE }
+                  if (menuContainer.visibility == View.VISIBLE) { menuContainer.visibility = View.GONE; keysContainer.visibility = View.VISIBLE } 
+                  else { keysContainer.visibility = View.GONE; aiContainer.visibility = View.GONE; clipboardContainer.visibility = View.GONE; menuContainer.visibility = View.VISIBLE }
+              }
+              
+              private fun toggleAiMenu() {
+                  if (aiContainer.visibility == View.VISIBLE) { aiContainer.visibility = View.GONE; keysContainer.visibility = View.VISIBLE } 
+                  else { keysContainer.visibility = View.GONE; menuContainer.visibility = View.GONE; clipboardContainer.visibility = View.GONE; aiContainer.visibility = View.VISIBLE }
+              }
+
+              private fun toggleClipboard() {
+                  if (clipboardContainer.visibility == View.VISIBLE) { clipboardContainer.visibility = View.GONE; keysContainer.visibility = View.VISIBLE } 
+                  else { keysContainer.visibility = View.GONE; menuContainer.visibility = View.GONE; aiContainer.visibility = View.GONE; populateClipboard(); clipboardContainer.visibility = View.VISIBLE }
               }
 
               private fun rebuildKeysLayout() {
@@ -542,6 +650,8 @@ jobs:
 
               private fun refreshKeysData() {
                   val textColorInt = ContextCompat.getColor(this, R.color.key_text)
+                  val sizeMultiplier = 1.0f + (prefs.getInt("kb_size", 2) * 0.1f) // لجعل الخط يكبر مع الكيبورد!
+                  
                   val rowsData = if (isEmojiMode) {
                       listOf(
                           listOf("😀", "😂", "🥰", "😎", "🤔", "😭", "🙏", "👍"),
@@ -566,15 +676,16 @@ jobs:
                       }
                   } else {
                       when (currentLang) {
+                          // إضافة الهمزات (أ، إ، آ) في قائمة الـ SHIFT العربية 
                           "AR" -> if (isCaps) listOf(
-                                  listOf("َ", "ً", "ُ", "ٌ", "ِ", "ٍ", "ّ", "ْ", "ه", "خ", "ح", "ج"),
-                                  listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط", "د"),
+                                  listOf("َ", "ً", "ُ", "ٌ", "ِ", "ٍ", "ّ", "ْ", "أ", "إ", "آ", "["),
+                                  listOf("]", "{", "}", "(", ")", "<", ">", "\"", "'", ":", ";", "\\"),
                                   listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"),
                                   listOf("?123", "🌐", "SPACE", ".", "ENTER")
                               ) else listOf(
                                   listOf("ذ", "ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج"),
                                   listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط", "د"),
-                                  listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"),
+                                  listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"), // الـ (ء) موجودة دائماً هنا
                                   listOf("?123", "🌐", "SPACE", ".", "ENTER")
                               )
                           "FR" -> listOf(
@@ -602,7 +713,10 @@ jobs:
                               view.visibility = View.VISIBLE; view.tag = key
                               val displayText = when (key) { "SHIFT" -> if (isCaps) "⇪" else "⇧"; "DEL" -> "⌫"; "ENTER" -> "⏎"; else -> if (isCaps && !isSymbols && !isEmojiMode && currentLang != "AR") key.uppercase() else key }
                               view.text = displayText
-                              view.textSize = if (isEmojiMode && key.length == 2) 28f else if (key == "🌐" || key == "?123" || key == "ABC") 14f else 22f
+                              
+                              // تكبير حجم الخط (Text Size) تلقائياً مع حجم الكيبورد!
+                              val baseTextSize = if (isEmojiMode && key.length == 2) 28f else if (key == "🌐" || key == "?123" || key == "ABC") 14f else 22f
+                              view.textSize = baseTextSize * sizeMultiplier
                               
                               val isSpecial = key.length > 2 || key == "🌐" || key == "DEL" || key == "SHIFT"
                               view.setBackgroundResource(when { key == "ENTER" -> R.drawable.key_enter_selector; isSpecial -> R.drawable.key_special_selector; else -> R.drawable.key_selector })
@@ -619,8 +733,19 @@ jobs:
                   val ic = currentInputConnection ?: return
                   when (key) {
                       "DEL" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL)); if (currentTypedWord.isNotEmpty()) currentTypedWord.deleteCharAt(currentTypedWord.length - 1) }
-                      "SPACE" -> { ic.commitText(" ", 1); currentTypedWord.clear() }
-                      "ENTER" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)); currentTypedWord.clear() }
+                      "SPACE", "ENTER" -> { 
+                          if (key == "SPACE") ic.commitText(" ", 1)
+                          else { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)) }
+                          
+                          // إضافة الكلمة المكتوبة للقاموس المتعلم 🧠
+                          val word = currentTypedWord.toString().trim()
+                          if (word.length > 2 && !isEmojiMode && !isSymbols) {
+                              userDict.add(word)
+                              if (userDict.size > 500) userDict = userDict.drop(50).toMutableSet() // لا نزيد عن 500 كلمة لتوفير المساحة
+                              prefs.edit().putStringSet("user_dict", userDict).apply()
+                          }
+                          currentTypedWord.clear() 
+                      }
                       "SHIFT" -> { isCaps = !isCaps; refreshKeysData() }
                       "?123" -> { isSymbols = true; isEmojiMode = false; refreshKeysData() }
                       "ABC" -> { isSymbols = false; isEmojiMode = false; refreshKeysData() }
@@ -634,7 +759,6 @@ jobs:
                   updateSuggestions()
               }
 
-              // ================= دالة الاهتزاز المفقودة التي تم استرجاعها =================
               private fun vibrate() {
                   if (!prefs.getBoolean("vibrate", true)) return
                   try {
@@ -642,10 +766,8 @@ jobs:
                       else { @Suppress("DEPRECATION") vibrator.vibrate(12) }
                   } catch (e: Exception) {}
               }
-              // ==============================================================================
 
-              // ================= دالة الذكاء الاصطناعي الشاملة (الرد، التصحيح، الترجمة) =================
-              private fun performAiAction(actionType: String, btn: TextView, originalLabel: String) {
+              private fun performAiAction(actionType: String, btn: LinearLayout, originalTitle: String) {
                   val apiKey = prefs.getString("api_key", "")
                   if (apiKey.isNullOrEmpty()) { Toast.makeText(this, "⚠️ ضع المفتاح في الإعدادات أولاً", Toast.LENGTH_LONG).show(); return }
                   
@@ -656,10 +778,11 @@ jobs:
                       Toast.makeText(this, "لا يوجد نص لتصحيحه أو ترجمته", Toast.LENGTH_SHORT).show()
                       return
                   }
-
-                  btn.text = "⏳"
+                  
+                  val titleTextView = (btn.getChildAt(1) as LinearLayout).getChildAt(0) as TextView
+                  titleTextView.text = "جاري المعالجة... ⏳"
                   btn.isEnabled = false
-                  btn.alpha = 0.7f
+                  btn.alpha = 0.5f
 
                   scope.launch {
                       try {
@@ -670,7 +793,7 @@ jobs:
                               val prompt = when (actionType) {
                                   "FIX" -> "أنت مدقق لغوي. قم بتصحيح الأخطاء الإملائية والنحوية للنص التالي، وأعد إرسال النص المصحح فقط بدون أي مقدمات أو شروحات: $extractedText"
                                   "TRANSLATE" -> "أنت مترجم محترف. إذا كان النص التالي بالعربية، ترجمه للإنجليزية. وإذا كان بالإنجليزية، ترجمه للعربية. أرسل الترجمة فقط بدون أي كلام إضافي: $extractedText"
-                                  else -> "You are an AI keyboard assistant. Reply naturally to: $extractedText"
+                                  else -> "You are an AI keyboard assistant. Reply naturally and politely to the following message, send only the reply without any formatting: $extractedText"
                               }
                               
                               val payload = JSONObject().apply { put("contents", org.json.JSONArray().apply { put(JSONObject().apply { put("parts", org.json.JSONArray().apply { put(JSONObject().apply { put("text", prompt) }) }) }) }) }
@@ -686,16 +809,16 @@ jobs:
                                   ic.deleteSurroundingText(extractedText.length, 0)
                                   ic.commitText(reply, 1)
                               }
+                              toggleAiMenu() // العودة للكيبورد بعد نجاح العملية
                           }
                       } catch (e: Exception) { 
                           withContext(Dispatchers.Main) { Toast.makeText(this@KeyboardService, "فشل الاتصال بـ Gemini", Toast.LENGTH_SHORT).show() }
                       } 
                       finally { 
-                          btn.text = originalLabel; btn.isEnabled = true; btn.alpha = 1.0f 
+                          titleTextView.text = originalTitle; btn.isEnabled = true; btn.alpha = 1.0f 
                       }
                   }
               }
-              // =========================================================================================
 
               override fun onDestroy() { super.onDestroy(); scope.cancel() }
           }
@@ -725,21 +848,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase25.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase26.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase25.apk
+          path: release-output/AI-Keyboard-Pro-Phase26.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v25.0
-          name: "AI Keyboard Pro - Phase 25 (The Goodnight Build - Vibrate Fix ✅)"
-          body: "1. إصلاح خطأ الترجمة البرمجية (Compiler Error) الناتج عن فقدان دالة الاهتزاز.\n2. تحويل زر الذكاء الاصطناعي إلى 3 أزرار خارقة (ترجمة 🌍، تصحيح 📝، رد ✨).\n3. إمكانية تصحيح النصوص وترجمتها فوراً."
-          files: release-output/AI-Keyboard-Pro-Phase25.apk
+          tag_name: aikeyboard-v26.0
+          name: "AI Keyboard Pro - Phase 26 (The Smart Manager Update 🧠💼)"
+          body: "1. القاموس المتعلم: الكيبورد يحفظ كلماتك الخاصة ويقترحها عليك مستقبلاً.\n2. مدير الحافظة الذكي: يحفظ آخر 10 نصوص قمت بنسخها لتستخدمها لاحقاً بسهولة.\n3. تنظيف شريط الكيبورد: استبدال أزرار الذكاء الاصطناعي بزر واحد أنيق (AI ✨) يفتح قائمة كاملة من الميزات.\n4. تناسق حجم الخط: الآن يكبر حجم خط الحروف تلقائياً عند تكبير حجم الكيبورد من الإعدادات.\n5. تحسينات العربية: وضع الهمزات (أ، إ، آ) في مكانها الصحيح في قائمة SHIFT لتسهيل الكتابة."
+          files: release-output/AI-Keyboard-Pro-Phase26.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
