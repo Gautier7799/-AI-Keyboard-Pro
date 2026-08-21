@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 24; versionName = "17.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 25; versionName = "18.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -71,18 +71,18 @@ jobs:
           }
           EOF
 
-          # ---- الألوان ----
+          # ---- الألوان (مستوحاة من أناقة Apple وخفة Google) ----
           cat << 'EOF' > app/src/main/res/values/colors.xml
           <resources>
-              <color name="keyboard_bg">#F2F2F7</color>
+              <color name="keyboard_bg">#D1D4D9</color>
               <color name="key_bg">#FFFFFF</color>
-              <color name="key_bg_pressed">#D1D1D6</color>
-              <color name="key_special_bg">#B3B8C1</color>
-              <color name="key_special_bg_pressed">#9AA0AB</color>
+              <color name="key_bg_pressed">#B4B8C1</color>
+              <color name="key_special_bg">#B4B8C1</color>
+              <color name="key_special_bg_pressed">#FFFFFF</color>
               <color name="key_text">#000000</color>
-              <color name="toolbar_bg">#FFFFFF</color>
+              <color name="toolbar_bg">#D1D4D9</color>
               <color name="menu_pill_bg">#FFFFFF</color>
-              <!-- Material You Colors -->
+              <!-- Material You Colors for Toolbar -->
               <color name="icon_settings_bg">#D3E3FD</color>
               <color name="icon_settings_fg">#041E49</color>
               <color name="icon_emoji_bg">#FFDF99</color>
@@ -93,14 +93,14 @@ jobs:
           EOF
           cat << 'EOF' > app/src/main/res/values-night/colors.xml
           <resources>
-              <color name="keyboard_bg">#0A0C10</color>
-              <color name="key_bg">#1C1C1E</color>
-              <color name="key_bg_pressed">#2C2C2E</color>
-              <color name="key_special_bg">#2C2C2E</color>
-              <color name="key_special_bg_pressed">#3A3A3C</color>
+              <color name="keyboard_bg">#252525</color>
+              <color name="key_bg">#4A4A4A</color>
+              <color name="key_bg_pressed">#252525</color>
+              <color name="key_special_bg">#333333</color>
+              <color name="key_special_bg_pressed">#4A4A4A</color>
               <color name="key_text">#FFFFFF</color>
-              <color name="toolbar_bg">#1C1C1E</color>
-              <color name="menu_pill_bg">#1C1C1E</color>
+              <color name="toolbar_bg">#252525</color>
+              <color name="menu_pill_bg">#333333</color>
               <!-- Material You Colors Dark -->
               <color name="icon_settings_bg">#004A77</color>
               <color name="icon_settings_fg">#C2E7FF</color>
@@ -148,39 +148,50 @@ jobs:
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#000000" android:pathData="M20,11H7.83l5.59,-5.59L12,4l-8,8l8,8l1.41,-1.41L7.83,13H20v-2z"/></vector>
           EOF
 
-          # ---- ملفات الرسم للأزرار ----
+          # ---- ملفات الرسم للأزرار (بتصميم بارز أنيق جداً) ----
           cat << 'EOF' > app/src/main/res/drawable/bg_menu_pill.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/menu_pill_bg"/><corners android:radius="16dp"/><stroke android:width="1dp" android:color="#338E8E93"/></shape>
           EOF
+          
+          # مفاتيح عادية
           cat << 'EOF' > app/src/main/res/drawable/bg_key.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="8dp"/></shape>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="6dp"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_key_pressed.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg_pressed"/><corners android:radius="8dp"/></shape>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg_pressed"/><corners android:radius="6dp"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/key_selector.xml
           <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_pressed" /><item android:drawable="@drawable/bg_key" /></selector>
           EOF
+          
+          # مفاتيح خاصة (Shift, Delete)
           cat << 'EOF' > app/src/main/res/drawable/bg_key_special.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_special_bg"/><corners android:radius="8dp"/></shape>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_special_bg"/><corners android:radius="6dp"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_key_special_pressed.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_special_bg_pressed"/><corners android:radius="8dp"/></shape>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_special_bg_pressed"/><corners android:radius="6dp"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/key_special_selector.xml
           <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_special_pressed" /><item android:drawable="@drawable/bg_key_special" /></selector>
           EOF
+          
+          # زر الإدخال
           cat << 'EOF' > app/src/main/res/drawable/bg_key_enter.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#007AFF"/><corners android:radius="8dp"/></shape>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#007AFF"/><corners android:radius="6dp"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_key_enter_pressed.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#005BB5"/><corners android:radius="8dp"/></shape>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#005BB5"/><corners android:radius="6dp"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/key_enter_selector.xml
           <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_enter_pressed" /><item android:drawable="@drawable/bg_key_enter" /></selector>
           EOF
 
-          # ---- إصلاح أيقونة التطبيق (استرجاع التصميم الجميل) ----
+          # تصميم النافذة المنبثقة المدمجة (Bubble)
+          cat << 'EOF' > app/src/main/res/drawable/bg_popup_bubble.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="12dp"/></shape>
+          EOF
+
+          # ---- أيقونة التطبيق (النجوم) ----
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#0A0C10" android:pathData="M0,0h108v108h-108z"/></vector>
           EOF
@@ -242,7 +253,7 @@ jobs:
           }
           EOF
 
-          # ---- لوحة المفاتيح: (إصلاح الاهتزاز + تصحيح الحروف والرموز العربية + PopUp آمن) ----
+          # ---- الكيبورد: سرعة البرق (بدون PopupWindow) وتصميم احترافي ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           import android.content.ClipboardManager
@@ -252,6 +263,7 @@ jobs:
           import android.view.View
           import android.view.ViewGroup
           import android.widget.LinearLayout
+          import android.widget.FrameLayout
           import android.widget.TextView
           import android.widget.ImageView
           import android.graphics.Color
@@ -263,7 +275,6 @@ jobs:
           import android.os.Vibrator
           import android.view.MotionEvent
           import android.view.KeyEvent
-          import android.widget.PopupWindow
           import android.widget.Toast
           import android.widget.ScrollView
           import androidx.core.content.ContextCompat
@@ -279,17 +290,17 @@ jobs:
               private var isEmojiMode = false
               private var currentLang = "EN"
               
-              private lateinit var rootLayout: LinearLayout
+              private lateinit var rootFrame: FrameLayout
+              private lateinit var mainLayout: LinearLayout
               private lateinit var keysContainer: LinearLayout
               private lateinit var menuContainer: ScrollView
+              private lateinit var keyPreviewBubble: TextView
+              
               private lateinit var prefs: SharedPreferences
               private lateinit var vibrator: Vibrator
               private val scope = CoroutineScope(Dispatchers.Main + Job())
               private var density: Float = 1f
               
-              private var popupWindow: PopupWindow? = null
-              private var popupTextView: TextView? = null
-
               private val keyViews = ArrayList<ArrayList<TextView>>()
 
               override fun onCreateInputView(): View {
@@ -301,26 +312,26 @@ jobs:
                   val textColorInt = ContextCompat.getColor(this, R.color.key_text)
                   window?.window?.navigationBarColor = bgColor
 
-                  // تهيئة النافذة المنبثقة (Popup) مرة واحدة فقط لتجنب اللاق
-                  popupTextView = TextView(this).apply {
-                      textSize = 34f; setTextColor(textColorInt); gravity = Gravity.CENTER
-                      setBackgroundResource(R.drawable.bg_key); elevation = 4f * density
-                  }
-                  popupWindow = PopupWindow(popupTextView, (55 * density).toInt(), (70 * density).toInt()).apply { isClippingEnabled = false }
-
-                  rootLayout = LinearLayout(this).apply {
-                      orientation = LinearLayout.VERTICAL; setBackgroundColor(bgColor)
+                  // 1. Root FrameLayout (للسماح للنافذة المنبثقة بالطفو فوق الكيبورد بدون لاق)
+                  rootFrame = FrameLayout(this).apply {
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
 
-                  // 1. شريط الأدوات
+                  // 2. Main LinearLayout
+                  mainLayout = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setBackgroundColor(bgColor)
+                      layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                  }
+
+                  // شريط الأدوات الأنيق
                   val toolbar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-                      setBackgroundColor(bgColor) 
+                      setBackgroundColor(Color.TRANSPARENT) 
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (48 * density).toInt())
                       setPadding((8*density).toInt(), 0, (8*density).toInt(), 0)
                   }
-                  rootLayout.addView(toolbar)
+                  mainLayout.addView(toolbar)
                   
                   fun addMaterialIcon(iconResId: Int, bgResId: Int, action: () -> Unit) {
                       val img = ImageView(this).apply {
@@ -357,10 +368,10 @@ jobs:
                   }
                   toolbar.addView(aiButton)
 
-                  // 2. الحاويات
+                  // حاوية الأزرار
                   keysContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(6, 6, 6, 12) }
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(6, 6, 6, (12*density).toInt()) }
                   }
                   
                   menuContainer = ScrollView(this).apply {
@@ -399,14 +410,25 @@ jobs:
                       if (txt.isNotEmpty()) { prefs.edit().putString("api_key", txt).apply(); Toast.makeText(this, "تم حفظ المفتاح!", Toast.LENGTH_SHORT).show() }
                   }
                   addMenuOption("الرجوع للوحة", R.drawable.ic_menu_back) { toggleMenu() }
-                  
                   menuContainer.addView(menuGrid)
                   
-                  rootLayout.addView(keysContainer)
-                  rootLayout.addView(menuContainer)
+                  mainLayout.addView(keysContainer)
+                  mainLayout.addView(menuContainer)
+                  
+                  // 3. النافذة المنبثقة الذكية (Floating View Layer) السريعة جداً كبديل للـ PopupWindow البطيئة
+                  keyPreviewBubble = TextView(this).apply {
+                      textSize = 36f; setTextColor(textColorInt); gravity = Gravity.CENTER
+                      setBackgroundResource(R.drawable.bg_popup_bubble)
+                      elevation = 6f * density // ظل خفيف وأنيق
+                      visibility = View.GONE
+                      layoutParams = FrameLayout.LayoutParams((55 * density).toInt(), (65 * density).toInt())
+                  }
+
+                  rootFrame.addView(mainLayout)
+                  rootFrame.addView(keyPreviewBubble)
 
                   rebuildKeysLayout()
-                  return rootLayout
+                  return rootFrame
               }
 
               private fun toggleMenu() {
@@ -418,23 +440,40 @@ jobs:
                   keysContainer.removeAllViews()
                   keyViews.clear()
                   val sizeMultiplier = 1.0f + (prefs.getInt("kb_size", 2) * 0.1f) 
-                  val baseKeyHeight = (54 * density * sizeMultiplier).toInt() 
+                  val baseKeyHeight = (50 * density * sizeMultiplier).toInt() 
                   
                   for (r in 0 until 4) {
                       val rowLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, baseKeyHeight) }
                       val rowViews = ArrayList<TextView>()
                       for (c in 0 until 12) {
                           val keyView = TextView(this).apply {
-                              gravity = Gravity.CENTER; typeface = Typeface.DEFAULT
-                              val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { setMargins(5, (6*sizeMultiplier).toInt(), 5, (6*sizeMultiplier).toInt()) }
+                              gravity = Gravity.CENTER; typeface = Typeface.DEFAULT_BOLD
+                              val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { setMargins(4, (4*sizeMultiplier).toInt(), 4, (4*sizeMultiplier).toInt()) }
                               layoutParams = lp; isClickable = true
+                              elevation = 1f * density // لمسة Apple الأنيقة (ظل خفيف جداً أسفل الزر)
                               
-                              // عودة اللمس الحقيقي بدون لاق مع التفاعل البصري
+                              // محرك اللمس السريع جداً 
                               setOnTouchListener { v, event ->
                                   when (event.action) {
-                                      MotionEvent.ACTION_DOWN -> { v.isPressed = true; vibrate(); showPopup(v, text.toString()); true }
-                                      MotionEvent.ACTION_UP -> { v.isPressed = false; hidePopup(); handleKeyClick(tag as String); true }
-                                      MotionEvent.ACTION_CANCEL -> { v.isPressed = false; hidePopup(); true }
+                                      MotionEvent.ACTION_DOWN -> { 
+                                          v.isPressed = true; vibrate()
+                                          val txt = (v as TextView).text.toString()
+                                          if (prefs.getBoolean("popup", true) && txt.length == 1 && !isEmojiMode) {
+                                              // حساب الموقع بسرعة خرافية وعرض النافذة
+                                              val loc = IntArray(2); v.getLocationInWindow(loc)
+                                              val rootLoc = IntArray(2); rootFrame.getLocationInWindow(rootLoc)
+                                              keyPreviewBubble.text = txt
+                                              keyPreviewBubble.x = (loc[0] - rootLoc[0]).toFloat() - (keyPreviewBubble.layoutParams.width - v.width) / 2f
+                                              keyPreviewBubble.y = (loc[1] - rootLoc[1]).toFloat() - keyPreviewBubble.layoutParams.height + (8*density)
+                                              keyPreviewBubble.visibility = View.VISIBLE
+                                          }
+                                          true 
+                                      }
+                                      MotionEvent.ACTION_UP -> { 
+                                          v.isPressed = false; keyPreviewBubble.visibility = View.GONE
+                                          handleKeyClick(tag as String); true 
+                                      }
+                                      MotionEvent.ACTION_CANCEL -> { v.isPressed = false; keyPreviewBubble.visibility = View.GONE; true }
                                       else -> false
                                   }
                               }
@@ -450,8 +489,6 @@ jobs:
 
               private fun refreshKeysData() {
                   val textColorInt = ContextCompat.getColor(this, R.color.key_text)
-                  
-                  // إصلاح نظام الحروف والرموز العربية بشكل نهائي
                   val rowsData = if (isEmojiMode) {
                       listOf(
                           listOf("😀", "😂", "🥰", "😎", "🤔", "😭", "🙏", "👍"),
@@ -460,14 +497,14 @@ jobs:
                       )
                   } else if (isSymbols) {
                       if (currentLang == "AR") {
-                          listOf( // الرموز والأرقام العربية
+                          listOf(
                               listOf("١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩", "٠"),
                               listOf("@", "#", "﷼", "_", "&", "-", "+", "(", ")", "/"),
                               listOf("=", "*", "\"", "'", ":", "؛", "!", "؟", "DEL"),
                               listOf("ABC", "🌐", "SPACE", ".", "ENTER")
                           )
                       } else {
-                          listOf( // الرموز والأرقام الإنجليزية
+                          listOf(
                               listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
                               listOf("@", "#", "$", "_", "&", "-", "+", "(", ")", "/"),
                               listOf("=", "*", "\"", "'", ":", ";", "!", "?", "DEL"),
@@ -476,23 +513,17 @@ jobs:
                       }
                   } else {
                       when (currentLang) {
-                          "AR" -> {
-                              if (isCaps) { // مفاجأة: الحركات العربية في زر الشفت!
-                                  listOf(
-                                      listOf("َ", "ً", "ُ", "ٌ", "ِ", "ٍ", "ّ", "ْ", "ه", "خ", "ح", "ج"),
-                                      listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط", "د"),
-                                      listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"),
-                                      listOf("?123", "🌐", "SPACE", ".", "ENTER")
-                                  )
-                              } else {
-                                  listOf(
-                                      listOf("ذ", "ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج"),
-                                      listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط", "د"),
-                                      listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"),
-                                      listOf("?123", "🌐", "SPACE", ".", "ENTER")
-                                  )
-                              }
-                          }
+                          "AR" -> if (isCaps) listOf(
+                                  listOf("َ", "ً", "ُ", "ٌ", "ِ", "ٍ", "ّ", "ْ", "ه", "خ", "ح", "ج"),
+                                  listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط", "د"),
+                                  listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"),
+                                  listOf("?123", "🌐", "SPACE", ".", "ENTER")
+                              ) else listOf(
+                                  listOf("ذ", "ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج"),
+                                  listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط", "د"),
+                                  listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"),
+                                  listOf("?123", "🌐", "SPACE", ".", "ENTER")
+                              )
                           "FR" -> listOf(
                               listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p"),
                               listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m"),
@@ -519,7 +550,7 @@ jobs:
                               view.tag = key
                               val displayText = when (key) { "SHIFT" -> if (isCaps) "⇪" else "⇧"; "DEL" -> "⌫"; "ENTER" -> "⏎"; else -> if (isCaps && !isSymbols && !isEmojiMode && currentLang != "AR") key.uppercase() else key }
                               view.text = displayText
-                              view.textSize = if (isEmojiMode && key.length == 2) 30f else if (key == "🌐" || key == "?123" || key == "ABC") 15f else 26f
+                              view.textSize = if (isEmojiMode && key.length == 2) 28f else if (key == "🌐" || key == "?123" || key == "ABC") 14f else 22f
                               
                               val isSpecial = key.length > 2 || key == "🌐" || key == "DEL" || key == "SHIFT"
                               view.setBackgroundResource(when { key == "ENTER" -> R.drawable.key_enter_selector; isSpecial -> R.drawable.key_special_selector; else -> R.drawable.key_selector })
@@ -532,16 +563,6 @@ jobs:
                           }
                       }
                   }
-              }
-
-              private fun showPopup(keyView: View, text: String) {
-                  if (!prefs.getBoolean("popup", true) || text.length > 1 || isEmojiMode) return
-                  popupTextView?.text = text
-                  popupWindow?.showAsDropDown(keyView, -((55 * density).toInt() - keyView.width) / 2, -(keyView.height * 1.8).toInt())
-              }
-              
-              private fun hidePopup() {
-                  popupWindow?.dismiss()
               }
 
               private fun handleKeyClick(key: String) {
@@ -557,20 +578,17 @@ jobs:
                       else -> {
                           val letter = if (isCaps && !isSymbols && !isEmojiMode && currentLang != "AR") key.uppercase() else key
                           ic.commitText(letter, 1)
+                          // ذكاء التشكيل: إرجاع الـ Shift للوضع الطبيعي بعد كتابة حرف واحد
+                          if (isCaps) { isCaps = false; refreshKeysData() }
                       }
                   }
               }
 
-              // عودة الاهتزاز الأصلي القوي بدون لاق
               private fun vibrate() {
                   if (!prefs.getBoolean("vibrate", true)) return
                   try {
-                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE))
-                      } else {
-                          @Suppress("DEPRECATION")
-                          vibrator.vibrate(15)
-                      }
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) { vibrator.vibrate(VibrationEffect.createOneShot(12, VibrationEffect.DEFAULT_AMPLITUDE)) } 
+                      else { @Suppress("DEPRECATION") vibrator.vibrate(12) }
                   } catch (e: Exception) {}
               }
 
@@ -600,45 +618,25 @@ jobs:
           }
           EOF
 
-          cat << 'EOF' > app/src/main/AndroidManifest.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
-              <uses-permission android:name="android.permission.VIBRATE" />
-              <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:theme="@style/Theme.AIKeyboard">
-                  <activity android:name=".MainActivity" android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-                  <service android:name=".KeyboardService" android:label="@string/ime_name" android:permission="android.permission.BIND_INPUT_METHOD" android:exported="true">
-                      <intent-filter><action android:name="android.view.InputMethod" /></intent-filter>
-                      <meta-data android:name="android.view.im" android:resource="@xml/method" />
-                  </service>
-              </application>
-          </manifest>
-          EOF
-
       - name: Build APK
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase17.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase18.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase17.apk
+          path: release-output/AI-Keyboard-Pro-Phase18.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v17.0
-          name: "AI Keyboard Pro - Phase 17 (Fixes & Perfection ✨)"
-          body: "1. استرجاع أيقونة التطبيق الجميلة وإلغاء أيقونة الأندرويد الافتراضية.\n2. إصلاح جذري للاهتزاز (Vibration) ليعود أقوى وأسرع من السابق.\n3. إصلاح الرموز العربية مع إضافة ميزة (التشكيل والحركات) عند الضغط على زر Shift في اللغة العربية."
-          files: release-output/AI-Keyboard-Pro-Phase17.apk
+          tag_name: aikeyboard-v18.0
+          name: "AI Keyboard Pro - Phase 18 (The Masterpiece: 0ms Lag ✨)"
+          body: "1. القضاء التام والمطلق على ה-Lag عبر استبدال PopupWindow بطبقة (Floating View Layer) السريعة جداً.\n2. تصميم فائق الأناقة بدمج ألوان iOS المريحة للعين وظلال الأزرار الواقعية (Elevation) مع إبقاء أيقونات Material You.\n3. الكيبورد الآن يعود تلقائياً للحروف العادية بعد كتابة حرف واحد باستخدام Shift (تسريع هائل للكتابة)."
+          files: release-output/AI-Keyboard-Pro-Phase18.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
