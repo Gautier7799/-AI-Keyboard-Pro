@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 43; versionName = "36.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 44; versionName = "37.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -222,7 +222,7 @@ jobs:
           }
           EOF
 
-          # ---- كود الكيبورد الرئيسي (حل المشاكل الـ 5 بالكامل) ----
+          # ---- كود الكيبورد الرئيسي بعد إصلاح مشكلة الاهتزاز (currentInputView) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           
@@ -387,9 +387,6 @@ jobs:
                   }
               }
 
-              // ==========================================
-              // حل المشاكل الهندسية للحروف والأزرار
-              // ==========================================
               private fun getLayoutData(): LayoutData {
                   if (isSymbols) {
                       val nums = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
@@ -397,23 +394,17 @@ jobs:
                           nums.map { KeyDef(it, 1.2f) },
                           listOf("-", "/", ":", ";", "(", ")", "$", "&", "@", "\"").map { KeyDef(it, 1.2f) },
                           listOf(KeyDef("ABC", 1.8f)) + listOf(".", ",", "?", "!", "'").map { KeyDef(it, 1.68f) } + listOf(KeyDef("DEL", 1.8f)),
-                          // الصف الرابع: تصغير 123 و Enter، وتكبير المسافة
                           listOf(KeyDef("ABC", 2.0f), KeyDef("SPACE", 8.0f), KeyDef("ENTER", 2.0f)),
-                          // الصف الخامس: الميكروفون والكرة
                           listOf(KeyDef("GLOBE", 1.5f), KeyDef("SPACER", 9.0f), KeyDef("MIC", 1.5f))
                       ))
                   }
                   return when (currentLang) {
                       "AR" -> {
-                          // توزيعة عربية 34 حرف (حل مشكلة الزنقة وتصغير الشفت والمسح)
                           LayoutData(12f, listOf(
-                              "ض ص ث ق ف غ ع ه خ ح ج د".split(" ").map { KeyDef(it, 1.0f) }, // 12 حرف براحتهم
-                              listOf(KeyDef("SPACER", 0.5f)) + "ش س ي ب ل ا ت ن م ك ط".split(" ").map { KeyDef(it, 1.0f) } + listOf(KeyDef("SPACER", 0.5f)), // 11 حرف
-                              // المشكلة كانت هنا: الآن الحروف 0.9 والـ شفت 1.05 (حجم ممتاز ومتناسق)
-                              listOf(KeyDef("SHIFT", 1.05f)) + "ذ ئ ء ؤ ر لا ى ة و ز ظ".split(" ").map { KeyDef(it, 0.9f) } + listOf(KeyDef("DEL", 1.05f)), // 11 حرف
-                              // الصف الرابع
+                              "ض ص ث ق ف غ ع ه خ ح ج د".split(" ").map { KeyDef(it, 1.0f) }, 
+                              listOf(KeyDef("SPACER", 0.5f)) + "ش س ي ب ل ا ت ن م ك ط".split(" ").map { KeyDef(it, 1.0f) } + listOf(KeyDef("SPACER", 0.5f)),
+                              listOf(KeyDef("SHIFT", 1.05f)) + "ذ ئ ء ؤ ر لا ى ة و ز ظ".split(" ").map { KeyDef(it, 0.9f) } + listOf(KeyDef("DEL", 1.05f)),
                               listOf(KeyDef("?123", 2.0f), KeyDef("SPACE", 8.0f), KeyDef("ENTER", 2.0f)),
-                              // الصف الخامس المخصص للكرة والميكروفون أسفل الكيبورد
                               listOf(KeyDef("GLOBE", 1.5f), KeyDef("SPACER", 9.0f), KeyDef("MIC", 1.5f))
                           ))
                       }
@@ -431,16 +422,15 @@ jobs:
 
               override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
                   super.onStartInputView(info, restarting)
-                  rebuildKeysLayout() // تطبيق الحجم الجديد بمجرد فتح الكيبورد
+                  rebuildKeysLayout() 
               }
 
               private fun rebuildKeysLayout() {
                   keysContainer.removeAllViews()
                   val layoutData = getLayoutData()
                   
-                  // تكبير وتصغير أقوى وملاحظ
                   val kbStep = prefs.getInt("kb_scale_step", 3)
-                  val kbScale = 0.7f + (kbStep * 0.15f) // من 0.7 إلى 1.6
+                  val kbScale = 0.7f + (kbStep * 0.15f) 
                   val baseKeyHeight = (44 * density * kbScale).toInt() 
                   
                   val txtStep = prefs.getInt("text_scale_step", 3)
@@ -452,7 +442,6 @@ jobs:
                   val iconColorInt = ContextCompat.getColor(this, R.color.toolbar_icon)
 
                   for ((rowIndex, row) in layoutData.rows.withIndex()) {
-                      // الصف الخامس (الكرة والميكروفون) يكون أنحف قليلاً
                       val rowHeight = if (rowIndex == 4) (36 * density).toInt() else baseKeyHeight
                       
                       val rowLayout = LinearLayout(this).apply { 
@@ -464,13 +453,12 @@ jobs:
                           if (label == "SPACER") {
                               rowLayout.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, keyDef.weight) })
                           } else if (label == "GLOBE" || label == "MIC") {
-                              // أزرار الأيقونات السفلية (بدون خلفية بيضاء)
                               val iconView = TextView(this).apply {
                                   text = if(label=="GLOBE") "🌐" else "🎤"
                                   textSize = 24f; gravity = Gravity.CENTER; setTextColor(iconColorInt); isClickable = true
                                   layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, keyDef.weight)
-                                  setOnClickListener { 
-                                      vibrate()
+                                  setOnClickListener { view ->
+                                      view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP) // <-- الإصلاح هنا
                                       if(label=="GLOBE") { currentLang = if(currentLang == "EN") "AR" else "EN"; currentTypedWord.clear(); rebuildKeysLayout() }
                                       else { Toast.makeText(this@KeyboardService, "Voice Input Coming Soon", Toast.LENGTH_SHORT).show() }
                                   }
@@ -495,7 +483,7 @@ jobs:
                                       when (event.action) {
                                           MotionEvent.ACTION_DOWN -> { 
                                               v.isPressed = true
-                                              vibrate()
+                                              v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP) // <-- الإصلاح هنا
                                               if (label.length == 1 && label != " ") {
                                                   val keyX = v.x + rowLayout.x
                                                   val keyY = v.y + rowLayout.y + keysContainer.y
@@ -519,8 +507,6 @@ jobs:
                   }
               }
 
-              private fun vibrate() { this.currentInputView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP) }
-
               override fun onFinishInput() { super.onFinishInput(); currentTypedWord.clear(); if(this::sug1.isInitialized) { sug1.text = ""; sug2.text = ""; sug3.text = "" } }
 
               private fun updateSuggestions() {
@@ -540,7 +526,6 @@ jobs:
               }
 
               private fun handleKeyClick(key: String) {
-                  // إذا كان المستخدم يكتب و أدوات الذكاء مفتوحة، نغلقها ليرى الاقتراحات
                   if (aiToolsView.visibility == View.VISIBLE) toggleToolbar()
 
                   val ic = currentInputConnection ?: return
@@ -619,21 +604,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase36.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase37.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase36.apk
+          path: release-output/AI-Keyboard-Pro-Phase37.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v36.0
-          name: "AI Keyboard Pro - Phase 36 (Golden Edition 🥇)"
-          body: "النسخة النهائية لحل المشاكل الـ 5:\n1. 📐 الحروف العربية أخذت مساحتها الكاملة (تم تصغير Shift و Delete بنسبة 40% لتتنفس الحروف براحتها).\n2. 🔍 تصغير أزرار ?123 و إدخال، وتكبير المسافة بشكل واضح.\n3. 🌐 إضافة الصف الخامس السفلي (الكرة والميكروفون) داخل الكيبورد لكي لا تختفي أبداً.\n4. ⊞ شريط Gboard يعمل بكفاءة: افتراضياً يعرض المصحح، وعند الضغط تنبثق أدوات الـ AI.\n5. 📏 شريط التكبير يعمل بقوة مضاعفة (ملاحظة: أغلق الكيبورد وافتحه للتطبيق)."
-          files: release-output/AI-Keyboard-Pro-Phase36.apk
+          tag_name: aikeyboard-v37.0
+          name: "AI Keyboard Pro - Phase 37 (Golden Fix)"
+          body: "1. 🛠 تم إصلاح مشكلة `currentInputView` التي تسببت بفشل البناء.\n2. تم ربط الاهتزاز مباشرة بالزر `v.performHapticFeedback` لضمان صفر أعطال.\n3. الكيبورد الآن جاهز للاستخدام بكل المميزات التي صممناها في النسخة السابقة (الحروف الواسعة، شريط Gboard، وأزرار الذكاء الاصطناعي)."
+          files: release-output/AI-Keyboard-Pro-Phase37.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
