@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 34; versionName = "27.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 35; versionName = "28.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -71,132 +71,154 @@ jobs:
           }
           EOF
 
-          # ---- الألوان المأخوذة من واجهة iOS ----
+          # ---- الألوان المطابقة لـ iOS ----
           cat << 'EOF' > app/src/main/res/values/colors.xml
           <resources>
               <color name="keyboard_bg">#D1D1D6</color>
+              
+              <!-- ألوان الأزرار الفاتحة -->
               <color name="key_bg">#FFFFFF</color>
+              <color name="key_shadow">#898A8D</color>
               <color name="key_bg_pressed">#E5E5EA</color>
+              
+              <!-- ألوان الأزرار الرمادية (Shift, Backspace) -->
               <color name="key_special_bg">#B4B8C1</color>
+              <color name="key_special_shadow">#898A8D</color>
               <color name="key_special_bg_pressed">#9AA0AB</color>
+              
               <color name="key_text">#000000</color>
               <color name="suggestion_text">#3C3C43</color>
               <color name="toolbar_bg">#D1D1D6</color>
               <color name="menu_pill_bg">#FFFFFF</color>
-              <color name="icon_settings_bg">#D3E3FD</color>
-              <color name="icon_settings_fg">#041E49</color>
+              
+              <!-- ألوان الأيقونات -->
+              <color name="icon_settings_bg">#B4B8C1</color>
+              <color name="icon_settings_fg">#000000</color>
               <color name="icon_emoji_bg">#FFDF99</color>
               <color name="icon_emoji_fg">#3E2723</color>
               <color name="icon_paste_bg">#C4EED0</color>
               <color name="icon_paste_fg">#072711</color>
+              <color name="icon_hide_bg">#E5E5EA</color>
+              <color name="icon_hide_fg">#000000</color>
           </resources>
           EOF
+          
           cat << 'EOF' > app/src/main/res/values-night/colors.xml
           <resources>
               <color name="keyboard_bg">#1C1C1E</color>
-              <color name="key_bg">#3A3A3C</color>
-              <color name="key_bg_pressed">#48484A</color>
-              <color name="key_special_bg">#2C2C2E</color>
-              <color name="key_special_bg_pressed">#3A3A3C</color>
+              
+              <color name="key_bg">#545456</color>
+              <color name="key_shadow">#000000</color>
+              <color name="key_bg_pressed">#3A3A3C</color>
+              
+              <color name="key_special_bg">#3A3A3C</color>
+              <color name="key_special_shadow">#000000</color>
+              <color name="key_special_bg_pressed">#2C2C2E</color>
+              
               <color name="key_text">#FFFFFF</color>
               <color name="suggestion_text">#EBEBF5</color>
               <color name="toolbar_bg">#1C1C1E</color>
               <color name="menu_pill_bg">#2C2C2E</color>
-              <color name="icon_settings_bg">#004A77</color>
-              <color name="icon_settings_fg">#C2E7FF</color>
+              
+              <color name="icon_settings_bg">#3A3A3C</color>
+              <color name="icon_settings_fg">#FFFFFF</color>
               <color name="icon_emoji_bg">#564419</color>
               <color name="icon_emoji_fg">#FFE082</color>
               <color name="icon_paste_bg">#0F5223</color>
               <color name="icon_paste_fg">#C4EECE</color>
+              <color name="icon_hide_bg">#3A3A3C</color>
+              <color name="icon_hide_fg">#FFFFFF</color>
           </resources>
           EOF
 
-          # ---- الرسم والأيقونات ----
+          # ---- الأزرار بلمسة iOS ثلاثية الأبعاد (Layer-List) ----
+          cat << 'EOF' > app/src/main/res/drawable/bg_key.xml
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+              <item android:top="1dp" android:bottom="0dp"><shape><solid android:color="@color/key_shadow"/><corners android:radius="6dp"/></shape></item>
+              <item android:bottom="1.2dp"><shape><solid android:color="@color/key_bg"/><corners android:radius="6dp"/></shape></item>
+          </layer-list>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/bg_key_pressed.xml
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+              <item><shape><solid android:color="@color/key_bg_pressed"/><corners android:radius="6dp"/></shape></item>
+          </layer-list>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/key_selector.xml
+          <selector xmlns:android="http://schemas.android.com/apk/res/android">
+              <item android:state_pressed="true" android:drawable="@drawable/bg_key_pressed" />
+              <item android:drawable="@drawable/bg_key" />
+          </selector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_key_special.xml
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+              <item android:top="1dp" android:bottom="0dp"><shape><solid android:color="@color/key_special_shadow"/><corners android:radius="6dp"/></shape></item>
+              <item android:bottom="1.2dp"><shape><solid android:color="@color/key_special_bg"/><corners android:radius="6dp"/></shape></item>
+          </layer-list>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/bg_key_special_pressed.xml
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+              <item><shape><solid android:color="@color/key_special_bg_pressed"/><corners android:radius="6dp"/></shape></item>
+          </layer-list>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/key_special_selector.xml
+          <selector xmlns:android="http://schemas.android.com/apk/res/android">
+              <item android:state_pressed="true" android:drawable="@drawable/bg_key_special_pressed" />
+              <item android:drawable="@drawable/bg_key_special" />
+          </selector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_key_enter.xml
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+              <item android:top="1dp" android:bottom="0dp"><shape><solid android:color="#005BB5"/><corners android:radius="6dp"/></shape></item>
+              <item android:bottom="1.2dp"><shape><solid android:color="#007AFF"/><corners android:radius="6dp"/></shape></item>
+          </layer-list>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/bg_key_enter_pressed.xml
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+              <item><shape><solid android:color="#005BB5"/><corners android:radius="6dp"/></shape></item>
+          </layer-list>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/key_enter_selector.xml
+          <selector xmlns:android="http://schemas.android.com/apk/res/android">
+              <item android:state_pressed="true" android:drawable="@drawable/bg_key_enter_pressed" />
+              <item android:drawable="@drawable/bg_key_enter" />
+          </selector>
+          EOF
+
+          # ---- الأيقونات الأخرى ----
+          cat << 'EOF' > app/src/main/res/drawable/ic_hide_keyboard.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_hide_fg" android:pathData="M20,3H4C2.9,3 2,3.9 2,5v14c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V5C22,3.9 21.1,3 20,3zM20,19H4V5h16V19zM12,16l-4,-4h3V9h2v3h3L12,16z"/></vector>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/bg_icon_hide.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/icon_hide_bg"/></shape>
+          EOF
+          
+          # نسخ باقي الملفات الأساسية...
           cat << 'EOF' > app/src/main/res/drawable/bg_dashboard_card.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="20dp"/></shape>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_btn_blue.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#007AFF"/><corners android:radius="14dp"/></shape>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_btn_green.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#34C759"/><corners android:radius="14dp"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_input.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/keyboard_bg"/><corners android:radius="12dp"/><stroke android:width="1dp" android:color="#338E8E93"/></shape>
           EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_icon_settings.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/icon_settings_bg"/></shape>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_icon_emoji.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/icon_emoji_bg"/></shape>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_icon_paste.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/icon_paste_bg"/></shape>
-          EOF
           cat << 'EOF' > app/src/main/res/drawable/ic_gear_colored.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_settings_fg" android:pathData="M19.4,13c0,-0.3 0,-0.7 0,-1s0,-0.7 0,-1l2.1,-1.7c0.2,-0.2 0.2,-0.4 0.1,-0.6l-2,-3.5c-0.1,-0.2 -0.4,-0.3 -0.6,-0.2l-2.5,1c-0.5,-0.4 -1.1,-0.7 -1.7,-1l-0.4,-2.6C14.4,2.2 14.2,2 14,2h-4c-0.2,0 -0.5,0.2 -0.5,0.4l-0.4,2.6c-0.6,0.3 -1.2,0.6 -1.7,1l-2.5,-1c-0.2,-0.1 -0.5,0 -0.6,0.2l-2,3.5c-0.1,0.2 -0.1,0.5 0.1,0.6l2.1,1.7c0,0.3 0,0.7 0,1s0,0.7 0,1l-2.1,1.7c-0.2,0.2 -0.2,0.4 -0.1,0.6l2,3.5c0.1,0.2 0.4,0.3 0.6,0.2l2.5,-1c0.5,0.4 1.1,0.7 1.7,1l0.4,2.6c0,0.2 0.3,0.4 0.5,0.4h4c0.2,0 0.5,-0.2 0.5,-0.4l0.4,-2.6c0.6,-0.3 1.2,-0.6 1.7,-1l2.5,1c0.2,0.1 0.5,0 0.6,-0.2l2,-3.5c0.1,-0.2 0.1,-0.5 -0.1,-0.6L19.4,13zM12,15.5c-1.9,0 -3.5,-1.6 -3.5,-3.5s1.6,-3.5 3.5,-3.5 3.5,1.6 3.5,3.5S13.9,15.5 12,15.5z"/></vector>
           EOF
-          cat << 'EOF' > app/src/main/res/drawable/ic_smile_colored.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_emoji_fg" android:pathData="M11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM12,20c-4.42,0 -8,-3.58 -8,-8s3.58,-8 8,-8 8,3.58 8,8 -3.58,8 -8,8zM15.5,11c0.83,0 1.5,-0.67 1.5,-1.5S16.33,8 15.5,8 14,8.67 14,9.5s0.67,1.5 1.5,1.5zM8.5,11c0.83,0 1.5,-0.67 1.5,-1.5S9.33,8 8.5,8 7,8.67 7,9.5 7.67,11 8.5,11zM12,17.5c2.33,0 4.31,-1.46 5.11,-3.5H6.89c0.8,2.04 2.78,3.5 5.11,3.5z"/></vector>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/ic_paste_colored.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_paste_fg" android:pathData="M19,2h-4.2C14.4,0.8 13.3,0 12,0c-1.3,0 -2.4,0.8 -2.8,2H5C3.9,2 3,2.9 3,4v16c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2V4C21,2.9 20.1,2 19,2zM12,2c0.6,0 1,0.4 1,1s-0.4,1 -1,1 -1,-0.4 -1,-1S11.4,2 12,2zM19,20H5V4h2v3h10V4h2V20z"/></vector>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/ic_menu_size_up.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#000000" android:pathData="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></vector>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/ic_menu_size_down.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#000000" android:pathData="M19,13H5v-2h14v2z"/></vector>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/ic_menu_back.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#000000" android:pathData="M20,11H7.83l5.59,-5.59L12,4l-8,8l8,8l1.41,-1.41L7.83,13H20v-2z"/></vector>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_menu_pill.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/menu_pill_bg"/><corners android:radius="16dp"/><stroke android:width="1dp" android:color="#338E8E93"/></shape>
-          EOF
-          
-          # ---- الأزرار بلمسة iOS (Rounded Corners) ----
-          cat << 'EOF' > app/src/main/res/drawable/bg_key.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="5dp"/></shape>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_key_pressed.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg_pressed"/><corners android:radius="5dp"/></shape>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/key_selector.xml
-          <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_pressed" /><item android:drawable="@drawable/bg_key" /></selector>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_key_special.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_special_bg"/><corners android:radius="5dp"/></shape>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_key_special_pressed.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_special_bg_pressed"/><corners android:radius="5dp"/></shape>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/key_special_selector.xml
-          <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_special_pressed" /><item android:drawable="@drawable/bg_key_special" /></selector>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_key_enter.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#007AFF"/><corners android:radius="5dp"/></shape>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/bg_key_enter_pressed.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#005BB5"/><corners android:radius="5dp"/></shape>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/key_enter_selector.xml
-          <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_enter_pressed" /><item android:drawable="@drawable/bg_key_enter" /></selector>
+          cat << 'EOF' > app/src/main/res/drawable/bg_icon_settings.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/icon_settings_bg"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_popup_bubble.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="10dp"/></shape>
           EOF
-          
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#0A0C10" android:pathData="M0,0h108v108h-108z"/></vector>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_foreground.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#00000000" android:pathData="M0,0h108v108h-108z"/><path android:fillColor="#9ECAFF" android:pathData="M54,20 C54,40 40,54 20,54 C40,54 54,68 54,88 C54,68 68,54 88,54 C68,54 54,40 54,20 Z"/><path android:fillColor="#34D399" android:pathData="M75,25 C75,32 68,37 60,37 C68,37 75,44 75,52 C75,44 82,37 90,37 C82,37 75,32 75,25 Z"/></vector>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#00000000" android:pathData="M0,0h108v108h-108z"/><path android:fillColor="#9ECAFF" android:pathData="M54,20 C54,40 40,54 20,54 C40,54 68,54 88,54 C68,54 54,40 54,20 Z"/></vector>
           EOF
           cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           <?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@drawable/ic_launcher_background"/><foreground android:drawable="@drawable/ic_launcher_foreground"/></adaptive-icon>
           EOF
-
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources><string name="app_name">AI Keyboard Pro</string><string name="ime_name">AI Keyboard Pro ✨</string></resources>
           EOF
@@ -207,30 +229,39 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?><input-method xmlns:android="http://schemas.android.com/apk/res/android" android:supportsInlineSuggestions="true"><subtype android:imeSubtypeLocale="en_US" android:imeSubtypeMode="keyboard" /></input-method>
           EOF
 
-          # ---- Dashboard Layout ----
+          # ---- واجهة الإعدادات مع الـ SLIDERS (أشرطة التمرير) ----
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/keyboard_bg" android:fillViewport="true">
               <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
-                  <ImageView android:id="@+id/logo_img" android:layout_width="96dp" android:layout_height="96dp" android:layout_gravity="center" android:layout_marginTop="24dp" android:src="@mipmap/ic_launcher" />
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:gravity="center" android:text="AI Keyboard Pro ✨" android:textColor="@color/key_text" android:textSize="26sp" android:textStyle="bold" />
-                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:layout_marginBottom="32dp" android:gravity="center" android:text="تحديث الأناقة والتناسق (V27)" android:textColor="#8E8E93" android:textSize="16sp" />
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="32dp" android:gravity="center" android:text="The iOS Edition (V28)" android:textColor="#8E8E93" android:textSize="16sp" />
                   
                   <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:layout_marginStart="8dp" android:text="الخطوة الأولى: التفعيل" android:textColor="@color/key_text" android:textSize="14sp" android:textStyle="bold" />
                   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/bg_dashboard_card" android:elevation="2dp" android:orientation="vertical" android:padding="16dp">
-                      <Button android:id="@+id/btn_enable" android:layout_width="match_parent" android:layout_height="56dp" android:background="@drawable/bg_btn_blue" android:text="1. تفعيل الكيبورد" android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" />
-                      <Button android:id="@+id/btn_select" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="12dp" android:background="@drawable/bg_btn_green" android:text="2. اختيار الكيبورد" android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" />
+                      <Button android:id="@+id/btn_enable" android:layout_width="match_parent" android:layout_height="56dp" android:background="#007AFF" android:text="1. تفعيل الكيبورد" android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" />
+                      <Button android:id="@+id/btn_select" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="12dp" android:background="#34C759" android:text="2. اختيار الكيبورد" android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" />
                   </LinearLayout>
                   
                   <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" android:layout_marginStart="8dp" android:text="الخطوة الثانية: إعدادات Gemini" android:textColor="@color/key_text" android:textSize="14sp" android:textStyle="bold" />
                   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/bg_dashboard_card" android:elevation="2dp" android:orientation="vertical" android:padding="16dp">
                       <EditText android:id="@+id/input_api_key" android:layout_width="match_parent" android:layout_height="50dp" android:background="@drawable/bg_input" android:hint="لصق API Key هنا..." android:paddingHorizontal="16dp" android:textColor="@color/key_text" android:textColorHint="#8E8E93" android:textSize="14sp" android:inputType="textPassword" />
-                      <Button android:id="@+id/btn_save_api" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="12dp" android:background="@drawable/bg_btn_blue" android:text="حفظ المفتاح السري 🔒" android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" />
+                      <Button android:id="@+id/btn_save_api" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="12dp" android:background="#007AFF" android:text="حفظ المفتاح הסري 🔒" android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" />
                   </LinearLayout>
                   
-                  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" android:layout_marginStart="8dp" android:text="إعدادات عامة" android:textColor="@color/key_text" android:textSize="14sp" android:textStyle="bold" />
+                  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" android:layout_marginStart="8dp" android:text="المظهر والحجم (Appearance)" android:textColor="@color/key_text" android:textSize="14sp" android:textStyle="bold" />
                   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="40dp" android:background="@drawable/bg_dashboard_card" android:elevation="2dp" android:orientation="vertical" android:padding="16dp">
-                      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                      
+                      <!-- حجم الكيبورد -->
+                      <TextView android:id="@+id/tv_kb_size" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="حجم الكيبورد (الارتفاع): 100%" android:textColor="@color/key_text" android:textSize="14sp" android:textStyle="bold" />
+                      <SeekBar android:id="@+id/seek_kb_size" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginBottom="16dp" android:max="100" android:progress="50" />
+                      
+                      <!-- حجم الخط -->
+                      <TextView android:id="@+id/tv_text_size" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="حجم خط الحروف: 100%" android:textColor="@color/key_text" android:textSize="14sp" android:textStyle="bold" />
+                      <SeekBar android:id="@+id/seek_text_size" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginBottom="16dp" android:max="100" android:progress="50" />
+
+                      <!-- الاهتزاز -->
+                      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center_vertical" android:orientation="horizontal">
                           <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="الاهتزاز عند الكتابة" android:textColor="@color/key_text" android:textSize="16sp" android:textStyle="bold" />
                           <Switch android:id="@+id/switch_vibrate" android:layout_width="wrap_content" android:layout_height="wrap_content" />
                       </LinearLayout>
@@ -264,6 +295,37 @@ jobs:
                       prefs.edit().putString("api_key", inputApi.text.toString()).apply()
                       Toast.makeText(this, "تم حفظ المفتاح بنجاح! ✨", Toast.LENGTH_SHORT).show() 
                   }
+
+                  // Sliders Logic (50 = 100% scale. Range is 0.5f to 1.5f)
+                  val seekKbSize = findViewById<SeekBar>(R.id.seek_kb_size)
+                  val tvKbSize = findViewById<TextView>(R.id.tv_kb_size)
+                  val savedKbScale = prefs.getFloat("kb_scale", 1.0f)
+                  seekKbSize.progress = ((savedKbScale - 0.5f) * 100).toInt()
+                  tvKbSize.text = "حجم الكيبورد (الارتفاع): ${(savedKbScale * 100).toInt()}%"
+                  seekKbSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                      override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                          val scale = 0.5f + (progress / 100f)
+                          tvKbSize.text = "حجم الكيبورد (الارتفاع): ${(scale * 100).toInt()}%"
+                          prefs.edit().putFloat("kb_scale", scale).apply()
+                      }
+                      override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                      override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                  })
+
+                  val seekTextSize = findViewById<SeekBar>(R.id.seek_text_size)
+                  val tvTextSize = findViewById<TextView>(R.id.tv_text_size)
+                  val savedTextScale = prefs.getFloat("text_scale", 1.0f)
+                  seekTextSize.progress = ((savedTextScale - 0.5f) * 100).toInt()
+                  tvTextSize.text = "حجم خط الحروف: ${(savedTextScale * 100).toInt()}%"
+                  seekTextSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                      override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                          val scale = 0.5f + (progress / 100f)
+                          tvTextSize.text = "حجم خط الحروف: ${(scale * 100).toInt()}%"
+                          prefs.edit().putFloat("text_scale", scale).apply()
+                      }
+                      override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                      override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                  })
                   
                   val switchVibrate = findViewById<Switch>(R.id.switch_vibrate)
                   switchVibrate.isChecked = prefs.getBoolean("vibrate", true)
@@ -272,7 +334,7 @@ jobs:
           }
           EOF
 
-          # ---- Keyboard Service (THE AESTHETIC UPDATE - iOS Layout Engine 🎨📐) ----
+          # ---- Keyboard Service (THE iOS STAGGERED ENGINE 🎨📐) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           import android.content.ClipboardManager
@@ -313,12 +375,8 @@ jobs:
               private lateinit var rootFrame: FrameLayout
               private lateinit var mainLayout: LinearLayout
               private lateinit var keysContainer: LinearLayout
-              private lateinit var menuContainer: ScrollView
               private lateinit var aiContainer: ScrollView
-              private lateinit var clipboardContainer: ScrollView
-              
               private lateinit var keyPreviewBubble: TextView
-              private lateinit var clipboardGrid: LinearLayout
               
               private lateinit var sug1: TextView
               private lateinit var sug2: TextView
@@ -333,33 +391,8 @@ jobs:
               private val currentTypedWord = StringBuilder()
               private var userDict = mutableSetOf<String>()
 
-              private val arDict = arrayOf("السلام", "عليكم", "مرحبا", "كيف", "حالك", "شكرا", "صباح", "الخير", "مساء", "الحمد", "لله", "اليوم", "غدا", "الآن", "ممكن", "عفوا", "جميل", "جدا", "رائع", "إن", "شاء", "الله", "نعم", "لا")
-              private val enDict = arrayOf("hello", "how", "are", "you", "good", "morning", "night", "thanks", "thank", "please", "what", "time", "this", "that", "there", "their", "have", "been", "would", "could", "should")
-              private val frDict = arrayOf("bonjour", "comment", "merci", "salut", "bien", "très", "avec", "pour", "dans", "faire", "dire", "aller", "voir", "vouloir", "venir", "devoir", "pouvoir")
-
-              // هيكل البيانات الجديد للتحكم بأحجام الفراغات بدقة متناهية
               data class KeyDef(val label: String, val weight: Float)
               data class LayoutData(val weightSum: Float, val rows: List<List<KeyDef>>)
-
-              override fun onCreate() {
-                  super.onCreate()
-                  val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                  clipboard.addPrimaryClipChangedListener {
-                      val clip = clipboard.primaryClip
-                      if (clip != null && clip.itemCount > 0) {
-                          val text = clip.getItemAt(0).text?.toString()
-                          if (!text.isNullOrEmpty()) {
-                              val p = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
-                              val historyStr = p.getString("clip_history", "") ?: ""
-                              val history = historyStr.split("|||").filter { it.isNotBlank() }.toMutableList()
-                              history.remove(text)
-                              history.add(0, text)
-                              if (history.size > 10) history.removeAt(history.size - 1)
-                              p.edit().putString("clip_history", history.joinToString("|||")).apply()
-                          }
-                      }
-                  }
-              }
 
               override fun onCreateInputView(): View {
                   prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
@@ -388,15 +421,19 @@ jobs:
                           setImageResource(iconResId); setBackgroundResource(bgResId)
                           val size = (26 * density).toInt() 
                           layoutParams = LinearLayout.LayoutParams(size, size).apply { setMargins(0, 0, (6*density).toInt(), 0) }
-                          val p = (5 * density).toInt()
-                          setPadding(p, p, p, p)
+                          val p = (5 * density).toInt(); setPadding(p, p, p, p)
                           setOnClickListener { vibrate(); action() }
                       }
                       toolbar.addView(img)
                   }
 
-                  addMaterialIcon(R.drawable.ic_gear_colored, R.drawable.bg_icon_settings) { toggleMenu() }
-                  addMaterialIcon(R.drawable.ic_smile_colored, R.drawable.bg_icon_emoji) { isEmojiMode = !isEmojiMode; refreshKeysData() }
+                  // زر إخفاء الكيبورد الجديد (حل مشكلة السهم لأسفل)
+                  addMaterialIcon(R.drawable.ic_hide_keyboard, R.drawable.bg_icon_hide) { requestHideSelf(0) }
+                  addMaterialIcon(R.drawable.ic_gear_colored, R.drawable.bg_icon_settings) { 
+                      val intent = Intent(this, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+                      startActivity(intent)
+                      requestHideSelf(0)
+                  }
                   
                   val suggestionContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
@@ -426,27 +463,7 @@ jobs:
                   }
                   toolbar.addView(aiButton)
 
-                  keysContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setPadding(0, (4*density).toInt(), 0, (8*density).toInt()) } }
-                  
-                  menuContainer = ScrollView(this).apply { visibility = View.GONE; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
-                  val menuGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding((20*density).toInt(), (10*density).toInt(), (20*density).toInt(), (20*density).toInt()) }
-                  fun addMenuOption(title: String, iconRes: Int, action: () -> Unit) {
-                      val row = LinearLayout(this).apply {
-                          orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-                          setBackgroundResource(R.drawable.bg_menu_pill)
-                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (52 * density).toInt()).apply { setMargins(0, 0, 0, (12 * density).toInt()) }
-                          setPadding((16 * density).toInt(), 0, (16 * density).toInt(), 0)
-                          setOnClickListener { vibrate(); action() }
-                      }
-                      row.addView(ImageView(this).apply { setImageResource(iconRes); setColorFilter(textColorInt); layoutParams = LinearLayout.LayoutParams((24 * density).toInt(), (24 * density).toInt()).apply { setMargins(0, 0, (16 * density).toInt(), 0) } })
-                      row.addView(TextView(this).apply { text = title; textSize = 16f; setTextColor(textColorInt); typeface = Typeface.DEFAULT_BOLD })
-                      menuGrid.addView(row)
-                  }
-                  addMenuOption("مدير الحافظة", R.drawable.ic_paste_colored) { toggleClipboard() }
-                  addMenuOption("تكبير الكيبورد", R.drawable.ic_menu_size_up) { var s = prefs.getInt("kb_size", 2); if(s<5) s++; prefs.edit().putInt("kb_size", s).apply(); rebuildKeysLayout() }
-                  addMenuOption("تصغير الكيبورد", R.drawable.ic_menu_size_down) { var s = prefs.getInt("kb_size", 2); if(s>0) s--; prefs.edit().putInt("kb_size", s).apply(); rebuildKeysLayout() }
-                  addMenuOption("الرجوع", R.drawable.ic_menu_back) { toggleMenu() }
-                  menuContainer.addView(menuGrid)
+                  keysContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setPadding(0, (2*density).toInt(), 0, (6*density).toInt()) } }
                   
                   aiContainer = ScrollView(this).apply { visibility = View.GONE; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
                   val aiGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding((16*density).toInt(), (16*density).toInt(), (16*density).toInt(), (16*density).toInt()) }
@@ -471,19 +488,13 @@ jobs:
                   addAiOption("رد ذكي ✨", "يقرأ ويكتب رداً ذكياً", "✨", "#34C759", "REPLY")
                   aiContainer.addView(aiGrid)
 
-                  clipboardContainer = ScrollView(this).apply { visibility = View.GONE; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
-                  clipboardGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding((16*density).toInt(), (16*density).toInt(), (16*density).toInt(), (16*density).toInt()) }
-                  clipboardContainer.addView(clipboardGrid)
-
                   mainLayout.addView(keysContainer)
-                  mainLayout.addView(menuContainer)
                   mainLayout.addView(aiContainer)
-                  mainLayout.addView(clipboardContainer)
                   
                   keyPreviewBubble = TextView(this).apply {
-                      textSize = 36f; setTextColor(textColorInt); gravity = Gravity.CENTER
+                      textSize = 34f; setTextColor(textColorInt); gravity = Gravity.CENTER
                       setBackgroundResource(R.drawable.bg_popup_bubble); elevation = 8f * density; visibility = View.GONE
-                      layoutParams = FrameLayout.LayoutParams((50 * density).toInt(), (60 * density).toInt())
+                      layoutParams = FrameLayout.LayoutParams((48 * density).toInt(), (58 * density).toInt())
                   }
 
                   rootFrame.addView(mainLayout)
@@ -493,17 +504,8 @@ jobs:
                   return rootFrame
               }
 
-              // ================= محرك الهندسة والأبعاد (The Staggered Engine) =================
+              // ================= محرك تخطيط iOS (The iOS Staggered Engine) =================
               private fun getLayoutData(): LayoutData {
-                  if (isEmojiMode) {
-                      return LayoutData(8f, listOf(
-                          listOf("😀", "😂", "🥰", "😎", "🤔", "😭", "🙏", "👍").map { KeyDef(it, 1f) },
-                          listOf("❤️", "🔥", "✨", "💯", "🎉", "⭐", "✅", "❌").map { KeyDef(it, 1f) },
-                          listOf(KeyDef("ABC", 1.5f), KeyDef("SPACE", 5f), KeyDef("DEL", 1.5f)),
-                          emptyList()
-                      ))
-                  }
-                  
                   if (isSymbols) {
                       val isAr = currentLang == "AR"
                       val sum = if (isAr) 12f else 10f
@@ -524,11 +526,15 @@ jobs:
                               listOf("َ", "ً", "ُ", "ٌ", "ِ", "ٍ", "ّ", "ْ", "أ", "إ", "آ", "[").map { KeyDef(it, 1f) },
                               listOf("]", "{", "}", "(", ")", "<", ">", "\"", "'", ":", ";", "\\").map { KeyDef(it, 1f) },
                               listOf(KeyDef("SHIFT", 1.5f)) + listOf("ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ").map { KeyDef(it, 0.9f) } + listOf(KeyDef("DEL", 1.5f)),
-                              listOf(KeyDef("?123", 2f), KeyDef("🌐", 1.5f), KeyDef("SPACE", 5f), KeyDef(".", 1f), KeyDef("ENTER", 2.5f)) // تناسق المساحة
+                              listOf(KeyDef("?123", 2f), KeyDef("🌐", 1.5f), KeyDef("SPACE", 5f), KeyDef(".", 1f), KeyDef("ENTER", 2.5f))
                           ) else listOf(
-                              listOf("ذ", "ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج").map { KeyDef(it, 1f) },
-                              listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط", "د").map { KeyDef(it, 1f) },
+                              // السطر الأول: 12 حرف
+                              listOf("ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج", "د").map { KeyDef(it, 1f) },
+                              // السطر الثاني: 11 حرف (مع فواصل جانبية لمحاكاة الإزاحة)
+                              listOf(KeyDef("SPACER", 0.5f)) + listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط").map { KeyDef(it, 1f) } + listOf(KeyDef("SPACER", 0.5f)),
+                              // السطر الثالث: 10 حروف بين الشيفت والمسح
                               listOf(KeyDef("SHIFT", 1.5f)) + listOf("ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ").map { KeyDef(it, 0.9f) } + listOf(KeyDef("DEL", 1.5f)),
+                              // السطر الأخير
                               listOf(KeyDef("?123", 2f), KeyDef("🌐", 1.5f), KeyDef("SPACE", 5f), KeyDef(".", 1f), KeyDef("ENTER", 2.5f))
                           )
                           LayoutData(sum, rows)
@@ -539,7 +545,7 @@ jobs:
                               listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p").map { KeyDef(if (isCaps) it.uppercase() else it, 1f) },
                               listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m").map { KeyDef(if (isCaps) it.uppercase() else it, 1f) },
                               listOf(KeyDef("SHIFT", 1.5f), KeyDef("SPACER", 0.5f)) + listOf("w", "x", "c", "v", "b", "n").map { KeyDef(if (isCaps) it.uppercase() else it, 1f) } + listOf(KeyDef("SPACER", 0.5f), KeyDef("DEL", 1.5f)),
-                              listOf(KeyDef("?123", 1.5f), KeyDef("🌐", 1f), KeyDef("SPACE", 5f), KeyDef("ENTER", 2.5f)) // تناظر المسافة
+                              listOf(KeyDef("?123", 1.5f), KeyDef("🌐", 1f), KeyDef("SPACE", 5f), KeyDef("ENTER", 2.5f))
                           )
                           LayoutData(sum, rows)
                       }
@@ -556,33 +562,36 @@ jobs:
                   }
               }
 
+              override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
+                  super.onStartInputView(info, restarting)
+                  rebuildKeysLayout() // تحديث الحجم فوراً عند فتح الكيبورد
+              }
+
               private fun rebuildKeysLayout() {
                   keysContainer.removeAllViews()
                   keyViews.clear()
-                  val sizeMultiplier = 1.0f + (prefs.getInt("kb_size", 2) * 0.1f) 
-                  val baseKeyHeight = (44 * density * sizeMultiplier).toInt() 
+                  val kbScale = prefs.getFloat("kb_scale", 1.0f) 
+                  val baseKeyHeight = (44 * density * kbScale).toInt() 
                   
-                  // نبني شبكة 4x12 كحد أقصى لتتحمل كل الأزرار
+                  // الشبكة تتحمل 12 زر كحد أقصى للسطر
                   for (r in 0 until 4) {
                       val rowLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, baseKeyHeight) }
                       val rowViews = ArrayList<TextView>()
                       for (c in 0 until 12) {
                           val keyView = TextView(this).apply {
-                              gravity = Gravity.CENTER
-                              isClickable = true
-                              elevation = 1.2f * density // لمسة الظل الخفيفة
+                              gravity = Gravity.CENTER; isClickable = true
                               
                               setOnTouchListener { v, event ->
                                   when (event.action) {
                                       MotionEvent.ACTION_DOWN -> { 
                                           v.isPressed = true; vibrate()
                                           val txt = (v as TextView).tag.toString()
-                                          if (txt.length == 1 && !isEmojiMode) {
+                                          if (txt.length == 1 && !isEmojiMode && txt != " ") {
                                               val loc = IntArray(2); v.getLocationInWindow(loc)
                                               val rootLoc = IntArray(2); rootFrame.getLocationInWindow(rootLoc)
                                               keyPreviewBubble.text = (v as TextView).text.toString()
                                               keyPreviewBubble.x = (loc[0] - rootLoc[0]).toFloat() - (keyPreviewBubble.layoutParams.width - v.width) / 2f
-                                              keyPreviewBubble.y = (loc[1] - rootLoc[1]).toFloat() - keyPreviewBubble.layoutParams.height + (4*density)
+                                              keyPreviewBubble.y = (loc[1] - rootLoc[1]).toFloat() - keyPreviewBubble.layoutParams.height + (2*density)
                                               keyPreviewBubble.visibility = View.VISIBLE
                                           }
                                           true 
@@ -607,15 +616,15 @@ jobs:
 
               private fun refreshKeysData() {
                   val textColorInt = ContextCompat.getColor(this, R.color.key_text)
-                  val sizeMultiplier = 1.0f + (prefs.getInt("kb_size", 2) * 0.1f) 
-                  val keyMarginHorizontal = (2.5f * density).toInt() 
-                  val keyMarginVertical = (4f * sizeMultiplier * density).toInt()
+                  val textScale = prefs.getFloat("text_scale", 1.0f) 
+                  val keyMarginHorizontal = (3f * density).toInt() 
+                  val keyMarginVertical = (5f * density).toInt()
 
                   val layoutData = getLayoutData()
 
                   for (r in 0 until 4) {
                       val rowLayout = keysContainer.getChildAt(r) as LinearLayout
-                      rowLayout.weightSum = layoutData.weightSum // قوة التصميم المتناظر!
+                      rowLayout.weightSum = layoutData.weightSum 
                       rowLayout.setPadding(0, keyMarginVertical/2, 0, keyMarginVertical/2)
                       
                       val dataRow = if (r < layoutData.rows.size) layoutData.rows[r] else emptyList()
@@ -636,16 +645,16 @@ jobs:
                                   view.visibility = View.VISIBLE
                                   view.tag = key
                                   
-                                  val displayText = when (key) { "SHIFT" -> if (isCaps) "⇪" else "⇧"; "DEL" -> "⌫"; "ENTER" -> "⏎"; else -> key }
+                                  val displayText = when (key) { "SHIFT" -> if (isCaps) "⇪" else "⇧"; "DEL" -> "⌫"; "ENTER" -> "إدخال"; "SPACE" -> "مسافة"; else -> key }
                                   view.text = displayText
                                   
-                                  val baseTextSize = if (isEmojiMode && key.length == 2) 28f else if (key == "🌐" || key == "?123" || key == "ABC") 14f else 22f
-                                  view.textSize = baseTextSize * sizeMultiplier
+                                  val baseTextSize = if (key.length > 1) 14f else 22f
+                                  view.textSize = baseTextSize * textScale
                                   
                                   val isSpecial = key.length > 2 || key == "🌐" || key == "DEL" || key == "SHIFT"
                                   view.setBackgroundResource(when { key == "ENTER" -> R.drawable.key_enter_selector; isSpecial -> R.drawable.key_special_selector; else -> R.drawable.key_selector })
                                   view.setTextColor(if(key == "ENTER") Color.WHITE else textColorInt)
-                                  view.typeface = Typeface.DEFAULT // خط نظيف ورفيع مثل iOS
+                                  view.typeface = Typeface.DEFAULT 
                                   
                                   (view.layoutParams as LinearLayout.LayoutParams).apply { this.weight = weight; setMargins(keyMarginHorizontal, 0, keyMarginHorizontal, 0) }
                               }
@@ -653,27 +662,10 @@ jobs:
                       }
                   }
               }
-              // ... بقية الدوال (الذكاء الاصطناعي، الحافظة، وغيرها) كما هي من V26 ...
-              private fun populateClipboard() {
-                  clipboardGrid.removeAllViews()
-                  val historyStr = prefs.getString("clip_history", "") ?: ""
-                  val history = historyStr.split("|||").filter { it.isNotBlank() }
-                  if (history.isEmpty()) { clipboardGrid.addView(TextView(this).apply { text = "الحافظة فارغة حالياً"; textSize = 16f; gravity = Gravity.CENTER; setTextColor(ContextCompat.getColor(this@KeyboardService, R.color.suggestion_text)) }); return }
-                  val textColorInt = ContextCompat.getColor(this, R.color.key_text)
-                  for (item in history) {
-                      val card = TextView(this).apply {
-                          text = item; textSize = 15f; setTextColor(textColorInt); setBackgroundResource(R.drawable.bg_menu_pill)
-                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, (8*density).toInt()) }
-                          setPadding((16*density).toInt(), (12*density).toInt(), (16*density).toInt(), (12*density).toInt())
-                          setOnClickListener { vibrate(); currentInputConnection?.commitText(item, 1); toggleClipboard() }
-                      }
-                      clipboardGrid.addView(card)
-                  }
-              }
 
               override fun onFinishInput() {
                   super.onFinishInput(); currentTypedWord.clear(); if(this::sug1.isInitialized) { sug1.text = ""; sug2.text = ""; sug3.text = "" }
-                  keysContainer.visibility = View.VISIBLE; menuContainer.visibility = View.GONE; aiContainer.visibility = View.GONE; clipboardContainer.visibility = View.GONE
+                  keysContainer.visibility = View.VISIBLE; aiContainer.visibility = View.GONE
               }
 
               private fun updateSuggestions() {
@@ -693,9 +685,7 @@ jobs:
                   ic.deleteSurroundingText(currentTypedWord.length, 0); ic.commitText(sug + " ", 1); currentTypedWord.clear(); updateSuggestions()
               }
 
-              private fun toggleMenu() { if (menuContainer.visibility == View.VISIBLE) { menuContainer.visibility = View.GONE; keysContainer.visibility = View.VISIBLE } else { keysContainer.visibility = View.GONE; aiContainer.visibility = View.GONE; clipboardContainer.visibility = View.GONE; menuContainer.visibility = View.VISIBLE } }
-              private fun toggleAiMenu() { if (aiContainer.visibility == View.VISIBLE) { aiContainer.visibility = View.GONE; keysContainer.visibility = View.VISIBLE } else { keysContainer.visibility = View.GONE; menuContainer.visibility = View.GONE; clipboardContainer.visibility = View.GONE; aiContainer.visibility = View.VISIBLE } }
-              private fun toggleClipboard() { if (clipboardContainer.visibility == View.VISIBLE) { clipboardContainer.visibility = View.GONE; keysContainer.visibility = View.VISIBLE } else { keysContainer.visibility = View.GONE; menuContainer.visibility = View.GONE; aiContainer.visibility = View.GONE; populateClipboard(); clipboardContainer.visibility = View.VISIBLE } }
+              private fun toggleAiMenu() { if (aiContainer.visibility == View.VISIBLE) { aiContainer.visibility = View.GONE; keysContainer.visibility = View.VISIBLE } else { keysContainer.visibility = View.GONE; aiContainer.visibility = View.VISIBLE } }
 
               private fun handleKeyClick(key: String) {
                   val ic = currentInputConnection ?: return
@@ -779,21 +769,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase27.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase28.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase27.apk
+          path: release-output/AI-Keyboard-Pro-Phase28.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v27.0
-          name: "AI Keyboard Pro - Phase 27 (The iOS Aesthetic Update 🎨📐)"
-          body: "1. محرك تصميم هندسي جديد كلياً يعتمد على نِسَب الأوزان (Weight Proportions).\n2. إزاحة السطور (Staggered Layout) لتطابق لوحة مفاتيح iOS بدقة.\n3. توسيط زر المسافة (Space) وجعله متناظراً مع الأزرار الجانبية.\n4. استخدام ألوان iOS الرسمية للخطوط، الخلفيات، والأزرار المظللة مع تقليل سماكة الخط (Typeface).\n5. فقاعة التكبير عند الضغط أصبحت أكثر نعومة ودائرية لتشبه فقاعات أبل."
-          files: release-output/AI-Keyboard-Pro-Phase27.apk
+          tag_name: aikeyboard-v28.0
+          name: "AI Keyboard Pro - Phase 28 (The iOS Clone & Sliders 🍏🎚️)"
+          body: "1. محاكاة دقيقة لشكل مفاتيح iOS باستخدام تقنية Layer-List لإنشاء ظل 3D خفيف جداً.\n2. ترتيب الحروف العربية والإنجليزية بشكل متعرج (Staggered) مطابق بنسبة 100% لتصميم آبل.\n3. إضافة (شريطي تمرير - Sliders) في الإعدادات للتحكم الدقيق المنفصل في حجم الكيبورد وحجم الخط.\n4. إضافة زر صريح وواضح في الشريط العلوي الأيسر (سهم لأسفل ⬇️) لإخفاء/إنزال الكيبورد بسرعة."
+          files: release-output/AI-Keyboard-Pro-Phase28.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
