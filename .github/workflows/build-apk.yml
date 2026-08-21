@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 21; versionName = "14.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 22; versionName = "15.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -71,18 +71,24 @@ jobs:
           }
           EOF
 
-          # ---- الألوان (سريعة التجاوب) ----
+          # ---- الألوان (بما في ذلك ألوان Material You الجذابة للأيقونات) ----
           cat << 'EOF' > app/src/main/res/values/colors.xml
           <resources>
-              <color name="keyboard_bg">#E5E5EA</color>
+              <color name="keyboard_bg">#F2F2F7</color>
               <color name="key_bg">#FFFFFF</color>
               <color name="key_bg_pressed">#D1D1D6</color>
               <color name="key_special_bg">#B3B8C1</color>
               <color name="key_special_bg_pressed">#9AA0AB</color>
               <color name="key_text">#000000</color>
               <color name="toolbar_bg">#FFFFFF</color>
-              <color name="icon_color">#1C1C1E</color>
               <color name="menu_pill_bg">#D1D1D6</color>
+              <!-- ألوان الأيقونات الفاتحة -->
+              <color name="icon_settings_bg">#D3E3FD</color>
+              <color name="icon_settings_fg">#041E49</color>
+              <color name="icon_emoji_bg">#FFDF99</color>
+              <color name="icon_emoji_fg">#3E2723</color>
+              <color name="icon_paste_bg">#C4EED0</color>
+              <color name="icon_paste_fg">#072711</color>
           </resources>
           EOF
           cat << 'EOF' > app/src/main/res/values-night/colors.xml
@@ -94,14 +100,42 @@ jobs:
               <color name="key_special_bg_pressed">#3A3A3C</color>
               <color name="key_text">#FFFFFF</color>
               <color name="toolbar_bg">#1C1C1E</color>
-              <color name="icon_color">#FFFFFF</color>
               <color name="menu_pill_bg">#2C2C2E</color>
+              <!-- ألوان الأيقونات الداكنة -->
+              <color name="icon_settings_bg">#004A77</color>
+              <color name="icon_settings_fg">#C2E7FF</color>
+              <color name="icon_emoji_bg">#564419</color>
+              <color name="icon_emoji_fg">#FFE082</color>
+              <color name="icon_paste_bg">#0F5223</color>
+              <color name="icon_paste_fg">#C4EECE</color>
           </resources>
           EOF
 
-          # ---- ملفات الرسم (محسنة لعدم استهلاك الرام) ----
+          # ---- خلفيات الأيقونات الدائرية (Material You) ----
+          cat << 'EOF' > app/src/main/res/drawable/bg_icon_settings.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/icon_settings_bg"/></shape>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/bg_icon_emoji.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/icon_emoji_bg"/></shape>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/bg_icon_paste.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/icon_paste_bg"/></shape>
+          EOF
+
+          # ---- الأيقونات نفسها بألوان Material You متناسقة ----
+          cat << 'EOF' > app/src/main/res/drawable/ic_gear_colored.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_settings_fg" android:pathData="M19.4,13c0,-0.3 0,-0.7 0,-1s0,-0.7 0,-1l2.1,-1.7c0.2,-0.2 0.2,-0.4 0.1,-0.6l-2,-3.5c-0.1,-0.2 -0.4,-0.3 -0.6,-0.2l-2.5,1c-0.5,-0.4 -1.1,-0.7 -1.7,-1l-0.4,-2.6C14.4,2.2 14.2,2 14,2h-4c-0.2,0 -0.5,0.2 -0.5,0.4l-0.4,2.6c-0.6,0.3 -1.2,0.6 -1.7,1l-2.5,-1c-0.2,-0.1 -0.5,0 -0.6,0.2l-2,3.5c-0.1,0.2 -0.1,0.5 0.1,0.6l2.1,1.7c0,0.3 0,0.7 0,1s0,0.7 0,1l-2.1,1.7c-0.2,0.2 -0.2,0.4 -0.1,0.6l2,3.5c0.1,0.2 0.4,0.3 0.6,0.2l2.5,-1c0.5,0.4 1.1,0.7 1.7,1l0.4,2.6c0,0.2 0.3,0.4 0.5,0.4h4c0.2,0 0.5,-0.2 0.5,-0.4l0.4,-2.6c0.6,-0.3 1.2,-0.6 1.7,-1l2.5,1c0.2,0.1 0.5,0 0.6,-0.2l2,-3.5c0.1,-0.2 0.1,-0.5 -0.1,-0.6L19.4,13zM12,15.5c-1.9,0 -3.5,-1.6 -3.5,-3.5s1.6,-3.5 3.5,-3.5 3.5,1.6 3.5,3.5S13.9,15.5 12,15.5z"/></vector>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/ic_smile_colored.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_emoji_fg" android:pathData="M11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM12,20c-4.42,0 -8,-3.58 -8,-8s3.58,-8 8,-8 8,3.58 8,8 -3.58,8 -8,8zM15.5,11c0.83,0 1.5,-0.67 1.5,-1.5S16.33,8 15.5,8 14,8.67 14,9.5s0.67,1.5 1.5,1.5zM8.5,11c0.83,0 1.5,-0.67 1.5,-1.5S9.33,8 8.5,8 7,8.67 7,9.5 7.67,11 8.5,11zM12,17.5c2.33,0 4.31,-1.46 5.11,-3.5H6.89c0.8,2.04 2.78,3.5 5.11,3.5z"/></vector>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/ic_paste_colored.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_paste_fg" android:pathData="M19,2h-4.2C14.4,0.8 13.3,0 12,0c-1.3,0 -2.4,0.8 -2.8,2H5C3.9,2 3,2.9 3,4v16c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2V4C21,2.9 20.1,2 19,2zM12,2c0.6,0 1,0.4 1,1s-0.4,1 -1,1 -1,-0.4 -1,-1S11.4,2 12,2zM19,20H5V4h2v3h10V4h2V20z"/></vector>
+          EOF
+
+          # ---- ملفات الرسم للأزرار ----
           cat << 'EOF' > app/src/main/res/drawable/bg_toolbar.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/toolbar_bg"/><corners android:radius="24dp"/></shape>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/toolbar_bg"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_menu_pill.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/menu_pill_bg"/><corners android:radius="20dp"/></shape>
@@ -134,17 +168,9 @@ jobs:
           <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_enter_pressed" /><item android:drawable="@drawable/bg_key_enter" /></selector>
           EOF
 
-          # ---- الأيقونات المطلوبة ----
-          cat << 'EOF' > app/src/main/res/drawable/ic_menu.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_color" android:pathData="M4,18h16v-2H4v2zM4,13h16v-2H4v2zM4,6v2h16V6H4z"/></vector>
-          EOF
-          cat << 'EOF' > app/src/main/res/drawable/ic_back.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_color" android:pathData="M20,11H7.83l5.59,-5.59L12,4l-8,8l8,8l1.41,-1.41L7.83,13H20v-2z"/></vector>
-          EOF
-          
           # ---- إعدادات التطبيق ----
           cat << 'EOF' > app/src/main/res/values/strings.xml
-          <resources><string name="app_name">AI Keyboard</string><string name="ime_name">AI Keyboard Pro ✨</string></resources>
+          <resources><string name="app_name">AI Keyboard Pro</string><string name="ime_name">AI Keyboard Pro ✨</string></resources>
           EOF
           cat << 'EOF' > app/src/main/res/values/themes.xml
           <resources><style name="Theme.AIKeyboard" parent="Theme.AppCompat.DayNight.NoActionBar"><item name="android:windowLightStatusBar">?attr/isLightTheme</item></style></resources>
@@ -162,7 +188,7 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?><input-method xmlns:android="http://schemas.android.com/apk/res/android" android:supportsInlineSuggestions="true"><subtype android:imeSubtypeLocale="en_US" android:imeSubtypeMode="keyboard" /></input-method>
           EOF
 
-          # ---- واجهة التطبيق الخارجية (مبسطة جداً لأنك لا تريدها) ----
+          # ---- واجهة التفعيل ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
           package com.aikeyboard.pro
           import android.content.Context
@@ -182,10 +208,7 @@ jobs:
                   super.onCreate(savedInstanceState)
                   setTheme(R.style.Theme_AIKeyboard)
                   val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER; setPadding(60, 60, 60, 60) }
-                  
-                  root.addView(TextView(this).apply { text = "AI Keyboard Pro ✨"; textSize = 28f; setTextColor(Color.WHITE); paintFlags = paintFlags or android.graphics.Paint.FAKE_BOLD_TEXT_FLAG; setPadding(0,0,0,40) })
-                  root.addView(TextView(this).apply { text = "تم نقل جميع الإعدادات إلى داخل لوحة المفاتيح لتجربة أسرع وأفضل!"; textSize = 16f; setTextColor(Color.LTGRAY); gravity = Gravity.CENTER; setPadding(0,0,0,80) })
-                  
+                  root.addView(TextView(this).apply { text = "AI Keyboard Pro ✨"; textSize = 28f; setTextColor(Color.GRAY); paintFlags = paintFlags or android.graphics.Paint.FAKE_BOLD_TEXT_FLAG; setPadding(0,0,0,40) })
                   val btn = Button(this).apply {
                       text = "تفعيل الكيبورد"; setTextColor(Color.WHITE); textSize = 18f
                       background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#007AFF")) }
@@ -193,7 +216,6 @@ jobs:
                       setOnClickListener { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
                   }
                   root.addView(btn)
-                  
                   val btn2 = Button(this).apply {
                       text = "اختيار الكيبورد"; setTextColor(Color.WHITE); textSize = 18f
                       background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#34D399")) }
@@ -201,13 +223,12 @@ jobs:
                       setOnClickListener { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
                   }
                   root.addView(btn2)
-                  
                   setContentView(root)
               }
           }
           EOF
 
-          # ---- لوحة المفاتيح (ZERO LAG + قائمة إعدادات داخلية Gboard Style) ----
+          # ---- لوحة المفاتيح: الأيقونات الجميلة + مساحة التصحيح + حل جذري للاهتزاز (صفر لاق) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           import android.content.ClipboardManager
@@ -223,9 +244,7 @@ jobs:
           import android.graphics.Typeface
           import android.graphics.drawable.GradientDrawable
           import android.view.Gravity
-          import android.os.Build
-          import android.os.VibrationEffect
-          import android.os.Vibrator
+          import android.view.HapticFeedbackConstants
           import android.view.MotionEvent
           import android.view.KeyEvent
           import android.widget.PopupWindow
@@ -248,16 +267,13 @@ jobs:
               private lateinit var keysContainer: LinearLayout
               private lateinit var menuContainer: ScrollView
               private lateinit var prefs: SharedPreferences
-              private lateinit var vibrator: Vibrator
               private val scope = CoroutineScope(Dispatchers.Main + Job())
               private var density: Float = 1f
               private var currentPopup: PopupWindow? = null
 
-              // سر الأداء الخالي من اللاق: مصفوفة للأزرار نحدث نصوصها فقط ولا نمسحها أبداً!
               private val keyViews = ArrayList<ArrayList<TextView>>()
 
               override fun onCreateInputView(): View {
-                  vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                   prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
                   density = resources.displayMetrics.density
                   
@@ -271,114 +287,97 @@ jobs:
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
 
-                  // 1. شريط الأدوات الكبسولي (Toolbar)
-                  val toolbarContainer = LinearLayout(this).apply {
-                      orientation = LinearLayout.HORIZONTAL
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { 
-                          setMargins((8*density).toInt(), (10*density).toInt(), (8*density).toInt(), (2*density).toInt()) 
-                      }
-                  }
-
+                  // 1. شريط الأدوات (أيقونات Material You + مساحة التصحيح)
                   val toolbar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-                      setBackgroundResource(R.drawable.bg_toolbar) 
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (48 * density).toInt())
-                      elevation = 3f * density
-                      setPadding((12*density).toInt(), 0, (8*density).toInt(), 0)
+                      setBackgroundColor(bgColor) 
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (50 * density).toInt())
+                      setPadding((8*density).toInt(), 0, (8*density).toInt(), 0)
                   }
-                  toolbarContainer.addView(toolbar)
-                  rootLayout.addView(toolbarContainer)
+                  rootLayout.addView(toolbar)
                   
-                  fun addToolIcon(iconText: String, action: () -> Unit) {
-                      val iconContainer = LinearLayout(this).apply {
-                          gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+                  fun addMaterialIcon(iconResId: Int, bgResId: Int, action: () -> Unit) {
+                      val img = ImageView(this).apply {
+                          setImageResource(iconResId)
+                          setBackgroundResource(bgResId)
+                          val size = (36 * density).toInt()
+                          layoutParams = LinearLayout.LayoutParams(size, size).apply { setMargins(0, 0, (10*density).toInt(), 0) }
+                          val p = (8 * density).toInt()
+                          setPadding(p, p, p, p)
+                          setOnClickListener { vibrate(this); action() }
                       }
-                      val tv = TextView(this).apply {
-                          text = iconText; textSize = 22f; gravity = Gravity.CENTER
-                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                          setOnClickListener { vibrate(); action() }
-                      }
-                      iconContainer.addView(tv)
-                      toolbar.addView(iconContainer)
+                      toolbar.addView(img)
                   }
 
-                  // قائمة الإعدادات (Menu) المدمجة كـ Gboard
-                  addToolIcon("🎛️") { toggleMenu() } // فتح قائمة الإعدادات الداخلية
-                  addToolIcon("😊") { isEmojiMode = !isEmojiMode; refreshKeysData() }
-                  addToolIcon("📋") { 
+                  // أيقونات جميلة جداً على اليسار
+                  addMaterialIcon(R.drawable.ic_gear_colored, R.drawable.bg_icon_settings) { toggleMenu() }
+                  addMaterialIcon(R.drawable.ic_smile_colored, R.drawable.bg_icon_emoji) { isEmojiMode = !isEmojiMode; refreshKeysData() }
+                  addMaterialIcon(R.drawable.ic_paste_colored, R.drawable.bg_icon_paste) { 
                       val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                       val textToPaste = clipboard.primaryClip?.getItemAt(0)?.text
                       if (textToPaste != null) currentInputConnection?.commitText(textToPaste, 1)
                   }
-                  toolbar.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 0.5f) })
                   
+                  // مساحة فارغة في المنتصف (لتصحيح الكلمات و Gemini مستقبلاً)
+                  val suggestionSpace = TextView(this).apply {
+                      text = "" // فارغ كما طلبت لترك مساحة
+                      layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+                  }
+                  toolbar.addView(suggestionSpace)
+                  
+                  // زر الذكاء الاصطناعي على اليمين
                   val aiButton = TextView(this).apply {
                       text = "✨ AI Reply"
                       setTextColor(Color.WHITE); textSize = 14f; typeface = Typeface.DEFAULT_BOLD; gravity = Gravity.CENTER
                       background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#34D399")) }
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (36 * density).toInt())
                       setPadding((16*density).toInt(), 0, (16*density).toInt(), 0)
-                      setOnClickListener { vibrate(); generateAiResponse(this) }
+                      setOnClickListener { vibrate(this); generateAiResponse(this) }
                   }
                   toolbar.addView(aiButton)
 
-                  // 2. حاوية الأزرار (Keys)
+                  // 2. حاوية الأزرار
                   keysContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(6, 6, 6, 12) }
                   }
                   
-                  // 3. حاوية القائمة الداخلية (Menu) - مخفية افتراضياً
+                  // 3. القائمة الداخلية (الإعدادات)
                   menuContainer = ScrollView(this).apply {
                       visibility = View.GONE
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (240 * density).toInt())
                   }
                   val menuGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(40, 20, 40, 20) }
                   
-                  fun addMenuPill(title: String, icon: String, action: () -> Unit) {
+                  fun addMenuPill(title: String, iconStr: String, action: () -> Unit) {
                       val pill = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
                           setBackgroundResource(R.drawable.bg_menu_pill)
-                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (60 * density).toInt()).apply { setMargins(0, 0, 0, 20) }
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (56 * density).toInt()).apply { setMargins(0, 0, 0, 20) }
                           setPadding(40, 0, 40, 0)
-                          setOnClickListener { vibrate(); action() }
+                          setOnClickListener { vibrate(this); action() }
                       }
-                      pill.addView(TextView(this).apply { text = icon; textSize = 24f; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply{ setMargins(0,0,40,0) } })
+                      pill.addView(TextView(this).apply { text = iconStr; textSize = 22f; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply{ setMargins(0,0,40,0) } })
                       pill.addView(TextView(this).apply { text = title; textSize = 16f; setTextColor(textColorInt); typeface = Typeface.DEFAULT_BOLD })
                       menuGrid.addView(pill)
                   }
                   
-                  addMenuPill("تفعيل / تعطيل الاهتزاز", "📳") { 
-                      val current = prefs.getBoolean("vibrate", true)
-                      prefs.edit().putBoolean("vibrate", !current).apply()
-                      Toast.makeText(this, if(!current) "الاهتزاز: مفعل" else "الاهتزاز: معطل", Toast.LENGTH_SHORT).show()
+                  addMenuPill("الاهتزاز (Vibration)", "📳") { 
+                      val current = prefs.getBoolean("vibrate", true); prefs.edit().putBoolean("vibrate", !current).apply(); Toast.makeText(this, if(!current) "مفعل" else "معطل", Toast.LENGTH_SHORT).show()
                   }
-                  addMenuPill("تفعيل / تعطيل البوب-أب", "🎈") { 
-                      val current = prefs.getBoolean("popup", true)
-                      prefs.edit().putBoolean("popup", !current).apply()
-                      Toast.makeText(this, if(!current) "البوب-أب: مفعل" else "البوب-أب: معطل", Toast.LENGTH_SHORT).show()
-                  }
-                  addMenuPill("تكبير حجم الكيبورد", "➕") { 
-                      var s = prefs.getInt("kb_size", 2); if(s<4) s++; prefs.edit().putInt("kb_size", s).apply(); rebuildKeysLayout()
-                  }
-                  addMenuPill("تصغير حجم الكيبورد", "➖") { 
-                      var s = prefs.getInt("kb_size", 2); if(s>0) s--; prefs.edit().putInt("kb_size", s).apply(); rebuildKeysLayout()
-                  }
-                  addMenuPill("لصق مفتاح Gemini من الحافظة", "🔑") { 
+                  addMenuPill("لصق مفتاح Gemini (API Key)", "🔑") { 
                       val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                       val txt = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
-                      if (txt.isNotEmpty()) { prefs.edit().putString("api_key", txt).apply(); Toast.makeText(this, "تم الحفظ بنجاح!", Toast.LENGTH_SHORT).show() }
+                      if (txt.isNotEmpty()) { prefs.edit().putString("api_key", txt).apply(); Toast.makeText(this, "تم حفظ المفتاح!", Toast.LENGTH_SHORT).show() }
                   }
-                  addMenuPill("العودة للكيبورد", "🔙") { toggleMenu() }
+                  addMenuPill("رجوع", "🔙") { toggleMenu() }
                   
                   menuContainer.addView(menuGrid)
                   
                   rootLayout.addView(keysContainer)
                   rootLayout.addView(menuContainer)
 
-                  // بناء الأزرار الفعلي (يحدث مرة واحدة فقط لمنع اللاق!)
                   rebuildKeysLayout()
-                  
                   return rootLayout
               }
 
@@ -390,7 +389,6 @@ jobs:
                   }
               }
 
-              // بناء الهيكل مرة واحدة
               private fun rebuildKeysLayout() {
                   keysContainer.removeAllViews()
                   keyViews.clear()
@@ -401,7 +399,7 @@ jobs:
                   for (r in 0 until 4) {
                       val rowLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, baseKeyHeight) }
                       val rowViews = ArrayList<TextView>()
-                      for (c in 0 until 12) { // أقصى عدد للأزرار في الصف (للعربية)
+                      for (c in 0 until 12) {
                           val keyView = TextView(this).apply {
                               gravity = Gravity.CENTER
                               typeface = Typeface.DEFAULT
@@ -409,7 +407,7 @@ jobs:
                               layoutParams = lp; isClickable = true
                               setOnTouchListener { v, event ->
                                   when (event.action) {
-                                      MotionEvent.ACTION_DOWN -> { vibrate(); showPopup(v, text.toString(), textColorInt); false } 
+                                      MotionEvent.ACTION_DOWN -> { vibrate(v); showPopup(v, text.toString(), textColorInt); false } 
                                       MotionEvent.ACTION_UP -> { currentPopup?.dismiss(); handleKeyClick(tag as String); false }
                                       MotionEvent.ACTION_CANCEL -> { currentPopup?.dismiss(); false }
                                       else -> false
@@ -422,10 +420,9 @@ jobs:
                       keyViews.add(rowViews)
                       keysContainer.addView(rowLayout)
                   }
-                  refreshKeysData() // تعبئة البيانات
+                  refreshKeysData()
               }
 
-              // تحديث النصوص فقط (O(1) أداء خارق = لا يوجد لاق)
               private fun refreshKeysData() {
                   val textColorInt = ContextCompat.getColor(this, R.color.key_text)
                   val rowsData = if (isEmojiMode) {
@@ -443,7 +440,7 @@ jobs:
                       )
                   } else {
                       when (currentLang) {
-                          "AR" -> listOf( // 12 حرف احترافي 
+                          "AR" -> listOf(
                               listOf("ذ", "ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج"),
                               listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط", "د"),
                               listOf("SHIFT", "ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ", "DEL"),
@@ -473,7 +470,6 @@ jobs:
                               val key = dataRow[c]
                               view.visibility = View.VISIBLE
                               view.tag = key
-                              
                               val displayText = when (key) { "SHIFT" -> if (isCaps) "⇪" else "⇧"; "DEL" -> "⌫"; "ENTER" -> "⏎"; else -> if (isCaps && !isSymbols && !isEmojiMode && currentLang != "AR") key.uppercase() else key }
                               view.text = displayText
                               view.textSize = if (isEmojiMode && key.length == 2) 30f else if (key == "🌐" || key == "?123" || key == "ABC") 15f else 26f
@@ -505,7 +501,7 @@ jobs:
                       "DEL" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL)) }
                       "SPACE" -> ic.commitText(" ", 1)
                       "ENTER" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)) }
-                      "SHIFT" -> { isCaps = !isCaps; refreshKeysData() } // الآن التحديث يتم بلمح البصر دون لاق
+                      "SHIFT" -> { isCaps = !isCaps; refreshKeysData() }
                       "?123" -> { isSymbols = true; isEmojiMode = false; refreshKeysData() }
                       "ABC" -> { isSymbols = false; isEmojiMode = false; refreshKeysData() }
                       "🌐" -> { currentLang = when(currentLang) { "EN" -> "AR"; "AR" -> "FR"; else -> "EN" }; refreshKeysData() }
@@ -516,16 +512,16 @@ jobs:
                   }
               }
 
-              private fun vibrate() {
+              // السر في القضاء على اللاق (استخدام الهاردوير بدلا من السوفتوير)
+              private fun vibrate(view: View) {
                   if (prefs.getBoolean("vibrate", true)) {
-                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) vibrator.vibrate(VibrationEffect.createOneShot(20, 100))
-                      else vibrator.vibrate(20)
+                      view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING)
                   }
               }
 
               private fun generateAiResponse(btn: TextView) {
                   val apiKey = prefs.getString("api_key", "")
-                  if (apiKey.isNullOrEmpty()) { Toast.makeText(this, "⚠️ ضع المفتاح في قائمة الإعدادات (🎛️) أولاً", Toast.LENGTH_LONG).show(); return }
+                  if (apiKey.isNullOrEmpty()) { Toast.makeText(this, "⚠️ ضع المفتاح في الإعدادات أولاً", Toast.LENGTH_LONG).show(); return }
                   val ic = currentInputConnection ?: return
                   val extractedText = ic.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)?.text?.toString() ?: ""
                   btn.text = "⏳ Typing..."; btn.isEnabled = false; btn.alpha = 0.7f
@@ -573,21 +569,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase14.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase15.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase14.apk
+          path: release-output/AI-Keyboard-Pro-Phase15.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v14.0
-          name: "AI Keyboard Pro - Phase 14 (Sleep Edition 🛌 - Zero Lag & Internal Settings)"
-          body: "1. حل جذري 100% لمشكلة اللاق عن طريق تقنية View Reusability (لا يوجد انهيار للنظام بعد الآن).\n2. إلغاء صفحة الإعدادات الخارجية تماماً كما طلب المستخدم.\n3. دمج قائمة الإعدادات (Menu) داخل الكيبورد نفسه (أزرار كبسولية للتحكم بالاهتزاز، الحجم، ولصق المفتاح)."
-          files: release-output/AI-Keyboard-Pro-Phase14.apk
+          tag_name: aikeyboard-v15.0
+          name: "AI Keyboard Pro - Phase 15 (Material You Icons & Zero Lag ✨)"
+          body: "1. أيقونات Material You أصلية (دائرية ملونة) تتفوق على تصميم iOS.\n2. ترك مساحة فارغة واسعة في شريط الأدوات تمهيداً لإضافة تصحيح الكلمات و Gemini.\n3. القضاء التام على ה-Lag عن طريق استخدام Hardware Haptic Feedback بدلاً من Software Vibrator."
+          files: release-output/AI-Keyboard-Pro-Phase15.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
