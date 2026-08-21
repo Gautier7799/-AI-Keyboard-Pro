@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 29; versionName = "22.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 31; versionName = "24.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -236,7 +236,6 @@ jobs:
           </ScrollView>
           EOF
 
-          # ---- Dashboard Activity (Fixed Opening Lag by removing ObjectAnimator) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
           package com.aikeyboard.pro
           import android.content.Context
@@ -270,7 +269,7 @@ jobs:
           }
           EOF
 
-          # ---- Keyboard Service (Zero-Allocation Prediction Engine) ----
+          # ---- Keyboard Service (THE AI SUPERPOWERS UPDATE 🤖🚀) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           import android.content.ClipboardManager
@@ -300,6 +299,7 @@ jobs:
           import java.net.HttpURLConnection
           import java.net.URL
           import java.io.OutputStreamWriter
+          import java.lang.StringBuilder
 
           class KeyboardService : InputMethodService() {
               private var isCaps = false
@@ -323,8 +323,8 @@ jobs:
               private var density: Float = 1f
               
               private val keyViews = ArrayList<ArrayList<TextView>>()
+              private val currentTypedWord = StringBuilder()
 
-              // القاموس الذكي المدمج
               private val arDict = arrayOf("السلام", "عليكم", "مرحبا", "كيف", "حالك", "شكرا", "صباح", "الخير", "مساء", "الحمد", "لله", "اليوم", "غدا", "الآن", "ممكن", "عفوا", "جميل", "جدا", "رائع", "إن", "شاء", "الله", "نعم", "لا")
               private val enDict = arrayOf("hello", "how", "are", "you", "good", "morning", "night", "thanks", "thank", "please", "what", "time", "this", "that", "there", "their", "have", "been", "would", "could", "should")
               private val frDict = arrayOf("bonjour", "comment", "merci", "salut", "bien", "très", "avec", "pour", "dans", "faire", "dire", "aller", "voir", "vouloir", "venir", "devoir", "pouvoir")
@@ -374,33 +374,39 @@ jobs:
                   fun createSugView(): TextView {
                       return TextView(this).apply {
                           layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
-                          gravity = Gravity.CENTER
-                          textSize = 15f
-                          typeface = Typeface.DEFAULT_BOLD
-                          setTextColor(sugColorInt)
-                          isClickable = true
+                          gravity = Gravity.CENTER; textSize = 15f; typeface = Typeface.DEFAULT_BOLD; setTextColor(sugColorInt); isClickable = true
                           setOnClickListener { applySuggestion(this.text.toString()); vibrate() }
                       }
                   }
                   
-                  sug1 = createSugView()
-                  sug2 = createSugView()
-                  sug3 = createSugView()
-                  
-                  suggestionContainer.addView(sug1)
-                  suggestionContainer.addView(sug2)
-                  suggestionContainer.addView(sug3)
+                  sug1 = createSugView(); sug2 = createSugView(); sug3 = createSugView()
+                  suggestionContainer.addView(sug1); suggestionContainer.addView(sug2); suggestionContainer.addView(sug3)
                   toolbar.addView(suggestionContainer)
                   
-                  val aiButton = TextView(this).apply {
-                      text = "AI✨"
-                      setTextColor(Color.WHITE); textSize = 12f; typeface = Typeface.DEFAULT_BOLD; gravity = Gravity.CENTER
-                      background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#34D399")) }
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (30 * density).toInt()).apply { setMargins((6*density).toInt(), 0, 0, 0) }
-                      setPadding((12*density).toInt(), 0, (12*density).toInt(), 0)
-                      setOnClickListener { vibrate(); generateAiResponse(this) }
+                  // ================= مركز الذكاء الاصطناعي (AI Hub) =================
+                  val aiHub = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      setPadding((4*density).toInt(), 0, 0, 0)
                   }
-                  toolbar.addView(aiButton)
+                  
+                  fun createAiButton(label: String, colorHex: String, actionType: String): TextView {
+                      return TextView(this).apply {
+                          text = label
+                          setTextColor(Color.WHITE); textSize = 11f; typeface = Typeface.DEFAULT_BOLD; gravity = Gravity.CENTER
+                          background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 20f; setColor(Color.parseColor(colorHex)) }
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (30 * density).toInt()).apply { setMargins(0, 0, (4*density).toInt(), 0) }
+                          setPadding((10*density).toInt(), 0, (10*density).toInt(), 0)
+                          setOnClickListener { vibrate(); performAiAction(actionType, this, label) }
+                      }
+                  }
+
+                  aiHub.addView(createAiButton("📝", "#FF9500", "FIX")) // صحح
+                  aiHub.addView(createAiButton("🌍", "#007AFF", "TRANSLATE")) // ترجم
+                  aiHub.addView(createAiButton("✨رد", "#34C759", "REPLY")) // رد سريع
+
+                  toolbar.addView(aiHub)
+                  // =================================================================
 
                   keysContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(6, 6, 6, (12*density).toInt()) } }
                   menuContainer = ScrollView(this).apply { visibility = View.GONE; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
@@ -446,26 +452,16 @@ jobs:
                   return rootFrame
               }
 
-              // ---- دالة ذكية خفيفة جداً بدون Regex لاستخراج الكلمة الحالية ----
-              private fun extractCurrentWord(): String {
-                  val ic = currentInputConnection ?: return ""
-                  val textBefore = ic.getTextBeforeCursor(30, 0)?.toString() ?: return ""
-                  var lastSpaceIndex = -1
-                  for (i in textBefore.indices.reversed()) {
-                      val c = textBefore[i]
-                      if (c == ' ' || c == '\n' || c == '.' || c == '،' || c == '!' || c == '؟' || c == ',') {
-                          lastSpaceIndex = i
-                          break
-                      }
-                  }
-                  return if (lastSpaceIndex == -1) textBefore else textBefore.substring(lastSpaceIndex + 1)
+              override fun onFinishInput() {
+                  super.onFinishInput()
+                  currentTypedWord.clear()
+                  if(this::sug1.isInitialized) { sug1.text = ""; sug2.text = ""; sug3.text = "" }
               }
 
-              // ---- تحديث الاقتراحات بدون استهلاك ذاكرة (Zero Allocation Array Search) ----
               private fun updateSuggestions() {
                   if(!this::sug1.isInitialized) return
-                  val word = extractCurrentWord()
-                  if (word.length < 2 || isEmojiMode) {
+                  val word = currentTypedWord.toString()
+                  if (word.length < 2 || isEmojiMode || isSymbols) {
                       sug1.text = ""; sug2.text = ""; sug3.text = ""
                       return
                   }
@@ -473,24 +469,21 @@ jobs:
                   val dict = when(currentLang) { "AR" -> arDict; "FR" -> frDict; else -> enDict }
                   var count = 0
                   val matches = arrayOf("", "", "")
-                  
                   for (item in dict) {
                       if (item.length > word.length && item.startsWith(word, ignoreCase = true)) {
                           matches[count] = item
-                          count++
-                          if (count == 3) break
+                          count++; if (count == 3) break
                       }
                   }
-                  
                   sug1.text = matches[0]; sug2.text = matches[1]; sug3.text = matches[2]
               }
 
               private fun applySuggestion(sug: String) {
                   if (sug.isEmpty()) return
-                  val word = extractCurrentWord()
                   val ic = currentInputConnection ?: return
-                  ic.deleteSurroundingText(word.length, 0)
+                  ic.deleteSurroundingText(currentTypedWord.length, 0)
                   ic.commitText(sug + " ", 1)
+                  currentTypedWord.clear()
                   updateSuggestions()
               }
 
@@ -606,8 +599,7 @@ jobs:
                           val view = viewRow[c]
                           if (c < dataRow.size) {
                               val key = dataRow[c]
-                              view.visibility = View.VISIBLE
-                              view.tag = key
+                              view.visibility = View.VISIBLE; view.tag = key
                               val displayText = when (key) { "SHIFT" -> if (isCaps) "⇪" else "⇧"; "DEL" -> "⌫"; "ENTER" -> "⏎"; else -> if (isCaps && !isSymbols && !isEmojiMode && currentLang != "AR") key.uppercase() else key }
                               view.text = displayText
                               view.textSize = if (isEmojiMode && key.length == 2) 28f else if (key == "🌐" || key == "?123" || key == "ABC") 14f else 22f
@@ -618,68 +610,85 @@ jobs:
                               
                               val weight = when (key) { "SPACE" -> 4.5f; "ENTER" -> 1.8f; "SHIFT", "DEL", "?123", "ABC" -> 1.5f; "🌐" -> 1.2f; else -> 1f }
                               (view.layoutParams as LinearLayout.LayoutParams).weight = weight
-                          } else {
-                              view.visibility = View.GONE
-                          }
+                          } else { view.visibility = View.GONE }
                       }
                   }
-                  // تحديث الاقتراحات فقط عند تغيير اللغة
-                  updateSuggestions()
               }
 
               private fun handleKeyClick(key: String) {
                   val ic = currentInputConnection ?: return
                   when (key) {
-                      "DEL" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL)) }
-                      "SPACE" -> ic.commitText(" ", 1)
-                      "ENTER" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)) }
+                      "DEL" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL)); if (currentTypedWord.isNotEmpty()) currentTypedWord.deleteCharAt(currentTypedWord.length - 1) }
+                      "SPACE" -> { ic.commitText(" ", 1); currentTypedWord.clear() }
+                      "ENTER" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)); currentTypedWord.clear() }
                       "SHIFT" -> { isCaps = !isCaps; refreshKeysData() }
                       "?123" -> { isSymbols = true; isEmojiMode = false; refreshKeysData() }
                       "ABC" -> { isSymbols = false; isEmojiMode = false; refreshKeysData() }
-                      "🌐" -> { currentLang = when(currentLang) { "EN" -> "AR"; "AR" -> "FR"; else -> "EN" }; refreshKeysData() }
+                      "🌐" -> { currentLang = when(currentLang) { "EN" -> "AR"; "AR" -> "FR"; else -> "EN" }; currentTypedWord.clear(); refreshKeysData() }
                       else -> {
                           val letter = if (isCaps && !isSymbols && !isEmojiMode && currentLang != "AR") key.uppercase() else key
-                          ic.commitText(letter, 1)
-                          if (isCaps) { isCaps = false; refreshKeysData() }
+                          ic.commitText(letter, 1); if (isCaps) { isCaps = false; refreshKeysData() }
+                          if (key.length == 1 && !isSymbols && !isEmojiMode) { currentTypedWord.append(letter) }
                       }
                   }
-                  
-                  // الكود السحري: نحدث الاقتراحات فقط عند الضغط على زر جديد أو المسح بدلاً من طوال الوقت!
-                  if (key == "DEL" || key.length == 1) {
-                      updateSuggestions()
-                  }
+                  updateSuggestions()
               }
 
-              private fun vibrate() {
-                  if (!prefs.getBoolean("vibrate", true)) return
-                  try {
-                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) { vibrator.vibrate(VibrationEffect.createOneShot(12, VibrationEffect.DEFAULT_AMPLITUDE)) } 
-                      else { @Suppress("DEPRECATION") vibrator.vibrate(12) }
-                  } catch (e: Exception) {}
-              }
-
-              private fun generateAiResponse(btn: TextView) {
+              // ================= دالة الذكاء الاصطناعي الشاملة (الرد، التصحيح، الترجمة) =================
+              private fun performAiAction(actionType: String, btn: TextView, originalLabel: String) {
                   val apiKey = prefs.getString("api_key", "")
                   if (apiKey.isNullOrEmpty()) { Toast.makeText(this, "⚠️ ضع المفتاح في الإعدادات أولاً", Toast.LENGTH_LONG).show(); return }
+                  
                   val ic = currentInputConnection ?: return
+                  // سحب النص الموجود في الحقل (بحد أقصى 500 حرف لسرعة الأداء)
                   val extractedText = ic.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)?.text?.toString() ?: ""
-                  btn.text = "⏳"; btn.isEnabled = false; btn.alpha = 0.7f
+                  
+                  if (extractedText.isBlank() && actionType != "REPLY") {
+                      Toast.makeText(this, "لا يوجد نص لتصحيحه أو ترجمته", Toast.LENGTH_SHORT).show()
+                      return
+                  }
+
+                  btn.text = "⏳"
+                  btn.isEnabled = false
+                  btn.alpha = 0.7f
+
                   scope.launch {
                       try {
                           val responseStr = withContext(Dispatchers.IO) {
                               val conn = URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey").openConnection() as HttpURLConnection
                               conn.requestMethod = "POST"; conn.setRequestProperty("Content-Type", "application/json"); conn.doOutput = true
-                              val prompt = if (extractedText.isNotBlank()) "You are an AI keyboard assistant. Reply naturally to: $extractedText" else "Write a short greeting."
+                              
+                              val prompt = when (actionType) {
+                                  "FIX" -> "أنت مدقق لغوي. قم بتصحيح الأخطاء الإملائية والنحوية للنص التالي، وأعد إرسال النص المصحح فقط بدون أي مقدمات أو شروحات: $extractedText"
+                                  "TRANSLATE" -> "أنت مترجم محترف. إذا كان النص التالي بالعربية، ترجمه للإنجليزية. وإذا كان بالإنجليزية، ترجمه للعربية. أرسل الترجمة فقط بدون أي كلام إضافي: $extractedText"
+                                  else -> "You are an AI keyboard assistant. Reply naturally to: $extractedText"
+                              }
+                              
                               val payload = JSONObject().apply { put("contents", org.json.JSONArray().apply { put(JSONObject().apply { put("parts", org.json.JSONArray().apply { put(JSONObject().apply { put("text", prompt) }) }) }) }) }
                               OutputStreamWriter(conn.outputStream).use { it.write(payload.toString()) }
                               conn.inputStream.bufferedReader().use { it.readText() }
                           }
-                          val reply = JSONObject(responseStr).getJSONArray("candidates").getJSONObject(0).getJSONObject("content").getJSONArray("parts").getJSONObject(0).getString("text")
-                          withContext(Dispatchers.Main) { ic.commitText("\n" + reply.trim() + " ✨\n", 1) }
-                      } catch (e: Exception) { withContext(Dispatchers.Main) { ic.commitText("\n[AI Error]\n", 1) } } 
-                      finally { btn.text = "AI✨"; btn.isEnabled = true; btn.alpha = 1.0f }
+                          val reply = JSONObject(responseStr).getJSONArray("candidates").getJSONObject(0).getJSONObject("content").getJSONArray("parts").getJSONObject(0).getString("text").trim()
+                          
+                          withContext(Dispatchers.Main) { 
+                              if (actionType == "REPLY") {
+                                  ic.commitText("\n" + reply + " ✨\n", 1)
+                              } else {
+                                  // للتصحيح والترجمة: نحذف النص القديم ونضع الجديد
+                                  ic.deleteSurroundingText(extractedText.length, 0)
+                                  ic.commitText(reply, 1)
+                              }
+                          }
+                      } catch (e: Exception) { 
+                          withContext(Dispatchers.Main) { Toast.makeText(this@KeyboardService, "فشل الاتصال بـ Gemini", Toast.LENGTH_SHORT).show() }
+                      } 
+                      finally { 
+                          btn.text = originalLabel; btn.isEnabled = true; btn.alpha = 1.0f 
+                      }
                   }
               }
+              // =========================================================================================
+
               override fun onDestroy() { super.onDestroy(); scope.cancel() }
           }
           EOF
@@ -708,21 +717,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase22.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase24.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase22.apk
+          path: release-output/AI-Keyboard-Pro-Phase24.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v22.0
-          name: "AI Keyboard Pro - Phase 22 (Zero-Lag Prediction Fix ⚡)"
-          body: "1. إصلاح مشكلة اللاج الخطيرة التي ظهرت في التنبؤات (عبر إزالة الـ Regex واستخدام خوارزمية Zero-Allocation).\n2. إيقاف تحديث الكلمات المستمر بدون داعٍ، وجعل الكيبورد يقرأ الحروف فقط عند الضغط عليها لضمان صفر استهلاك للمعالج.\n3. إزالة التأثيرات الجمالية الثقيلة من واجهة التطبيق لضمان سرعة خرافية في فتح التطبيق."
-          files: release-output/AI-Keyboard-Pro-Phase22.apk
+          tag_name: aikeyboard-v24.0
+          name: "AI Keyboard Pro - Phase 24 (The Goodnight Build: AI Superpowers 🤖🌙)"
+          body: "1. تحويل زر الذكاء الاصطناعي إلى 3 أزرار خارقة (ترجمة 🌍، تصحيح 📝، رد ✨).\n2. إمكانية كتابة نص مليء بالأخطاء والضغط على زر (صحح) ليقوم الكيبورد باستبداله بنص عربي سليم 100% فوراً.\n3. ميزة (الترجمة الحية) تستبدل الجملة التي كتبتها بترجمتها الإنجليزية بضغطة زر واحدة."
+          files: release-output/AI-Keyboard-Pro-Phase24.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
