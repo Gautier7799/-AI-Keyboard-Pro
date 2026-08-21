@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 37; versionName = "30.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 38; versionName = "31.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -74,7 +74,6 @@ jobs:
           # ---- ألوان iOS الأصلية ----
           cat << 'EOF' > app/src/main/res/values/colors.xml
           <resources>
-              <!-- ألوان لوحة المفاتيح -->
               <color name="keyboard_bg">#D1D1D6</color>
               <color name="key_bg">#FFFFFF</color>
               <color name="key_shadow">#898A8D</color>
@@ -85,7 +84,6 @@ jobs:
               <color name="key_text">#000000</color>
               <color name="suggestion_text">#3C3C43</color>
               
-              <!-- ألوان تطبيق الإعدادات (iOS Settings Style) -->
               <color name="settings_bg">#F2F2F7</color>
               <color name="settings_card">#FFFFFF</color>
               <color name="settings_text">#000000</color>
@@ -145,7 +143,6 @@ jobs:
           <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_enter_pressed" /><item android:drawable="@drawable/bg_key_enter" /></selector>
           EOF
 
-          # ---- تصميم تطبيق الإعدادات (iOS Settings Style) ----
           cat << 'EOF' > app/src/main/res/drawable/bg_settings_card.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/settings_card"/><corners android:radius="12dp"/></shape>
           EOF
@@ -162,7 +159,6 @@ jobs:
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="8dp"/></shape>
           EOF
 
-          # ---- أيقونة التطبيق (iOS Aesthetic) ----
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#1C1C1E" android:pathData="M0,0h108v108h-108z"/></vector>
           EOF
@@ -178,6 +174,12 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources><string name="app_name">AI Keyboard</string><string name="ime_name">AI Keyboard (iOS Style)</string></resources>
           EOF
+          
+          # ⬅️ هذا هو ملف الثيمات الذي سقط سهواً وتسبب بالخطأ! تمت إضافته.
+          cat << 'EOF' > app/src/main/res/values/themes.xml
+          <resources><style name="Theme.AIKeyboard" parent="Theme.AppCompat.DayNight.NoActionBar"><item name="android:windowLightStatusBar">?attr/isLightTheme</item></style></resources>
+          EOF
+
           cat << 'EOF' > app/src/main/res/xml/method.xml
           <?xml version="1.0" encoding="utf-8"?><input-method xmlns:android="http://schemas.android.com/apk/res/android" android:supportsInlineSuggestions="true"><subtype android:imeSubtypeLocale="en_US" android:imeSubtypeMode="keyboard" /></input-method>
           EOF
@@ -365,7 +367,6 @@ jobs:
                   rootFrame = FrameLayout(this).apply { layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
                   mainLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(bgColor); layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
 
-                  // شريط الاقتراحات (Clean Top Bar) خالي من الأيقونات المزعجة
                   val toolbar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
                       setBackgroundColor(Color.TRANSPARENT) 
@@ -391,7 +392,6 @@ jobs:
                   suggestionContainer.addView(sug1); suggestionContainer.addView(sug2); suggestionContainer.addView(sug3)
                   toolbar.addView(suggestionContainer)
                   
-                  // زر الذكاء الاصطناعي الأنيق في أقصى اليمين
                   val aiButton = TextView(this).apply {
                       text = "AI ✨"
                       setTextColor(Color.WHITE); textSize = 13f; typeface = Typeface.DEFAULT_BOLD; gravity = Gravity.CENTER
@@ -405,7 +405,6 @@ jobs:
 
                   keysContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setPadding(0, (2*density).toInt(), 0, (6*density).toInt()) } }
                   
-                  // شاشة الذكاء الاصطناعي (AI Overlay)
                   aiContainer = ScrollView(this).apply { visibility = View.GONE; layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
                   val aiGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding((16*density).toInt(), (16*density).toInt(), (16*density).toInt(), (16*density).toInt()) }
                   fun addAiOption(title: String, desc: String, iconStr: String, colorStr: String, actionType: String) {
@@ -445,7 +444,6 @@ jobs:
                   return rootFrame
               }
 
-              // ================= التوزيعة الهندسية الدقيقة لـ iOS (The Perfect Replica) =================
               private fun getLayoutData(): LayoutData {
                   if (isEmojiMode) {
                       return LayoutData(8f, listOf(
@@ -471,7 +469,6 @@ jobs:
                   
                   return when (currentLang) {
                       "AR" -> {
-                          // توزيعة 12-11-10 الدقيقة الخاصة بـ iOS للغة العربية
                           val sum = 12f
                           val rows = if (isCaps) listOf(
                               listOf("َ", "ً", "ُ", "ٌ", "ِ", "ٍ", "ّ", "ْ", "أ", "إ", "آ", "[").map { KeyDef(it, 1f) },
@@ -479,19 +476,14 @@ jobs:
                               listOf(KeyDef("SHIFT", 1f)) + listOf("ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ").map { KeyDef(it, 1f) } + listOf(KeyDef("DEL", 1f)),
                               listOf(KeyDef("?123", 1.5f), KeyDef("🌐", 1f), KeyDef("😊", 1f), KeyDef("SPACE", 7f), KeyDef("ENTER", 1.5f))
                           ) else listOf(
-                              // السطر الأول: 12 حرف
                               listOf("ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج", "د").map { KeyDef(it, 1f) },
-                              // السطر الثاني: 11 حرف مع إزاحة نصفية 0.5
                               listOf(KeyDef("SPACER", 0.5f)) + listOf("ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط").map { KeyDef(it, 1f) } + listOf(KeyDef("SPACER", 0.5f)),
-                              // السطر الثالث: 10 حروف بين زرين بحجم 1
                               listOf(KeyDef("SHIFT", 1f)) + listOf("ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ").map { KeyDef(it, 1f) } + listOf(KeyDef("DEL", 1f)),
-                              // السطر الأخير
                               listOf(KeyDef("?123", 1.5f), KeyDef("🌐", 1f), KeyDef("😊", 1f), KeyDef("SPACE", 7f), KeyDef("ENTER", 1.5f))
                           )
                           LayoutData(sum, rows)
                       }
                       else -> {
-                          // توزيعة الإنجليزية القياسية
                           val sum = 10f
                           val rows = listOf(
                               listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p").map { KeyDef(if (isCaps) it.uppercase() else it, 1f) },
@@ -711,21 +703,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase30.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase31.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase30.apk
+          path: release-output/AI-Keyboard-Pro-Phase31.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v30.0
-          name: "AI Keyboard Pro - Phase 30 (The Perfect iOS Replica 🍏)"
-          body: "1. 🍏 بناء توزيعة الحروف العربية (12-11-10) بدقة تامة لتكون الأزرار عريضة ومتناسقة ومطابقة لتصميم أبل.\n2. 🧹 تنظيف الشريط العلوي بالكامل وإزالة كل الأيقونات المزعجة للحفاظ على البساطة.\n3. ✨ إضافة زر AI الأزرق بشكل أنيق جداً في الزاوية العلوية اليمنى.\n4. 📱 إعادة بناء واجهة الإعدادات بستايل (iOS Settings) شاملة أشرطة التمرير والكتل البيضاء.\n5. 🌐😊 إضافة زر الإيموجي بجوار زر المسافة واللغة كما هو معتاد."
-          files: release-output/AI-Keyboard-Pro-Phase30.apk
+          tag_name: aikeyboard-v31.0
+          name: "AI Keyboard Pro - Phase 31 (The Final Perfect iOS Replica 🍏)"
+          body: "1. 🐛 إصلاح خطأ `Theme.AIKeyboard not found` الذي كان يمنع بناء التطبيق.\n2. 🍏 توزيعة الحروف العربية (12-11-10) دقيقة تماماً لتكون الأزرار عريضة ومتناسقة ومطابقة لتصميم أبل.\n3. 🧹 الشريط العلوي نظيف جداً وخالي من الأيقونات المزعجة للحفاظ على بساطة iOS.\n4. ✨ زر AI الأزرق متوفر بشكل أنيق جداً في الزاوية العلوية اليمنى.\n5. 📱 واجهة الإعدادات مطابقة لستايل (iOS Settings) مع أشرطة التمرير والتحكم بالحجم.\n6. 🌐😊 زر الإيموجي متوفر بجوار زر المسافة."
+          files: release-output/AI-Keyboard-Pro-Phase31.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
