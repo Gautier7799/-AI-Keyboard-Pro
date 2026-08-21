@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 31; versionName = "24.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 32; versionName = "25.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -269,7 +269,7 @@ jobs:
           }
           EOF
 
-          # ---- Keyboard Service (THE AI SUPERPOWERS UPDATE 🤖🚀) ----
+          # ---- Keyboard Service (THE AI SUPERPOWERS UPDATE + FIXED VIBRATE) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           import android.content.ClipboardManager
@@ -634,13 +634,22 @@ jobs:
                   updateSuggestions()
               }
 
+              // ================= دالة الاهتزاز المفقودة التي تم استرجاعها =================
+              private fun vibrate() {
+                  if (!prefs.getBoolean("vibrate", true)) return
+                  try {
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) { vibrator.vibrate(VibrationEffect.createOneShot(12, VibrationEffect.DEFAULT_AMPLITUDE)) } 
+                      else { @Suppress("DEPRECATION") vibrator.vibrate(12) }
+                  } catch (e: Exception) {}
+              }
+              // ==============================================================================
+
               // ================= دالة الذكاء الاصطناعي الشاملة (الرد، التصحيح، الترجمة) =================
               private fun performAiAction(actionType: String, btn: TextView, originalLabel: String) {
                   val apiKey = prefs.getString("api_key", "")
                   if (apiKey.isNullOrEmpty()) { Toast.makeText(this, "⚠️ ضع المفتاح في الإعدادات أولاً", Toast.LENGTH_LONG).show(); return }
                   
                   val ic = currentInputConnection ?: return
-                  // سحب النص الموجود في الحقل (بحد أقصى 500 حرف لسرعة الأداء)
                   val extractedText = ic.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)?.text?.toString() ?: ""
                   
                   if (extractedText.isBlank() && actionType != "REPLY") {
@@ -674,7 +683,6 @@ jobs:
                               if (actionType == "REPLY") {
                                   ic.commitText("\n" + reply + " ✨\n", 1)
                               } else {
-                                  // للتصحيح والترجمة: نحذف النص القديم ونضع الجديد
                                   ic.deleteSurroundingText(extractedText.length, 0)
                                   ic.commitText(reply, 1)
                               }
@@ -717,21 +725,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase24.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase25.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase24.apk
+          path: release-output/AI-Keyboard-Pro-Phase25.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v24.0
-          name: "AI Keyboard Pro - Phase 24 (The Goodnight Build: AI Superpowers 🤖🌙)"
-          body: "1. تحويل زر الذكاء الاصطناعي إلى 3 أزرار خارقة (ترجمة 🌍، تصحيح 📝، رد ✨).\n2. إمكانية كتابة نص مليء بالأخطاء والضغط على زر (صحح) ليقوم الكيبورد باستبداله بنص عربي سليم 100% فوراً.\n3. ميزة (الترجمة الحية) تستبدل الجملة التي كتبتها بترجمتها الإنجليزية بضغطة زر واحدة."
-          files: release-output/AI-Keyboard-Pro-Phase24.apk
+          tag_name: aikeyboard-v25.0
+          name: "AI Keyboard Pro - Phase 25 (The Goodnight Build - Vibrate Fix ✅)"
+          body: "1. إصلاح خطأ الترجمة البرمجية (Compiler Error) الناتج عن فقدان دالة الاهتزاز.\n2. تحويل زر الذكاء الاصطناعي إلى 3 أزرار خارقة (ترجمة 🌍، تصحيح 📝، رد ✨).\n3. إمكانية تصحيح النصوص وترجمتها فوراً."
+          files: release-output/AI-Keyboard-Pro-Phase25.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
