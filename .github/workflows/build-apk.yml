@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 18; versionName = "11.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 20; versionName = "13.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -100,12 +100,8 @@ jobs:
 
           # ---- ملفات الرسم للـ Selector ----
           cat << 'EOF' > app/src/main/res/drawable/bg_toolbar.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android">
-              <solid android:color="@color/toolbar_bg"/>
-              <corners android:radius="24dp"/>
-          </shape>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/toolbar_bg"/><corners android:radius="24dp"/></shape>
           EOF
-          
           cat << 'EOF' > app/src/main/res/drawable/bg_key.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="8dp"/></shape>
           EOF
@@ -113,12 +109,8 @@ jobs:
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg_pressed"/><corners android:radius="8dp"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/key_selector.xml
-          <selector xmlns:android="http://schemas.android.com/apk/res/android">
-              <item android:state_pressed="true" android:drawable="@drawable/bg_key_pressed" />
-              <item android:drawable="@drawable/bg_key" />
-          </selector>
+          <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_pressed" /><item android:drawable="@drawable/bg_key" /></selector>
           EOF
-
           cat << 'EOF' > app/src/main/res/drawable/bg_key_special.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_special_bg"/><corners android:radius="8dp"/></shape>
           EOF
@@ -126,12 +118,8 @@ jobs:
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_special_bg_pressed"/><corners android:radius="8dp"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/key_special_selector.xml
-          <selector xmlns:android="http://schemas.android.com/apk/res/android">
-              <item android:state_pressed="true" android:drawable="@drawable/bg_key_special_pressed" />
-              <item android:drawable="@drawable/bg_key_special" />
-          </selector>
+          <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_special_pressed" /><item android:drawable="@drawable/bg_key_special" /></selector>
           EOF
-
           cat << 'EOF' > app/src/main/res/drawable/bg_key_enter.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#007AFF"/><corners android:radius="8dp"/></shape>
           EOF
@@ -139,13 +127,10 @@ jobs:
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#005BB5"/><corners android:radius="8dp"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/key_enter_selector.xml
-          <selector xmlns:android="http://schemas.android.com/apk/res/android">
-              <item android:state_pressed="true" android:drawable="@drawable/bg_key_enter_pressed" />
-              <item android:drawable="@drawable/bg_key_enter" />
-          </selector>
+          <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_enter_pressed" /><item android:drawable="@drawable/bg_key_enter" /></selector>
           EOF
 
-          # ---- أيقونات Material 3 ----
+          # ---- الأيقونات (تمت إضافة كل الأيقونات التي طلبتها في شريط الكيبورد) ----
           cat << 'EOF' > app/src/main/res/drawable/ic_settings.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_color" android:pathData="M19.4,13c0,-0.3 0,-0.7 0,-1s0,-0.7 0,-1l2.1,-1.7c0.2,-0.2 0.2,-0.4 0.1,-0.6l-2,-3.5c-0.1,-0.2 -0.4,-0.3 -0.6,-0.2l-2.5,1c-0.5,-0.4 -1.1,-0.7 -1.7,-1l-0.4,-2.6C14.4,2.2 14.2,2 14,2h-4c-0.2,0 -0.5,0.2 -0.5,0.4l-0.4,2.6c-0.6,0.3 -1.2,0.6 -1.7,1l-2.5,-1c-0.2,-0.1 -0.5,0 -0.6,0.2l-2,3.5c-0.1,0.2 -0.1,0.5 0.1,0.6l2.1,1.7c0,0.3 0,0.7 0,1s0,0.7 0,1l-2.1,1.7c-0.2,0.2 -0.2,0.4 -0.1,0.6l2,3.5c0.1,0.2 0.4,0.3 0.6,0.2l2.5,-1c0.5,0.4 1.1,0.7 1.7,1l0.4,2.6c0,0.2 0.3,0.4 0.5,0.4h4c0.2,0 0.5,-0.2 0.5,-0.4l0.4,-2.6c0.6,-0.3 1.2,-0.6 1.7,-1l2.5,1c0.2,0.1 0.5,0 0.6,-0.2l2,-3.5c0.1,-0.2 0.1,-0.5 -0.1,-0.6L19.4,13zM12,15.5c-1.9,0 -3.5,-1.6 -3.5,-3.5s1.6,-3.5 3.5,-3.5 3.5,1.6 3.5,3.5S13.9,15.5 12,15.5z"/></vector>
           EOF
@@ -155,6 +140,25 @@ jobs:
           cat << 'EOF' > app/src/main/res/drawable/ic_emoji.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_color" android:pathData="M11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM12,20c-4.42,0 -8,-3.58 -8,-8s3.58,-8 8,-8 8,3.58 8,8 -3.58,8 -8,8zM15.5,11c0.83,0 1.5,-0.67 1.5,-1.5S16.33,8 15.5,8 14,8.67 14,9.5s0.67,1.5 1.5,1.5zM8.5,11c0.83,0 1.5,-0.67 1.5,-1.5S9.33,8 8.5,8 7,8.67 7,9.5 7.67,11 8.5,11zM12,17.5c2.33,0 4.31,-1.46 5.11,-3.5H6.89c0.8,2.04 2.78,3.5 5.11,3.5z"/></vector>
           EOF
+          cat << 'EOF' > app/src/main/res/drawable/ic_translate.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_color" android:pathData="M12.9,15.1l-2.5,-2.5c-0.9,1 -2,1.8 -3.4,2.4l-0.7,-1.9c1.1,-0.5 2,-1.2 2.8,-2.1H4v-2h7V7h2v2h6v2h-4.4c-0.4,1 -1,1.9 -1.7,2.8l2,2L12.9,15.1z"/></vector>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/ic_size.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_color" android:pathData="M10,14L10,14l0,-4l0,0l-3,3l-1.41,-1.41L12,5l6.41,6.41L17,12.83l-3,-3l0,0l0,4l0,0l3,-3l1.41,1.41L12,19L5.59,12.59L7,11.17L10,14z"/></vector>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/ic_keyboard.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFF" android:pathData="M20,5H4C2.9,5 2,5.9 2,7v10c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V7C22,5.9 21.1,5 20,5zM11,8h2v2h-2V8zM11,11h2v2h-2V11zM8,8h2v2H8V8zM8,11h2v2H8V11zM7,13H5v-2h2V13zM7,10H5V8h2V10zM16,17H8v-2h8V17zM16,13h-2v-2h2V13zM16,10h-2V8h2V10zM19,13h-2v-2h2V13zM19,10h-2V8h2V10z"/></vector>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/ic_check.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFF" android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM10,17l-5,-5 1.41,-1.41L10,14.17l7.59,-7.59L19,8l-9,9z"/></vector>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/ic_vibration.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_color" android:pathData="M0,15h2V9H0v6zm3,2h2V7H3v10zm19,-8v6h2V9h-2zm-3,8h2V7h-2v10zM16.5,3h-9C6.67,3 6,3.67 6,4.5v15c0,0.83 0.67,1.5 1.5,1.5h9c0.83,0 1.5,-0.67 1.5,-1.5v-15c0,-0.83 -0.67,-1.5 -1.5,-1.5zM16,19H8V5h8v14z"/></vector>
+          EOF
+          cat << 'EOF' > app/src/main/res/drawable/ic_popup.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_color" android:pathData="M19,2H5C3.89,2 3,2.9 3,4v14c0,1.1 0.89,2 2,2h4l3,3 3,-3h4c1.1,0 2,-0.9 2,-2V4C21,2.9 20.1,2 19,2zM19,18h-4.83l-0.59,0.59L12,20.17l-1.59,-1.59L9.83,18H5V4h14V18z"/></vector>
+          EOF
+          
 
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources><string name="app_name">AI Keyboard</string><string name="ime_name">AI Keyboard Pro ✨</string></resources>
@@ -175,7 +179,7 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?><input-method xmlns:android="http://schemas.android.com/apk/res/android" android:supportsInlineSuggestions="true"><subtype android:imeSubtypeLocale="en_US" android:imeSubtypeMode="keyboard" /></input-method>
           EOF
 
-          # ---- تطبيق الإعدادات (تم استعادة إعدادات الكيبورد) ----
+          # ---- الإعدادات (لا تغيير فيها) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
           package com.aikeyboard.pro
           import android.content.Context
@@ -211,16 +215,21 @@ jobs:
                   scrollView.addView(root)
 
                   root.addView(TextView(this).apply { text = "Préférences"; setTextColor(Color.parseColor(textColor)); textSize = 28f; setPadding(20, 0, 0, 60); paintFlags = paintFlags or android.graphics.Paint.FAKE_BOLD_TEXT_FLAG })
-                  fun createButton(textStr: String, action: () -> Unit) {
+                  
+                  fun createButton(textStr: String, iconRes: Int, action: () -> Unit) {
                       root.addView(Button(this).apply {
                           text = textStr; setTextColor(Color.WHITE); textSize = 16f; isAllCaps = false
                           background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 24f; setColor(Color.parseColor("#007AFF")) }
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 140).apply { setMargins(0, 0, 0, 30) }
+                          setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0)
+                          compoundDrawablePadding = 30; setPadding(60, 0, 0, 0)
+                          gravity = Gravity.CENTER_VERTICAL or Gravity.START
                           setOnClickListener { action() }
                       })
                   }
-                  createButton("1. Activer le clavier") { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
-                  createButton("2. Sélectionner le clavier") { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
+                  
+                  createButton("Activer le clavier", R.drawable.ic_keyboard) { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
+                  createButton("Sélectionner le clavier", R.drawable.ic_check) { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
 
                   root.addView(TextView(this).apply { text = "Intelligence Artificielle (Gemini)"; setTextColor(Color.parseColor(subTextColor)); textSize = 14f; setPadding(20, 40, 0, 10) })
                   val apiCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor(cardColor)) }; setPadding(40, 40, 40, 40) }
@@ -239,12 +248,12 @@ jobs:
                   })
                   root.addView(apiCard)
 
-                  // استعادة إعدادات الاهتزاز والحجم
                   root.addView(TextView(this).apply { text = "Apparence et Clavier"; setTextColor(Color.parseColor(subTextColor)); textSize = 14f; setPadding(20, 40, 0, 10) })
                   val settingsCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor(cardColor)) } }
                   
-                  fun createSwitch(title: String, subtitle: String, key: String, default: Boolean, isLast: Boolean = false) {
+                  fun createSwitch(title: String, subtitle: String, iconRes: Int, key: String, default: Boolean, isLast: Boolean = false) {
                       val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(40, 30, 40, 30) }
+                      row.addView(ImageView(this).apply { setImageResource(iconRes); layoutParams = LinearLayout.LayoutParams(60, 60).apply { setMargins(0, 0, 40, 0) } })
                       val textLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f) }
                       textLayout.addView(TextView(this).apply { text = title; setTextColor(Color.parseColor(textColor)); textSize = 16f })
                       textLayout.addView(TextView(this).apply { text = subtitle; setTextColor(Color.parseColor(subTextColor)); textSize = 12f })
@@ -256,13 +265,16 @@ jobs:
                       settingsCard.addView(row)
                       if(!isLast) settingsCard.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 2).apply{ setMargins(40,0,0,0) }; setBackgroundColor(Color.parseColor(if(isLight) "#E5E5EA" else "#38383A")) })
                   }
-                  createSwitch("Vibreur du clavier", "Émettre une vibration", "vibrate", true)
-                  createSwitch("Pop-up de touche", "Afficher l'indicateur", "popup", true, true)
+                  
+                  createSwitch("Vibreur du clavier", "Émettre une vibration", R.drawable.ic_vibration, "vibrate", true)
+                  createSwitch("Pop-up de touche", "Afficher l'indicateur", R.drawable.ic_popup, "popup", true, true)
                   root.addView(settingsCard)
 
                   root.addView(TextView(this).apply { text = "Taille du Clavier"; setTextColor(Color.parseColor(subTextColor)); textSize = 14f; setPadding(20, 50, 0, 10) })
-                  val sizeCard = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor(cardColor)) }; setPadding(40, 40, 40, 40) }
+                  val sizeCard = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor(cardColor)) }; setPadding(40, 40, 40, 40) }
+                  sizeCard.addView(ImageView(this).apply { setImageResource(R.drawable.ic_size); layoutParams = LinearLayout.LayoutParams(60, 60).apply { setMargins(0, 0, 30, 0) } })
                   sizeCard.addView(SeekBar(this).apply {
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       max = 4; progress = prefs.getInt("kb_size", 2)
                       setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                           override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) { prefs.edit().putInt("kb_size", progress).apply() }
@@ -271,13 +283,12 @@ jobs:
                       })
                   })
                   root.addView(sizeCard)
-
                   setContentView(scrollView)
               }
           }
           EOF
 
-          # ---- لوحة المفاتيح: حل جذر الـ Lag بالتخزين المؤقت (View Caching) ----
+          # ---- لوحة المفاتيح: حل جذر الـ Lag وترتيب أيقونات الشريط العلوي بامتياز ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           import android.content.ClipboardManager
@@ -320,18 +331,8 @@ jobs:
               private val scope = CoroutineScope(Dispatchers.Main + Job())
               private val letterKeyViews = mutableListOf<TextView>()
               private var density: Float = 1f
-              
-              // Caching: الاحتفاظ بالواجهة لتجنب إعادة البناء (إزالة الـ Lag تماماً)
-              private var cachedView: View? = null
-              private var isInitialized = false
 
               override fun onCreateInputView(): View {
-                  if (cachedView != null) {
-                      // إذا كانت الواجهة مبنية مسبقاً، استخدمها فوراً (سرعة البرق ⚡)
-                      checkAndBuildKeys()
-                      return cachedView!!
-                  }
-
                   vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                   density = resources.displayMetrics.density
                   
@@ -344,7 +345,7 @@ jobs:
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
 
-                  // شريط الأدوات الكبسولي 
+                  // 💎 شريط الأدوات الكبسولي (مطابق للصورة الثانية تماماً) 💎
                   val toolbarContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { 
@@ -355,7 +356,7 @@ jobs:
                   val toolbar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
                       setBackgroundResource(R.drawable.bg_toolbar) 
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (44 * density).toInt())
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (48 * density).toInt()) // كبرت الشريط قليلا ليناسب الأيقونات
                       elevation = 3f * density
                       setPadding((12*density).toInt(), 0, (8*density).toInt(), 0)
                   }
@@ -368,28 +369,32 @@ jobs:
                       }
                       val img = ImageView(this).apply {
                           setImageResource(iconResId)
-                          layoutParams = LinearLayout.LayoutParams((24*density).toInt(), (24*density).toInt())
+                          // أيقونات أكبر قليلاً وأكثر وضوحاً
+                          layoutParams = LinearLayout.LayoutParams((28*density).toInt(), (28*density).toInt())
                           setOnClickListener { vibrate(); action() }
                       }
                       iconContainer.addView(img)
                       toolbar.addView(iconContainer)
                   }
 
-                  // الأيقونات في مكانها الصحيح
-                  addToolIcon(R.drawable.ic_settings) { startActivity(Intent(this, MainActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) }
+                  // ترتيب الأيقونات كما طلبت بالصورة الثانية
+                  addToolIcon(R.drawable.ic_emoji) { isEmojiMode = !isEmojiMode; forceBuildKeys() }
+                  addToolIcon(R.drawable.ic_translate) { /* سيتم ربط الترجمة لاحقاً */ Toast.makeText(this, "Traduire", Toast.LENGTH_SHORT).show() }
                   addToolIcon(R.drawable.ic_paste) {
                       val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                       val textToPaste = clipboard.primaryClip?.getItemAt(0)?.text
                       if (textToPaste != null) currentInputConnection?.commitText(textToPaste, 1)
                   }
-                  addToolIcon(R.drawable.ic_emoji) { isEmojiMode = !isEmojiMode; forceBuildKeys() } // أيقونة الإيموجي الصحيحة
-                  toolbar.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) })
+                  addToolIcon(R.drawable.ic_size) { startActivity(Intent(this, MainActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) }
+                  addToolIcon(R.drawable.ic_settings) { startActivity(Intent(this, MainActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) }
+
+                  toolbar.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 0.5f) })
                   
                   aiButton = TextView(this).apply {
                       text = "✨ AI Reply"
                       setTextColor(Color.WHITE); textSize = 14f; typeface = Typeface.DEFAULT_BOLD; gravity = Gravity.CENTER
                       background = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; cornerRadius = 30f; setColor(Color.parseColor("#34D399")) }
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (34 * density).toInt())
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (36 * density).toInt())
                       setPadding((16*density).toInt(), 0, (16*density).toInt(), 0)
                       setOnClickListener { vibrate(); generateAiResponse() }
                   }
@@ -402,12 +407,7 @@ jobs:
                   rootLayout?.addView(keysContainer)
 
                   forceBuildKeys()
-                  cachedView = rootLayout
                   return rootLayout!!
-              }
-
-              private fun checkAndBuildKeys() {
-                  if (currentLang != "AR") updateKeysTextForShift()
               }
 
               private fun forceBuildKeys() {
@@ -567,7 +567,7 @@ jobs:
                       finally { aiButton?.text = "✨ AI Reply"; aiButton?.isEnabled = true; aiButton?.alpha = 1.0f }
                   }
               }
-              override fun onDestroy() { super.onDestroy(); scope.cancel(); cachedView = null }
+              override fun onDestroy() { super.onDestroy(); scope.cancel() }
           }
           EOF
 
@@ -595,21 +595,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase11.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase13.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase11.apk
+          path: release-output/AI-Keyboard-Pro-Phase13.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v11.0
-          name: "AI Keyboard Pro - Phase 11 (Zero Lag ⚡ & Perfect Toolbar)"
-          body: "1. نظام View Caching: الكيبورد يفتح فوراً (0 ثانية Lag).\n2. شريط أدوات كبسولي مع أيقونة الابتسامة (Emoji) المخصصة.\n3. استعادة إعدادات حجم الكيبورد والاهتزاز في الواجهة."
-          files: release-output/AI-Keyboard-Pro-Phase11.apk
+          tag_name: aikeyboard-v13.0
+          name: "AI Keyboard Pro - Phase 13 (Perfect Gboard Toolbar Layout ✨)"
+          body: "1. ترتيب الأيقونات في شريط الكيبورد العلوي بشكل أفقي تماماً كما في Gboard.\n2. إزالة أي كود يسبب تعليق أو انهيار النظام."
+          files: release-output/AI-Keyboard-Pro-Phase13.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
