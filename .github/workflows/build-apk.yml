@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 39; versionName = "32.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 40; versionName = "33.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -71,7 +71,7 @@ jobs:
           }
           EOF
 
-          # ---- الألوان (مطابقة للصورة 2) ----
+          # ---- الألوان ----
           cat << 'EOF' > app/src/main/res/values/colors.xml
           <resources>
               <color name="keyboard_bg">#D1D1D6</color>
@@ -102,7 +102,7 @@ jobs:
           </resources>
           EOF
 
-          # ---- تصميم الأزرار (مطابق لـ iOS بظل سفلي خفيف) ----
+          # ---- تصميم الأزرار ----
           cat << 'EOF' > app/src/main/res/drawable/bg_key.xml
           <layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item android:top="1dp" android:bottom="0dp"><shape><solid android:color="@color/key_shadow"/><corners android:radius="6dp"/></shape></item><item android:bottom="1.2dp"><shape><solid android:color="@color/key_bg"/><corners android:radius="6dp"/></shape></item></layer-list>
           EOF
@@ -130,9 +130,7 @@ jobs:
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#1C1C1E" android:pathData="M0,0h108v108h-108z"/></vector>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_foreground.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-              <path android:fillColor="#007AFF" android:pathData="M30,40 h48 v30 h-48 z"/>
-          </vector>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#007AFF" android:pathData="M30,40 h48 v30 h-48 z"/></vector>
           EOF
           cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           <?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@drawable/ic_launcher_background"/><foreground android:drawable="@drawable/ic_launcher_foreground"/></adaptive-icon>
@@ -147,7 +145,7 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?><input-method xmlns:android="http://schemas.android.com/apk/res/android" android:supportsInlineSuggestions="true"><subtype android:imeSubtypeLocale="en_US" android:imeSubtypeMode="keyboard" /></input-method>
           EOF
 
-          # ---- واجهة الإعدادات (مطابقة للصورة 3 - Sliders منقطة) ----
+          # ---- واجهة الإعدادات (Sliders منقطة) ----
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
@@ -163,16 +161,13 @@ jobs:
                   
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="المظهر (Apparence)" android:textColor="@color/ios_blue" android:textSize="16sp" android:textStyle="bold" android:layout_marginBottom="16dp" />
                   
-                  <!-- شريط تكبير الكيبورد -->
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="حجم الكيبورد (الارتفاع)" android:textSize="16sp" android:textStyle="bold" />
                   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp" android:layout_marginBottom="24dp">
                       <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textSize="14sp" android:textStyle="bold"/>
-                      <!-- الشريط المتقطع (Discrete) -->
                       <SeekBar android:id="@+id/seek_kb_size" style="@style/Widget.AppCompat.SeekBar.Discrete" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="4" android:progress="2" />
                       <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textSize="22sp" android:textStyle="bold"/>
                   </LinearLayout>
 
-                  <!-- شريط حجم الخط -->
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="حجم الخط (Taille de la police)" android:textSize="16sp" android:textStyle="bold" />
                   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp" android:layout_marginBottom="24dp">
                       <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textSize="14sp" android:textStyle="bold"/>
@@ -234,7 +229,7 @@ jobs:
           }
           EOF
 
-          # ---- محرك الكيبورد الجديد (ديناميكي ومطابق لـ iOS) ----
+          # ---- الكيبورد المطابق لـ iOS ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           
@@ -261,6 +256,7 @@ jobs:
           import java.net.HttpURLConnection
           import java.net.URL
           import java.lang.StringBuilder
+          import java.io.OutputStreamWriter // <--- تم إصلاح الخطأ وإضافة هذا السطر ✅
 
           class KeyboardService : InputMethodService() {
               private var isCaps = false
@@ -366,7 +362,6 @@ jobs:
                   return rootFrame
               }
 
-              // التوزيعة الديناميكية المطابقة للصورة 2 (بدون أخطاء التصميم القديمة)
               private fun getLayoutData(): LayoutData {
                   if (isSymbols) {
                       val nums = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
@@ -380,7 +375,6 @@ jobs:
                   
                   return when (currentLang) {
                       "AR" -> {
-                          // توزيعة عربية قياسية متساوية الأبعاد
                           LayoutData(11f, listOf(
                               "ض ص ث ق ف غ ع ه خ ح ج".split(" ").map { KeyDef(it, 1f) },
                               listOf(KeyDef("SPACER", 0.5f)) + "ش س ي ب ل ا ت ن م ك ط".split(" ").map { KeyDef(it, 1f) } + listOf(KeyDef("SPACER", 0.5f)),
@@ -389,7 +383,6 @@ jobs:
                           ))
                       }
                       else -> {
-                          // الصورة 2 بالضبط
                           LayoutData(10f, listOf(
                               "q w e r t y u i o p".split(" ").map { KeyDef(if (isCaps) it.uppercase() else it, 1f) },
                               listOf(KeyDef("SPACER", 0.5f)) + "a s d f g h j k l".split(" ").map { KeyDef(if (isCaps) it.uppercase() else it, 1f) } + listOf(KeyDef("SPACER", 0.5f)),
@@ -409,9 +402,8 @@ jobs:
                   keysContainer.removeAllViews()
                   val layoutData = getLayoutData()
                   
-                  // تحويل درجات Slider التكبير (0,1,2,3,4) إلى مقياس
                   val kbStep = prefs.getInt("kb_scale_step", 2)
-                  val kbScale = 0.8f + (kbStep * 0.1f) // 0=0.8, 2=1.0, 4=1.2
+                  val kbScale = 0.8f + (kbStep * 0.1f) 
                   val baseKeyHeight = (44 * density * kbScale).toInt() 
                   
                   val txtStep = prefs.getInt("text_scale_step", 2)
@@ -442,7 +434,7 @@ jobs:
                                   
                                   val isSpecial = label.length > 2 || label == "🌐" || label == "DEL" || label == "SHIFT" || label == "😊" || label == "ENTER"
                                   setBackgroundResource(if (isSpecial) R.drawable.key_special_selector else R.drawable.key_selector)
-                                  setTextColor(textColorInt) // في صورة iOS زر return لونه رمادي ونص أسود
+                                  setTextColor(textColorInt) 
                                   
                                   layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, keyDef.weight).apply { setMargins(keyMarginH, 0, keyMarginH, 0) }
                                   
@@ -505,7 +497,7 @@ jobs:
                       "?123" -> { isSymbols = true; rebuildKeysLayout() }
                       "ABC" -> { isSymbols = false; rebuildKeysLayout() }
                       "🌐" -> { currentLang = if(currentLang == "EN") "AR" else "EN"; currentTypedWord.clear(); rebuildKeysLayout() }
-                      "😊" -> { Toast.makeText(this, "Emoji coming soon", Toast.LENGTH_SHORT).show() }
+                      "😊" -> { Toast.makeText(this, "Emoji", Toast.LENGTH_SHORT).show() }
                       else -> {
                           val letter = if (isCaps && !isSymbols && currentLang != "AR") key.uppercase() else key
                           ic.commitText(letter, 1); if (isCaps) { isCaps = false; rebuildKeysLayout() }
@@ -517,7 +509,7 @@ jobs:
               
               private fun performAiAction(actionType: String, btn: LinearLayout, originalTitle: String) {
                   val apiKey = prefs.getString("api_key", "")
-                  if (apiKey.isNullOrEmpty()) { Toast.makeText(this, "⚠️ ضع المفتاح في الإعدادات", Toast.LENGTH_LONG).show(); return }
+                  if (apiKey.isNullOrEmpty()) { Toast.makeText(this, "⚠️ ضف المفتاح في الإعدادات", Toast.LENGTH_LONG).show(); return }
                   val ic = currentInputConnection ?: return
                   val extractedText = ic.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)?.text?.toString() ?: ""
                   if (extractedText.isBlank()) { Toast.makeText(this, "لا يوجد نص", Toast.LENGTH_SHORT).show(); return }
@@ -569,21 +561,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase32.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase33.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase32.apk
+          path: release-output/AI-Keyboard-Pro-Phase33.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v32.0
-          name: "AI Keyboard Pro - Phase 32 (Pure iOS Layout & Discrete Sliders)"
-          body: "1. 📱 تم بناء محرك الأزرار ديناميكياً ليطابق تصميم وشكل وأبعاد الصورة 2 الخاصة بـ iOS حرفياً (بدون أي أخطاء في تباعد الأزرار العربية).\n2. 📏 تم تغيير أشرطة التمرير (Sliders) في الإعدادات لتكون متقطعة (Discrete) مع حرفي T كما في الصورة 3 الخاصة بـ Gboard.\n3. ✨ تم الإبقاء فقط على زر الذكاء الاصطناعي، وإزالة كل الزوائد والتعقيدات غير المطلوبة.\n4. زر المسافة والإدخال وألوان المفاتيح تتطابق الآن مع الصورة 2 بنسبة 100%."
-          files: release-output/AI-Keyboard-Pro-Phase32.apk
+          tag_name: aikeyboard-v33.0
+          name: "AI Keyboard Pro - Phase 33 (Fix OutputStreamWriter 🚀)"
+          body: "إصلاح خطأ `OutputStreamWriter` لضمان نجاح البناء."
+          files: release-output/AI-Keyboard-Pro-Phase33.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
