@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 52; versionName = "45.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 53; versionName = "46.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -151,13 +151,9 @@ jobs:
           cat << 'EOF' > app/src/main/res/drawable/ic_arrow_back.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M20,11H7.83L13.42,5.41L12,4L4,12L12,20L13.41,18.59L7.83,13H20V11Z"/></vector>
           EOF
-          
-          # أيقونة التراجع (Undo) ↩️
           cat << 'EOF' > app/src/main/res/drawable/ic_undo.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M12.5,8C9.85,8 7.45,8.99 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z"/></vector>
           EOF
-
-          # أيقونة اختيار الكيبورد ⌨️
           cat << 'EOF' > app/src/main/res/drawable/ic_keyboard_picker.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M20,5H4C2.9,5 2.01,5.9 2.01,7L2,17C2,18.1 2.9,19 4,19H20C21.1,19 22,18.1 22,17V7C22,5.9 21.1,5 20,5ZM11,8H13V10H11V8ZM11,11H13V13H11V11ZM8,8H10V10H8V8ZM8,11H10V13H8V11ZM7,13H5V11H7V13ZM7,10H5V8H7V10ZM16,17H8V15H16V17ZM16,13H14V11H16V13ZM16,10H14V8H16V10ZM19,13H17V11H19V13ZM19,10H17V8H19V10Z"/></vector>
           EOF
@@ -197,7 +193,6 @@ jobs:
                   <Button android:id="@+id/btn_select" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="8dp" android:layout_marginBottom="24dp" android:text="2. اختيار الكيبورد" />
                   <EditText android:id="@+id/input_api_key" android:layout_width="match_parent" android:layout_height="50dp" android:hint="الصق مفتاح Gemini API هنا..." android:inputType="textPassword" />
                   <Button android:id="@+id/btn_save_api" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="8dp" android:layout_marginBottom="24dp" android:text="حفظ المفتاح" />
-                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="المظهر (ملاحظة: أغلق الكيبورد وافتحه ليتم التغيير)" android:textColor="@color/ios_blue" android:textSize="14sp" android:textStyle="bold" android:layout_marginBottom="16dp" />
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="حجم الكيبورد (الارتفاع)" android:textSize="16sp" android:textStyle="bold" />
                   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp" android:layout_marginBottom="24dp">
                       <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textSize="14sp" android:textStyle="bold"/>
@@ -273,6 +268,7 @@ jobs:
           import android.os.Looper
           import android.os.SystemClock
           import android.view.HapticFeedbackConstants
+          import android.text.TextUtils
           import androidx.core.content.ContextCompat
           import kotlinx.coroutines.*
           import org.json.JSONObject
@@ -303,20 +299,14 @@ jobs:
               private var density: Float = 1f
               private val currentTypedWord = StringBuilder()
 
-              private val arDict = arrayOf("السلام", "عليكم", "مرحبا", "كيف", "حالك", "شكرا", "صباح", "الخير", "إن", "شاء", "الله")
-              private val frDict = arrayOf("bonjour", "comment", "merci", "oui", "non", "salut", "bien", "avec", "pour")
+              // قواميس تجريبية موسعة
+              private val arDict = arrayOf("السلام", "عليكم", "مرحبا", "كيف", "حالك", "شكرا", "صباح", "الخير", "مساء", "اليوم", "غدا", "الآن", "مشروع", "تطبيق", "جميل", "جدا", "ممتاز", "نعم", "لا", "ماذا", "لماذا", "هذا", "هذه", "أنا", "أنت", "نحن", "إن", "شاء", "الله")
+              private val frDict = arrayOf("bonjour", "comment", "merci", "oui", "non", "salut", "bien", "avec", "pour", "projet", "application", "dynamic", "island", "keyboard", "clavier", "très", "beau", "bon", "jour", "nuit", "demain", "aujourd'hui")
 
               private val altChars = mapOf(
-                  "ا" to listOf("أ", "إ", "آ", "ء"),
-                  "ي" to listOf("ئ", "ى"),
-                  "و" to listOf("ؤ"),
-                  "ل" to listOf("لا", "لأ", "لإ", "لآ"),
-                  "e" to listOf("é", "è", "ê", "ë"),
-                  "a" to listOf("à", "â", "æ", "á"),
-                  "c" to listOf("ç"),
-                  "u" to listOf("ù", "û", "ü"),
-                  "i" to listOf("î", "ï"),
-                  "o" to listOf("ô", "œ")
+                  "ا" to listOf("أ", "إ", "آ", "ء"), "ي" to listOf("ئ", "ى"), "و" to listOf("ؤ"), "ل" to listOf("لا", "لأ", "لإ", "لآ"),
+                  "e" to listOf("é", "è", "ê", "ë"), "a" to listOf("à", "â", "æ", "á"), "c" to listOf("ç"), "u" to listOf("ù", "û", "ü"),
+                  "i" to listOf("î", "ï"), "o" to listOf("ô", "œ")
               )
 
               data class KeyDef(val label: String, val weight: Float)
@@ -351,11 +341,43 @@ jobs:
                   }
                   defaultToolbarView.addView(toolbarToggleBtn)
                   
-                  val suggestionContainer = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f); gravity = Gravity.CENTER }
-                  fun createSugView(): TextView { return TextView(this).apply { layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f); gravity = Gravity.CENTER; textSize = 15f; setTextColor(sugColorInt); isClickable = true; setOnClickListener { applySuggestion(this.text.toString()) } } }
-                  sug1 = createSugView(); sug2 = createSugView(); sug3 = createSugView()
-                  suggestionContainer.addView(sug1); suggestionContainer.addView(sug2); suggestionContainer.addView(sug3)
+                  // ==========================================
+                  // شريط الاقتراحات المطور (Version 46)
+                  // ==========================================
+                  val suggestionContainer = LinearLayout(this).apply { 
+                      orientation = LinearLayout.HORIZONTAL
+                      layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+                      gravity = Gravity.CENTER 
+                  }
+                  
+                  fun createSugView(isCenter: Boolean = false): TextView { 
+                      return TextView(this).apply { 
+                          layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+                          gravity = Gravity.CENTER; textSize = 16f; setTextColor(sugColorInt); isClickable = true
+                          maxLines = 1; ellipsize = TextUtils.TruncateAt.END
+                          if (isCenter) setTypeface(null, Typeface.BOLD) // الكلمة الحالية دائماً بخط عريض
+                          setOnClickListener { applySuggestion(this.text.toString()) } 
+                      } 
+                  }
+                  fun createDivider(): View {
+                      return View(this).apply {
+                          layoutParams = LinearLayout.LayoutParams(1, (24 * density).toInt())
+                          setBackgroundColor(Color.parseColor("#44888888")) // خط فاصل شفاف
+                      }
+                  }
+                  
+                  sug1 = createSugView()
+                  sug2 = createSugView(isCenter = true)
+                  sug3 = createSugView()
+                  
+                  suggestionContainer.addView(sug1)
+                  suggestionContainer.addView(createDivider())
+                  suggestionContainer.addView(sug2)
+                  suggestionContainer.addView(createDivider())
+                  suggestionContainer.addView(sug3)
+                  
                   defaultToolbarView.addView(suggestionContainer)
+                  // ==========================================
 
                   aiToolsView = HorizontalScrollView(this).apply { visibility = View.GONE; isHorizontalScrollBarEnabled = false; layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT) }
                   val toolsLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
@@ -394,9 +416,6 @@ jobs:
                   }
                   mainLayout.addView(keysContainer)
                   
-                  // ==========================================
-                  // الشريط السفلي المطور (4 أزرار لتلبيس كافة الاحتياجات)
-                  // ==========================================
                   val bottomBar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (38 * density).toInt())
@@ -404,70 +423,48 @@ jobs:
                       gravity = Gravity.CENTER_VERTICAL
                   }
                   
-                  // 1. زر اللغة
                   val globeBtn = ImageView(this).apply {
-                      setImageResource(R.drawable.ic_globe)
-                      setColorFilter(iconColorInt)
-                      scaleType = ImageView.ScaleType.CENTER_INSIDE
+                      setImageResource(R.drawable.ic_globe); setColorFilter(iconColorInt); scaleType = ImageView.ScaleType.CENTER_INSIDE
                       layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
-                      val p = (8 * density).toInt()
-                      setPadding(0, p, 0, p)
-                      setOnClickListener { view ->
-                          view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                          currentLang = if(currentLang == "FR") "AR" else "FR"; currentTypedWord.clear(); rebuildKeysLayout() 
+                      setPadding(0, (8*density).toInt(), 0, (8*density).toInt())
+                      setOnClickListener { 
+                          it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                          currentLang = if(currentLang == "FR") "AR" else "FR"; currentTypedWord.clear(); updateSuggestions(); rebuildKeysLayout() 
                       }
                   }
 
-                  // 2. زر التراجع (Undo) - طلبك الأساسي!
                   val undoBtn = ImageView(this).apply {
-                      setImageResource(R.drawable.ic_undo)
-                      setColorFilter(iconColorInt)
-                      scaleType = ImageView.ScaleType.CENTER_INSIDE
+                      setImageResource(R.drawable.ic_undo); setColorFilter(iconColorInt); scaleType = ImageView.ScaleType.CENTER_INSIDE
                       layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
-                      val p = (8 * density).toInt()
-                      setPadding(0, p, 0, p)
-                      setOnClickListener { view ->
-                          view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                      setPadding(0, (8*density).toInt(), 0, (8*density).toInt())
+                      setOnClickListener { 
+                          it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                           val ic = currentInputConnection ?: return@setOnClickListener
                           val time = SystemClock.uptimeMillis()
-                          // نرسل أمر Ctrl + Z للنظام للتراجع
                           ic.sendKeyEvent(KeyEvent(time, time, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_Z, 0, KeyEvent.META_CTRL_ON))
                           ic.sendKeyEvent(KeyEvent(time, time, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_Z, 0, KeyEvent.META_CTRL_ON))
                       }
                   }
                   
-                  // 3. زر المايك
                   val micBtn = ImageView(this).apply {
-                      setImageResource(R.drawable.ic_mic)
-                      setColorFilter(iconColorInt)
-                      scaleType = ImageView.ScaleType.CENTER_INSIDE
+                      setImageResource(R.drawable.ic_mic); setColorFilter(iconColorInt); scaleType = ImageView.ScaleType.CENTER_INSIDE
                       layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
-                      val p = (8 * density).toInt()
-                      setPadding(0, p, 0, p)
+                      setPadding(0, (8*density).toInt(), 0, (8*density).toInt())
                       setOnClickListener { it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP) }
                   }
 
-                  // 4. زر تبديل الكيبورد (للتخلص من احتكار Gboard دون الذهاب للإعدادات!)
                   val pickerBtn = ImageView(this).apply {
-                      setImageResource(R.drawable.ic_keyboard_picker)
-                      setColorFilter(iconColorInt)
-                      scaleType = ImageView.ScaleType.CENTER_INSIDE
+                      setImageResource(R.drawable.ic_keyboard_picker); setColorFilter(iconColorInt); scaleType = ImageView.ScaleType.CENTER_INSIDE
                       layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
-                      val p = (8 * density).toInt()
-                      setPadding(0, p, 0, p)
+                      setPadding(0, (8*density).toInt(), 0, (8*density).toInt())
                       setOnClickListener { 
                           it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                          val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                          imm.showInputMethodPicker() // هذا يفتح نافذة النظام لاختيار الكيبورد
+                          (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
                       }
                   }
 
-                  bottomBar.addView(globeBtn)
-                  bottomBar.addView(undoBtn)
-                  bottomBar.addView(micBtn)
-                  bottomBar.addView(pickerBtn)
+                  bottomBar.addView(globeBtn); bottomBar.addView(undoBtn); bottomBar.addView(micBtn); bottomBar.addView(pickerBtn)
                   mainLayout.addView(bottomBar)
-                  // ==========================================
                   
                   keyPreviewBubble = TextView(this).apply {
                       textSize = 34f; setTextColor(textColorInt); gravity = Gravity.CENTER; typeface = Typeface.DEFAULT_BOLD
@@ -511,7 +508,7 @@ jobs:
                   }
               }
 
-              override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) { super.onStartInputView(info, restarting); rebuildKeysLayout() }
+              override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) { super.onStartInputView(info, restarting); currentTypedWord.clear(); updateSuggestions(); rebuildKeysLayout() }
 
               private fun showAltMenu(anchor: View, chars: List<String>) {
                   val container = LinearLayout(this).apply {
@@ -526,7 +523,12 @@ jobs:
                       val btn = TextView(this).apply {
                           text = c; textSize = 24f; setTextColor(ContextCompat.getColor(this@KeyboardService, R.color.key_text))
                           gravity = Gravity.CENTER; setPadding((16*density).toInt(), (12*density).toInt(), (16*density).toInt(), (12*density).toInt())
-                          setOnClickListener { currentInputConnection?.commitText(c, 1); currentTypedWord.append(c); popup.dismiss() }
+                          setOnClickListener { 
+                              currentInputConnection?.commitText(c, 1)
+                              currentTypedWord.append(c)
+                              updateSuggestions()
+                              popup.dismiss() 
+                          }
                       }
                       container.addView(btn)
                   }
@@ -599,36 +601,72 @@ jobs:
                   }
               }
 
-              override fun onFinishInput() { super.onFinishInput(); currentTypedWord.clear(); if(this::sug1.isInitialized) { sug1.text = ""; sug2.text = ""; sug3.text = "" } }
+              override fun onFinishInput() { super.onFinishInput(); currentTypedWord.clear(); updateSuggestions() }
 
+              // ==========================================
+              // نظام التحديث الذكي للاقتراحات
+              // ==========================================
               private fun updateSuggestions() {
                   if(!this::sug1.isInitialized) return
-                  val word = currentTypedWord.toString()
-                  if (word.length < 2 || isSymbols) { sug1.text = ""; sug2.text = ""; sug3.text = ""; return }
+                  val word = currentTypedWord.toString().trim()
+                  
+                  // إخفاء الاقتراحات إذا كانت الكلمة فارغة أو الكيبورد في وضع الأرقام
+                  if (word.isEmpty() || isSymbols) { 
+                      sug1.text = ""; sug2.text = ""; sug3.text = ""
+                      return 
+                  }
+                  
                   val dict = when(currentLang) { "AR" -> arDict; else -> frDict }
-                  var count = 0; val matches = arrayOf("", "", "")
-                  for (item in dict) { if (item.length > word.length && item.startsWith(word, ignoreCase = true)) { matches[count] = item; count++; if (count == 3) break } }
-                  sug1.text = matches[0]; sug2.text = matches[1]; sug3.text = matches[2]
+                  val matches = mutableListOf<String>()
+                  
+                  // البحث في القاموس
+                  for (item in dict) { 
+                      if (item.length >= word.length && item.startsWith(word, ignoreCase = true) && !item.equals(word, ignoreCase = true)) { 
+                          matches.add(item)
+                      } 
+                  }
+                  
+                  // ترتيب الاقتراحات بحيث تكون الكلمة المكتوبة حالياً في المنتصف دائماً
+                  sug1.text = if (matches.size > 0) matches[0] else ""
+                  sug2.text = word  // الكلمة الحالية
+                  sug3.text = if (matches.size > 1) matches[1] else ""
               }
 
               private fun applySuggestion(sug: String) {
                   if (sug.isEmpty()) return
                   val ic = currentInputConnection ?: return
-                  ic.deleteSurroundingText(currentTypedWord.length, 0); ic.commitText(sug + " ", 1); currentTypedWord.clear(); updateSuggestions()
+                  // مسح الحروف التي تمت كتابتها، ووضع الكلمة الكاملة مع مسافة
+                  ic.deleteSurroundingText(currentTypedWord.length, 0)
+                  ic.commitText(sug + " ", 1)
+                  currentTypedWord.clear()
+                  updateSuggestions()
               }
+              // ==========================================
 
               private fun handleKeyClick(key: String) {
                   if (aiToolsView.visibility == View.VISIBLE) toggleToolbar()
                   val ic = currentInputConnection ?: return
                   when (key) {
-                      "DEL" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL)); if (currentTypedWord.isNotEmpty()) currentTypedWord.deleteCharAt(currentTypedWord.length - 1) }
-                      "SPACE", "ENTER" -> { if (key == "SPACE") ic.commitText(" ", 1) else { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)) }; currentTypedWord.clear() }
+                      "DEL" -> { 
+                          ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
+                          ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL))
+                          if (currentTypedWord.isNotEmpty()) currentTypedWord.deleteCharAt(currentTypedWord.length - 1) 
+                      }
+                      "SPACE", "ENTER" -> { 
+                          if (key == "SPACE") ic.commitText(" ", 1) else { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)) }
+                          currentTypedWord.clear() 
+                      }
                       "SHIFT" -> { isCaps = !isCaps; rebuildKeysLayout() }
-                      "?123" -> { isSymbols = true; rebuildKeysLayout() }
-                      "ABC" -> { isSymbols = false; rebuildKeysLayout() }
-                      else -> { val letter = if (isCaps && !isSymbols && currentLang != "AR") key.uppercase() else key; ic.commitText(letter, 1); if (isCaps) { isCaps = false; rebuildKeysLayout() }; if (key.length == 1 && !isSymbols) { currentTypedWord.append(letter) } }
+                      "?123" -> { isSymbols = true; rebuildKeysLayout(); updateSuggestions() }
+                      "ABC" -> { isSymbols = false; rebuildKeysLayout(); updateSuggestions() }
+                      else -> { 
+                          val letter = if (isCaps && !isSymbols && currentLang != "AR") key.uppercase() else key
+                          ic.commitText(letter, 1)
+                          if (isCaps) { isCaps = false; rebuildKeysLayout() }
+                          if (key.length == 1 && !isSymbols) { currentTypedWord.append(letter) } 
+                      }
                   }
-                  updateSuggestions()
+                  updateSuggestions() // تحديث الشريط مع كل حرف
               }
               
               private fun performAiAction(actionType: String, btn: TextView, originalTitle: String) {
@@ -682,21 +720,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase45.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase46.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase45.apk
+          path: release-output/AI-Keyboard-Pro-Phase46.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v45.0
-          name: "AI Keyboard Pro - Phase 45 (Keyboard Switcher & Undo)"
-          body: "1. ⌨️ **زر تبديل الكيبورد:** تم إضافة أيقونة كيبورد أسفل اليمين، بالضغط عليها تظهر نافذة الأندرويد لاختيار الكيبورد. هذا يغنيك تماماً عن الدخول للإعدادات وتعطيل Gboard.\n2. ↩️ **زر التراجع (Undo):** تم إضافة أيقونة تراجع تقوم بإرسال أمر (Ctrl+Z) للتراجع عن آخر نص أو حذف بالخطأ، لتصحيح أخطائك بسهولة وبضغطة واحدة."
-          files: release-output/AI-Keyboard-Pro-Phase45.apk
+          tag_name: aikeyboard-v46.0
+          name: "AI Keyboard Pro - Phase 46 (Smart Suggestions Fix)"
+          body: "1. 💡 **إصلاح شريط الكلمات:** الكلمة التي تكتبها ستظهر فوراً في منتصف الشريط العلوي بخط عريض، وبمجرد الضغط عليها يتم كتابتها مع ترك مسافة.\n2. 📚 **توسيع القاموس:** إضافة كلمات شائعة فرنسية وعربية للقاموس المدمج لتجربة خاصية الاقتراحات.\n3. 📏 **تحسين بصري:** إضافة فواصل (Dividers) شفافة بين الكلمات المقترحة لتشبه Gboard وكيبورد iOS."
+          files: release-output/AI-Keyboard-Pro-Phase46.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
