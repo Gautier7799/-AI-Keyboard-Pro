@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 54; versionName = "47.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 55; versionName = "48.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -71,50 +71,52 @@ jobs:
           }
           EOF
 
-          # ---- الألوان (محدثة بدقة لتطابق ألوان iOS الأصلية) ----
+          # ---- الألوان (محدثة لدعم الشفافية Translucent) ----
           cat << 'EOF' > app/src/main/res/values/colors.xml
           <resources>
-              <!-- الوضع الفاتح (Light Mode) -->
-              <color name="keyboard_bg">#D1D5DB</color>
-              <color name="key_bg">#FFFFFF</color>
+              <!-- الوضع الفاتح: خلفية شبه شفافة تسمح بمرور لون التطبيق خلفها -->
+              <color name="keyboard_bg">#E6D1D5DB</color> <!-- 90% opacity -->
+              <color name="key_bg">#FCFFFFFF</color>
               <color name="key_shadow">#898A8D</color>
-              <color name="key_bg_pressed">#E5E5EA</color>
-              <color name="key_special_bg">#B3B8C2</color>
+              <color name="key_bg_pressed">#D9E5E5EA</color>
+              <color name="key_special_bg">#CCB3B8C2</color>
               <color name="key_special_shadow">#898A8D</color>
-              <color name="key_special_bg_pressed">#FFFFFF</color>
+              <color name="key_special_bg_pressed">#FCFFFFFF</color>
               <color name="key_text">#000000</color>
               <color name="suggestion_text">#000000</color>
               <color name="toolbar_icon">#8E8E93</color> 
-              <color name="shortcut_bg">#F1F3F4</color>
+              <color name="shortcut_bg">#E6F1F3F4</color>
               <color name="ios_blue">#007AFF</color>
               <color name="slider_track">#E0E0E0</color>
               <color name="slider_progress">#00796B</color>
+              <color name="btn_bg">#212121</color>
           </resources>
           EOF
           
           cat << 'EOF' > app/src/main/res/values-night/colors.xml
           <resources>
-              <!-- الوضع الداكن (Dark Mode - OLED Friendly) -->
-              <color name="keyboard_bg">#1A1A1A</color> 
-              <color name="key_bg">#48484A</color> 
+              <!-- الوضع الداكن: خلفية زجاجية شفافة أنيقة (Glassmorphism effect) -->
+              <color name="keyboard_bg">#D91A1A1A</color> <!-- 85% opacity -->
+              <color name="key_bg">#CC48484A</color> <!-- شبه شفاف للمفاتيح -->
               <color name="key_shadow">#000000</color>
-              <color name="key_bg_pressed">#636366</color>
-              <color name="key_special_bg">#2C2C2E</color> 
+              <color name="key_bg_pressed">#99636366</color>
+              <color name="key_special_bg">#992C2C2E</color> 
               <color name="key_special_shadow">#000000</color>
-              <color name="key_special_bg_pressed">#48484A</color>
+              <color name="key_special_bg_pressed">#CC48484A</color>
               <color name="key_text">#FFFFFF</color>
               <color name="suggestion_text">#FFFFFF</color>
               <color name="toolbar_icon">#98989D</color> 
-              <color name="shortcut_bg">#2C2C2E</color>
+              <color name="shortcut_bg">#992C2C2E</color>
               <color name="ios_blue">#0A84FF</color>
               <color name="slider_track">#424242</color>
               <color name="slider_progress">#80CBC4</color>
+              <color name="btn_bg">#424242</color>
           </resources>
           EOF
 
-          # ---- أشكال المفاتيح (تم زيادة الانحناء إلى 8dp وتصغير الظل لـ 1.2dp لواقعية أكبر) ----
+          # ---- أشكال المفاتيح والإعدادات ----
           cat << 'EOF' > app/src/main/res/drawable/bg_key.xml
-          <layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item android:top="1.2dp" android:bottom="0dp"><shape><solid android:color="@color/key_shadow"/><corners android:radius="8dp"/></shape></item><item android:bottom="1.2dp"><shape><solid android:color="@color/key_bg"/><corners android:radius="8dp"/></shape></item></layer-list>
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item android:top="1dp" android:bottom="0dp"><shape><solid android:color="@color/key_shadow"/><corners android:radius="8dp"/></shape></item><item android:bottom="1dp"><shape><solid android:color="@color/key_bg"/><corners android:radius="8dp"/></shape></item></layer-list>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_key_pressed.xml
           <layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item><shape><solid android:color="@color/key_bg_pressed"/><corners android:radius="8dp"/></shape></item></layer-list>
@@ -123,7 +125,7 @@ jobs:
           <selector xmlns:android="http://schemas.android.com/apk/res/android"><item android:state_pressed="true" android:drawable="@drawable/bg_key_pressed" /><item android:drawable="@drawable/bg_key" /></selector>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_key_special.xml
-          <layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item android:top="1.2dp" android:bottom="0dp"><shape><solid android:color="@color/key_special_shadow"/><corners android:radius="8dp"/></shape></item><item android:bottom="1.2dp"><shape><solid android:color="@color/key_special_bg"/><corners android:radius="8dp"/></shape></item></layer-list>
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item android:top="1dp" android:bottom="0dp"><shape><solid android:color="@color/key_special_shadow"/><corners android:radius="8dp"/></shape></item><item android:bottom="1dp"><shape><solid android:color="@color/key_special_bg"/><corners android:radius="8dp"/></shape></item></layer-list>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_key_special_pressed.xml
           <layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item><shape><solid android:color="@color/key_special_bg_pressed"/><corners android:radius="8dp"/></shape></item></layer-list>
@@ -133,6 +135,11 @@ jobs:
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_popup_bubble.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="12dp"/><stroke android:width="0.5dp" android:color="#44000000"/></shape>
+          EOF
+          
+          # شكل أزرار الإعدادات الجديد (دائري وأنيق)
+          cat << 'EOF' > app/src/main/res/drawable/bg_button.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/btn_bg"/><corners android:radius="24dp"/></shape>
           EOF
 
           # ---- الأيقونات ----
@@ -160,12 +167,15 @@ jobs:
           cat << 'EOF' > app/src/main/res/drawable/ic_keyboard_picker.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M20,5H4C2.9,5 2.01,5.9 2.01,7L2,17C2,18.1 2.9,19 4,19H20C21.1,19 22,18.1 22,17V7C22,5.9 21.1,5 20,5ZM11,8H13V10H11V8ZM11,11H13V13H11V11ZM8,8H10V10H8V8ZM8,11H10V13H8V11ZM7,13H5V11H7V13ZM7,10H5V8H7V10ZM16,17H8V15H16V17ZM16,13H14V11H16V13ZM16,10H14V8H16V10ZM19,13H17V11H19V13ZM19,10H17V8H19V10Z"/></vector>
           EOF
-          # أيقونات جديدة ومعدلة
           cat << 'EOF' > app/src/main/res/drawable/ic_shift.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M15,15H9V20H15V15ZM12,4L5.5,13H8.5V22H15.5V13H18.5L12,4Z"/></vector>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/ic_delete.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M22,3H7C6.31,3 5.77,3.38 5.46,3.93L0,12L5.46,20.07C5.77,20.62 6.31,21 7,21H22C23.1,21 24,20.1 24,19V5C24,3.9 23.1,3 22,3ZM19,15.59L17.59,17L14,13.41L10.41,17L9,15.59L12.59,12L9,8.41L10.41,7L14,10.59L17.59,7L19,8.41L15.41,12L19,15.59Z"/></vector>
+          EOF
+          # أيقونات جديدة للمسافة والإنتر للأناقة
+          cat << 'EOF' > app/src/main/res/drawable/ic_enter.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M19,7V11H5.83L9.41,7.41L8,6L2,12L8,18L9.41,16.58L5.83,13H21V7H19Z"/></vector>
           EOF
 
           cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
@@ -194,26 +204,35 @@ jobs:
           <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><size android:width="6dp" android:height="6dp"/><solid android:color="@color/slider_progress"/></shape>
           EOF
 
+          # ---- واجهة الإعدادات المحدثة (زرائر متباعدة ومستديرة) ----
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
-                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:layout_marginBottom="24dp" android:text="إعدادات الكيبورد" android:textSize="28sp" android:textStyle="bold" />
-                  <Button android:id="@+id/btn_enable" android:layout_width="match_parent" android:layout_height="50dp" android:text="1. تفعيل الكيبورد" />
-                  <Button android:id="@+id/btn_select" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="8dp" android:layout_marginBottom="24dp" android:text="2. اختيار الكيبورد" />
-                  <EditText android:id="@+id/input_api_key" android:layout_width="match_parent" android:layout_height="50dp" android:hint="الصق مفتاح Gemini API هنا..." android:inputType="textPassword" />
-                  <Button android:id="@+id/btn_save_api" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="8dp" android:layout_marginBottom="24dp" android:text="حفظ المفتاح" />
-                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="حجم الكيبورد (الارتفاع)" android:textSize="16sp" android:textStyle="bold" />
-                  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp" android:layout_marginBottom="24dp">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
+                  
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:layout_marginBottom="30dp" android:text="إعدادات الكيبورد" android:textSize="32sp" android:textStyle="bold" android:gravity="center" />
+                  
+                  <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn_enable" android:layout_width="match_parent" android:layout_height="60dp" android:text="1. تفعيل الكيبورد" android:textColor="#FFFFFF" android:background="@drawable/bg_button" android:textSize="18sp" android:layout_marginBottom="16dp"/>
+                  
+                  <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn_select" android:layout_width="match_parent" android:layout_height="60dp" android:text="2. اختيار الكيبورد" android:textColor="#FFFFFF" android:background="@drawable/bg_button" android:textSize="18sp" android:layout_marginBottom="40dp"/>
+                  
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="إعدادات الذكاء الاصطناعي:" android:textSize="16sp" android:textStyle="bold" android:layout_marginBottom="12dp" />
+                  
+                  <EditText android:id="@+id/input_api_key" android:layout_width="match_parent" android:layout_height="60dp" android:hint="الصق مفتاح Gemini API هنا..." android:inputType="textPassword" android:background="@drawable/bg_popup_bubble" android:padding="16dp" android:layout_marginBottom="16dp" />
+                  
+                  <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn_save_api" android:layout_width="match_parent" android:layout_height="60dp" android:text="حفظ المفتاح" android:textColor="#FFFFFF" android:background="@drawable/bg_button" android:textSize="18sp" android:layout_marginBottom="40dp"/>
+                  
+                  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="حجم الكيبورد (الارتفاع):" android:textSize="16sp" android:textStyle="bold" />
+                  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="16dp" android:layout_marginBottom="40dp">
                       <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textSize="14sp" android:textStyle="bold"/>
-                      <SeekBar android:id="@+id/seek_kb_size" style="@style/Widget.AppCompat.SeekBar.Discrete" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="6" android:progress="3" android:progressDrawable="@drawable/slider_track_bg" android:thumb="@drawable/slider_thumb" android:tickMark="@drawable/slider_tick" android:splitTrack="false" android:paddingStart="12dp" android:paddingEnd="12dp" />
+                      <SeekBar android:id="@+id/seek_kb_size" style="@style/Widget.AppCompat.SeekBar.Discrete" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="6" android:progress="3" android:progressDrawable="@drawable/slider_track_bg" android:thumb="@drawable/slider_thumb" android:tickMark="@drawable/slider_tick" android:splitTrack="false" android:paddingStart="16dp" android:paddingEnd="16dp" />
                       <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="T" android:textSize="22sp" android:textStyle="bold"/>
                   </LinearLayout>
               </LinearLayout>
           </ScrollView>
           EOF
 
-          # ---- ملف الكيبورد الرئيسي (محدث هندسياً وبصرياً) ----
+          # ---- ملف الكيبورد الرئيسي (محدث هندسياً وبصرياً مع الشفافية) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
           
@@ -291,12 +310,16 @@ jobs:
                   val textColorInt = ContextCompat.getColor(this, R.color.key_text)
                   val sugColorInt = ContextCompat.getColor(this, R.color.suggestion_text)
                   val iconColorInt = ContextCompat.getColor(this, R.color.toolbar_icon)
-                  window?.window?.navigationBarColor = bgColor
+                  
+                  // ترك خلفية شريط التنقل شفافة لكي تندمج مع لون الكيبورد
+                  window?.window?.navigationBarColor = Color.TRANSPARENT
 
                   rootFrame = FrameLayout(this).apply { layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
+                  
+                  // الإعداد للشفافية: إعطاء الخلفية اللون الشفاف بدلاً من لون صلب
                   mainLayout = LinearLayout(this).apply { 
                       orientation = LinearLayout.VERTICAL
-                      setBackgroundColor(bgColor)
+                      setBackgroundColor(bgColor) 
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) 
                   }
 
@@ -373,13 +396,10 @@ jobs:
                   keysContainer = LinearLayout(this).apply { 
                       orientation = LinearLayout.VERTICAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      setPadding(0, 0, 0, (6*density).toInt()) // مسافة سفلية قبل الشريط السفلي
+                      setPadding(0, 0, 0, (6*density).toInt()) 
                   }
                   mainLayout.addView(keysContainer)
                   
-                  // ==========================================
-                  // الشريط السفلي الأنيق
-                  // ==========================================
                   val bottomBar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (40 * density).toInt())
@@ -390,7 +410,7 @@ jobs:
                   val globeBtn = ImageView(this).apply {
                       setImageResource(R.drawable.ic_globe); setColorFilter(iconColorInt); scaleType = ImageView.ScaleType.CENTER_INSIDE
                       layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
-                      setPadding(0, (10*density).toInt(), 0, (10*density).toInt()) // أيقونات أصغر وأنعم
+                      setPadding(0, (10*density).toInt(), 0, (10*density).toInt()) 
                       setOnClickListener { 
                           it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                           currentLang = if(currentLang == "FR") "AR" else "FR"; currentTypedWord.clear(); updateSuggestions(); rebuildKeysLayout() 
@@ -447,14 +467,17 @@ jobs:
                   else { defaultToolbarView.visibility = View.VISIBLE; aiToolsView.visibility = View.GONE }
               }
 
+              // ==========================================
+              // تعديل هندسة الصف الرابع: تقليص 123 والإنتر، وتكبير المسافة (مثل iOS)
+              // ==========================================
               private fun getLayoutRows(): List<List<KeyDef>> {
                   if (isSymbols) {
                       val nums = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
                       return listOf(
                           nums.map { KeyDef(it, 1f) },
                           listOf("-", "/", ":", ";", "(", ")", "€", "&", "@", "\"").map { KeyDef(it, 1f) },
-                          listOf(KeyDef("ABC", 1.3f)) + listOf(".", ",", "?", "!", "'").map { KeyDef(it, 1f) } + listOf(KeyDef("DEL", 1.3f)),
-                          listOf(KeyDef("ABC", 1.3f), KeyDef("SPACE", 5.0f), KeyDef("ENTER", 1.5f)) 
+                          listOf(KeyDef("ABC", 1.25f)) + listOf(".", ",", "?", "!", "'").map { KeyDef(it, 1f) } + listOf(KeyDef("DEL", 1.25f)),
+                          listOf(KeyDef("ABC", 1.25f), KeyDef("SPACE", 5.5f), KeyDef("ENTER", 1.25f)) // تقليص الأطراف وتكبير المسافة
                       )
                   }
                   return when (currentLang) {
@@ -462,13 +485,13 @@ jobs:
                           "ض ص ث ق ف غ ع ه خ ح ج د".split(" ").map { KeyDef(it, 1f) }, 
                           listOf(KeyDef("SPACER", 0.3f)) + "ش س ي ب ل ا ت ن م ك ط".split(" ").map { KeyDef(it, 1f) } + listOf(KeyDef("SPACER", 0.3f)),
                           listOf(KeyDef("SHIFT", 1.25f)) + "ذ ر ى ة و ز ظ".split(" ").map { KeyDef(it, 1f) } + listOf(KeyDef("DEL", 1.25f)),
-                          listOf(KeyDef("?123", 1.3f), KeyDef("SPACE", 5.0f), KeyDef("ENTER", 1.5f)) 
+                          listOf(KeyDef("?123", 1.25f), KeyDef("SPACE", 5.5f), KeyDef("ENTER", 1.25f)) // تقليص الأطراف وتكبير المسافة
                       )
                       else -> listOf(
                           "q w e r t y u i o p".split(" ").map { KeyDef(if (isCaps) it.uppercase() else it.replace("q","a").replace("w","z"), 1f) },
                           "a s d f g h j k l m".split(" ").map { KeyDef(if (isCaps) it.uppercase() else it.replace("a","q"), 1f) },
                           listOf(KeyDef("SHIFT", 1.25f)) + "z x c v b n".split(" ").map { KeyDef(if (isCaps) it.uppercase() else it.replace("z","w"), 1f) } + listOf(KeyDef("'", 1f), KeyDef("DEL", 1.25f)),
-                          listOf(KeyDef("?123", 1.3f), KeyDef("SPACE", 5.0f), KeyDef("ENTER", 1.5f))
+                          listOf(KeyDef("?123", 1.25f), KeyDef("SPACE", 5.5f), KeyDef("ENTER", 1.25f)) // تقليص الأطراف وتكبير المسافة
                       )
                   }
               }
@@ -505,7 +528,6 @@ jobs:
                   val kbScale = 0.85f + (kbStep * 0.1f) 
                   val baseKeyHeight = (54 * density * kbScale).toInt() 
                   
-                  // تعديل المسافات لتطابق iOS
                   val keyMarginH = (3f * density).toInt() 
                   val keyMarginV = (4.5f * density).toInt() 
                   
@@ -529,11 +551,10 @@ jobs:
                                   setBackgroundResource(if (isSpecial) R.drawable.key_special_selector else R.drawable.key_selector)
                                   isClickable = true
                                   
-                                  if (label == "SHIFT" || label == "DEL") {
-                                      // استخدام أيقونات بدلاً من نصوص للشيفت والحذف
+                                  if (label == "SHIFT" || label == "DEL" || label == "ENTER") {
                                       val iconView = ImageView(this@KeyboardService).apply {
                                           layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER)
-                                          val iconRes = if (label == "SHIFT") R.drawable.ic_shift else R.drawable.ic_delete
+                                          val iconRes = when (label) { "SHIFT" -> R.drawable.ic_shift; "DEL" -> R.drawable.ic_delete; else -> R.drawable.ic_enter }
                                           setImageResource(iconRes)
                                           setColorFilter(textColorInt)
                                           if(label == "SHIFT" && isCaps) alpha = 1.0f else if(label == "SHIFT") alpha = 0.6f
@@ -541,8 +562,8 @@ jobs:
                                       addView(iconView)
                                   } else {
                                       val textView = TextView(this@KeyboardService).apply {
-                                          text = when (label) { "ENTER" -> if(currentLang=="AR") "إدخال" else "retour"; "SPACE" -> if(currentLang=="AR") "مسافة" else "espace"; else -> label }
-                                          val baseSize = if (isSpecial) 15f else 24f // الحروف أكبر قليلاً والخط أنحف
+                                          text = when (label) { "SPACE" -> if(currentLang=="AR") "مسافة" else "espace"; else -> label }
+                                          val baseSize = if (isSpecial) 15f else 24f 
                                           textSize = baseSize; gravity = Gravity.CENTER; setTextColor(textColorInt)
                                           typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
                                           layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -705,21 +726,21 @@ jobs:
         run: |
           gradle assembleDebug -x test -x lint
           mkdir -p release-output
-          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase47.apk
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro-Phase48.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AI-Keyboard-Pro
-          path: release-output/AI-Keyboard-Pro-Phase47.apk
+          path: release-output/AI-Keyboard-Pro-Phase48.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v47.0
-          name: "AI Keyboard Pro - Phase 47 (iOS Aesthetic Overhaul 💎)"
-          body: "1. 🎨 **ألوان متطابقة مع iOS:** تعديل لون الخلفية الداكن، وجعل المفاتيح الخاصة (Space, Delete, Enter) بلون مختلف عن مفاتيح الحروف للتباين البصري.\n2. 📐 **هندسة المفاتيح:** زيادة درجة انحناء الزوايا (Radius) وتقليل سُمك الظل السفلي ليعطي إحساس ضغطة الآيفون بالضبط، مع تعديل المسافات بين المفاتيح.\n3. 🔠 **الخطوط والأيقونات:** تكبير حجم الحروف قليلاً واستخدام خط أنحف، واستبدال نصوص Shift و Delete بأيقونات احترافية متوافقة مع تصميم iOS.\n4. 🎛️ **الشريط السفلي:** تلوين أيقونات الشريط السفلي باللون الرمادي الأنيق بدلاً من الأبيض، وتصغير حجمها لتبدو أكثر فخامة."
-          files: release-output/AI-Keyboard-Pro-Phase47.apk
+          tag_name: aikeyboard-v48.0
+          name: "AI Keyboard Pro - Phase 48 (Visual Perfection 💎👻)"
+          body: "1. ⚙️ **إعدادات أنيقة:** إعادة تصميم صفحة الإعدادات لتكون الأزرار متباعدة وذات زوايا دائرية، لتشبه تطبيقات الأندرويد الحديثة.\n2. 📏 **هندسة الصف السفلي:** تم تقليص حجم أزرار الأرقام والإنتر، وتكبير زر المسافة ليتطابق مع تصميم iOS 26 الحديث.\n3. 👻 **الشفافية (Translucency):** خلفية الكيبورد أصبحت شفافة قليلاً (مع تأثير زجاجي في الوضع الداكن) لتتكيف مع ألوان التطبيق الذي يظهر خلفها، مما يعطي مظهراً فخماً وعصرياً بدلاً من اللون الصلب المُصمت.\n4. ⏎ **أيقونة إنتر:** تم استبدال كلمة (إدخال/retour) برمز 'السهم المنحني' المعتمد في iOS لزيادة النظافة البصرية."
+          files: release-output/AI-Keyboard-Pro-Phase48.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
