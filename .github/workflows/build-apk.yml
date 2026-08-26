@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 59; versionName = "50.1.1" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 60; versionName = "50.2.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -89,8 +89,6 @@ jobs:
               <color name="toolbar_icon">#8E8E93</color> 
               <color name="shortcut_bg">#FFFFFF</color>
               <color name="ios_blue">#007AFF</color>
-              <color name="slider_track">#E0E0E0</color>
-              <color name="slider_progress">#00796B</color>
               <color name="btn_bg">#212121</color>
           </resources>
           EOF
@@ -112,8 +110,6 @@ jobs:
               <color name="toolbar_icon">#98989D</color> 
               <color name="shortcut_bg">#2C2C2E</color>
               <color name="ios_blue">#0A84FF</color>
-              <color name="slider_track">#424242</color>
-              <color name="slider_progress">#80CBC4</color>
               <color name="btn_bg">#424242</color>
           </resources>
           EOF
@@ -150,7 +146,7 @@ jobs:
           EOF
 
           cat << 'EOF' > app/src/main/res/drawable/bg_keyboard_root.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/keyboard_bg"/><corners android:bottomLeftRadius="32dp" android:bottomRightRadius="32dp"/></shape>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/keyboard_bg"/></shape>
           EOF
           cat << 'EOF' > app/src/main/res/drawable/bg_popup_bubble.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="@color/key_bg"/><corners android:radius="12dp"/><stroke android:width="0.5dp" android:color="#44000000"/></shape>
@@ -187,8 +183,6 @@ jobs:
           cat << 'EOF' > app/src/main/res/drawable/ic_settings.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M19.14,12.94c0.04,-0.3 0.06,-0.61 0.06,-0.94c0,-0.32 -0.02,-0.64 -0.06,-0.94l2.03,-1.58c0.18,-0.14 0.23,-0.41 0.12,-0.61l-1.92,-3.32c-0.12,-0.22 -0.37,-0.29 -0.59,-0.22l-2.39,0.96c-0.5,-0.38 -1.03,-0.7 -1.62,-0.94L14.4,2.81c-0.04,-0.24 -0.24,-0.41 -0.48,-0.41h-3.84c-0.24,0 -0.43,0.17 -0.47,0.41L9.25,5.35C8.66,5.59 8.12,5.92 7.63,6.29L5.24,5.33c-0.22,-0.08 -0.47,0 -0.59,0.22L2.73,8.87C2.62,9.08 2.66,9.34 2.86,9.48l2.03,1.58C4.84,11.36 4.8,11.69 4.8,12s0.02,0.64 0.06,0.94l-2.03,1.58c-0.18,0.14 -0.23,0.41 -0.12,0.61l1.92,3.32c0.12,0.22 0.37,0.29 0.59,0.22l2.39,-0.96c0.5,0.38 1.03,0.7 1.62,0.94l0.36,2.54c0.05,0.24 0.24,0.41 0.48,0.41h3.84c0.24,0 0.43,-0.17 0.47,-0.41l0.36,-2.54c0.59,-0.24 1.13,-0.56 1.62,-0.94l2.39,0.96c0.22,0.08 0.47,0 0.59,-0.22l1.92,-3.32c0.12,-0.22 0.07,-0.49 -0.12,-0.61L19.14,12.94zM12,15.6c-1.98,0 -3.6,-1.62 -3.6,-3.6s1.62,-3.6 3.6,-3.6s3.6,1.62 3.6,3.6S13.98,15.6 12,15.6z"/></vector>
           EOF
-          
-          # ---- الأيقونة الناقصة للسهم (ic_arrow_back) ----
           cat << 'EOF' > app/src/main/res/drawable/ic_arrow_back.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M20,11H7.83l5.59,-5.59L12,4l-8,8l8,8l1.41,-1.41L7.83,13H20V11z"/></vector>
           EOF
@@ -211,16 +205,20 @@ jobs:
           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
               <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:layout_marginBottom="30dp" android:text="إعدادات الكيبورد" android:textSize="32sp" android:textStyle="bold" android:gravity="center" />
+                  
+                  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="تخصيص حجم الكيبورد (شريط التكبير):" android:textSize="16sp" android:textStyle="bold" android:layout_marginBottom="8dp"/>
+                  <SeekBar android:id="@+id/seek_height" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="50" android:progress="20" android:layout_marginBottom="24dp"/>
+                  
                   <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn_enable" android:layout_width="match_parent" android:layout_height="60dp" android:text="1. تفعيل الكيبورد" android:textColor="#FFFFFF" android:background="@drawable/bg_button" android:textSize="18sp" android:layout_marginBottom="16dp"/>
                   <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn_select" android:layout_width="match_parent" android:layout_height="60dp" android:text="2. اختيار الكيبورد" android:textColor="#FFFFFF" android:background="@drawable/bg_button" android:textSize="18sp" android:layout_marginBottom="40dp"/>
+                  
                   <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="إعدادات الذكاء الاصطناعي:" android:textSize="16sp" android:textStyle="bold" android:layout_marginBottom="12dp" />
                   <EditText android:id="@+id/input_api_key" android:layout_width="match_parent" android:layout_height="60dp" android:hint="الصق مفتاح Gemini API هنا..." android:inputType="textPassword" android:background="@drawable/bg_popup_bubble" android:padding="16dp" android:layout_marginBottom="16dp" />
-                  <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn_save_api" android:layout_width="match_parent" android:layout_height="60dp" android:text="حفظ المفتاح" android:textColor="#FFFFFF" android:background="@drawable/bg_button" android:textSize="18sp" android:layout_marginBottom="40dp"/>
+                  <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn_save_api" android:layout_width="match_parent" android:layout_height="60dp" android:text="حفظ الإعدادات" android:textColor="#FFFFFF" android:background="@drawable/bg_button" android:textSize="18sp" android:layout_marginBottom="40dp"/>
               </LinearLayout>
           </ScrollView>
           EOF
 
-          # ---- إضافة ملف الإعدادات (MainActivity) الذي كان ناقصاً ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
           package com.aikeyboard.pro
 
@@ -231,6 +229,7 @@ jobs:
           import android.view.inputmethod.InputMethodManager
           import android.widget.Button
           import android.widget.EditText
+          import android.widget.SeekBar
           import android.widget.Toast
           import androidx.appcompat.app.AppCompatActivity
 
@@ -250,14 +249,26 @@ jobs:
                       val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                       imm.showInputMethodPicker()
                   }
+                  
+                  val seekBar = findViewById<SeekBar>(R.id.seek_height)
+                  // استرجاع القيمة السابقة (الافتراضي 20 يعادل نسبة 1.0)
+                  seekBar.progress = prefs.getInt("kb_height_prog", 20)
 
                   val inputApiKey = findViewById<EditText>(R.id.input_api_key)
                   inputApiKey.setText(prefs.getString("api_key", ""))
 
                   findViewById<Button>(R.id.btn_save_api).setOnClickListener {
                       val key = inputApiKey.text.toString().trim()
-                      prefs.edit().putString("api_key", key).apply()
-                      Toast.makeText(this, "تم حفظ المفتاح بنجاح!", Toast.LENGTH_SHORT).show()
+                      val prog = seekBar.progress
+                      // الحسبة: (التقدم / 20) يعطينا نسبة. 20 تعني 1.0 (الحجم الطبيعي)، 30 تعني 1.5 (كبير جداً)
+                      val ratio = 0.8f + (prog / 100f) * 1.0f 
+                      
+                      prefs.edit()
+                          .putString("api_key", key)
+                          .putInt("kb_height_prog", prog)
+                          .putFloat("kb_height_ratio", ratio)
+                          .apply()
+                      Toast.makeText(this, "تم حفظ الإعدادات! أعد فتح الكيبورد.", Toast.LENGTH_SHORT).show()
                   }
               }
           }
@@ -308,6 +319,7 @@ jobs:
               private lateinit var rootFrame: FrameLayout
               private lateinit var mainLayout: LinearLayout
               private lateinit var keysContainer: LinearLayout
+              private lateinit var bottomSafeArea: FrameLayout
               private lateinit var keyPreviewBubble: TextView
               
               private lateinit var defaultToolbarView: LinearLayout
@@ -320,13 +332,20 @@ jobs:
               private lateinit var prefs: SharedPreferences
               private val scope = CoroutineScope(Dispatchers.Main + Job())
               private var density: Float = 1f
+              private var heightRatio: Float = 1f
               private val currentTypedWord = StringBuilder()
 
               private val arDict = "السلام,عليكم,مرحبا,كيف,حالك,شكرا,صباح,الخير,مساء,اليوم,غدا,الآن,مشروع,تطبيق,جميل,جدا,ممتاز,نعم,لا,ماذا,لماذا,هذا,هذه,أنا,أنت,نحن,إن,شاء,الله,في,من,على,إلى,عن,مع,كل,هل,أو,ثم,حتى,لو,ما,لم,لن,إنما,ربما,دائما,أبدا,هنا,هناك,فقط,أيضا,كثيرا,قليلا,جيد,سيء,كبير,صغير,جديد,قديم,رائع,مذهل,عظيم,أين,متى,كم,كيفما,بينما,عندما,وقت,ساعة,دقيقة,يوم,شهر,سنة,عمل,بيت,سيارة,مدرسة,طريق,رحلة,سفر,حب,حياة,قلب,عقل,روح,صديق,أخ,أخت,أب,أم,أستاذ,دكتور,مهندس,طبيب,مستشفى,جامعة,مكتب,كتاب,قلم,ورقة,حاسوب,هاتف,رسالة,مكالمة,صورة,فيديو,لعبة".split(",")
               private val frDict = "bonjour,comment,merci,oui,non,salut,bien,avec,pour,projet,application,dynamic,island,keyboard,clavier,très,beau,bon,jour,nuit,demain,aujourd'hui,je,tu,il,elle,nous,vous,ils,elles,le,la,les,un,une,des,et,ou,mais,donc,car,ni,or,qui,que,quoi,dont,où,quand,pourquoi,comment,combien,quel,quelle,ce,cet,cette,ces,mon,ton,son,notre,votre,leur,faire,dire,pouvoir,aller,voir,savoir,vouloir,venir,devoir,croire,trouver,donner,prendre,parler,aimer,passer,mettre,demander,tenir,sembler,laisser,rester,penser,entendre,regarder,répondre,rendre,connaître,paraître,arriver,sentir,attendre,vivre,chercher,comprendre,porter,devenir,entrer,retenir,écrire,appeler,tomber,reprendre,mener,lire,monter,partir".split(",")
 
               private val altChars = mapOf(
-                  "ا" to listOf("أ", "إ", "آ", "ء"), "ي" to listOf("ئ", "ى"), "و" to listOf("ؤ"), "ل" to listOf("لا", "لأ", "لإ", "لآ"),
+                  "ا" to listOf("أ", "إ", "آ", "ء"),
+                  "ي" to listOf("ئ", "ى"),
+                  "ى" to listOf("ي", "ئ"),
+                  "و" to listOf("ؤ"),
+                  "ه" to listOf("ة"),
+                  "ة" to listOf("ه"),
+                  "ل" to listOf("لا", "لأ", "لإ", "لآ"),
                   "e" to listOf("é", "è", "ê", "ë"), "a" to listOf("à", "â", "æ", "á"), "c" to listOf("ç"), "u" to listOf("ù", "û", "ü"),
                   "i" to listOf("î", "ï"), "o" to listOf("ô", "œ")
               )
@@ -336,27 +355,28 @@ jobs:
               override fun onCreateInputView(): View {
                   prefs = getSharedPreferences("ai_kb_prefs", Context.MODE_PRIVATE)
                   density = resources.displayMetrics.density
+                  heightRatio = prefs.getFloat("kb_height_ratio", 1.0f)
                   
                   val bgColor = ContextCompat.getColor(this, R.color.keyboard_bg)
                   val textColorInt = ContextCompat.getColor(this, R.color.key_text)
                   val sugColorInt = ContextCompat.getColor(this, R.color.suggestion_text)
                   val iconColorInt = ContextCompat.getColor(this, R.color.toolbar_icon)
                   
-                  window?.window?.navigationBarColor = Color.TRANSPARENT
+                  // سر الاحتراف: تلوين أسفل الشاشة بالكامل ليتصل مع النظام
+                  window?.window?.navigationBarColor = bgColor
 
                   rootFrame = FrameLayout(this).apply { 
-                      layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) 
+                      layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      setBackgroundColor(bgColor)
                   }
                   
                   mainLayout = LinearLayout(this).apply { 
                       orientation = LinearLayout.VERTICAL
                       setBackgroundResource(R.drawable.bg_keyboard_root) 
-                      layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                          setMargins(0, 0, 0, (8*density).toInt())
-                      }
+                      layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
 
-                  val toolbarWrapper = FrameLayout(this).apply { layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (44 * density).toInt()) }
+                  val toolbarWrapper = FrameLayout(this).apply { layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (44 * density * heightRatio).toInt()) }
                   
                   defaultToolbarView = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
@@ -453,10 +473,43 @@ jobs:
                   keysContainer = LinearLayout(this).apply { 
                       orientation = LinearLayout.VERTICAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      setPadding(0, (6*density).toInt(), 0, (6*density).toInt()) 
+                      setPadding(0, (6*density).toInt(), 0, 0) 
                   }
                   mainLayout.addView(keysContainer)
                   
+                  // المنظقة الآمنة السفلية (أيقونة الأرض والمايكروفون) - لتكتمل مع النظام
+                  bottomSafeArea = FrameLayout(this).apply {
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (60 * density).toInt())
+                      setPadding((24*density).toInt(), (10*density).toInt(), (24*density).toInt(), (10*density).toInt())
+                      
+                      val globeBtn = ImageView(this@KeyboardService).apply {
+                          setImageResource(R.drawable.ic_globe)
+                          setColorFilter(iconColorInt)
+                          layoutParams = FrameLayout.LayoutParams((28*density).toInt(), (28*density).toInt(), Gravity.START or Gravity.CENTER_VERTICAL)
+                          setOnClickListener {
+                              currentLang = if(currentLang == "FR") "AR" else "FR"
+                              currentTypedWord.clear(); updateSuggestions(); rebuildKeysLayout()
+                          }
+                          setOnLongClickListener { 
+                              (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
+                              true 
+                          }
+                      }
+                      
+                      val micBtn = ImageView(this@KeyboardService).apply {
+                          setImageResource(R.drawable.ic_mic)
+                          setColorFilter(iconColorInt)
+                          layoutParams = FrameLayout.LayoutParams((28*density).toInt(), (28*density).toInt(), Gravity.END or Gravity.CENTER_VERTICAL)
+                          setOnClickListener {
+                              // Voice dictation placeholder
+                          }
+                      }
+                      
+                      addView(globeBtn)
+                      addView(micBtn)
+                  }
+                  mainLayout.addView(bottomSafeArea)
+
                   keyPreviewBubble = TextView(this).apply {
                       textSize = 36f; setTextColor(textColorInt); gravity = Gravity.CENTER
                       typeface = Typeface.create("sans-serif", Typeface.NORMAL)
@@ -474,6 +527,7 @@ jobs:
                   else { defaultToolbarView.visibility = View.VISIBLE; aiToolsView.visibility = View.GONE }
               }
 
+              // نقل الميكروفون والأرض للأسفل، جعل المسافة أطول
               private fun getLayoutRows(): List<List<KeyDef>> {
                   if (isSymbols) {
                       val nums = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
@@ -481,7 +535,7 @@ jobs:
                           nums.map { KeyDef(it, 1f) },
                           listOf("-", "/", ":", ";", "(", ")", "€", "&", "@", "\"").map { KeyDef(it, 1f) },
                           listOf(KeyDef("ABC", 1.3f)) + listOf(".", ",", "?", "!", "'").map { KeyDef(it, 1f) } + listOf(KeyDef("DEL", 1.3f)),
-                          listOf(KeyDef("GLOBE", 1f), KeyDef("ABC", 1.5f), KeyDef("SPACE", 5.0f), KeyDef("ENTER", 1.5f), KeyDef("MIC", 1f)) 
+                          listOf(KeyDef("ABC", 1.5f), KeyDef("SPACE", 6.0f), KeyDef("ENTER", 1.5f)) 
                       )
                   }
                   return when (currentLang) {
@@ -489,18 +543,23 @@ jobs:
                           "ض ص ث ق ف غ ع ه خ ح ج د".split(" ").map { KeyDef(it, 1f) }, 
                           listOf(KeyDef("SPACER", 0.5f)) + "ش س ي ب ل ا ت ن م ك ط".split(" ").map { KeyDef(it, 1f) } + listOf(KeyDef("SPACER", 0.5f)),
                           listOf(KeyDef("SHIFT", 1.3f)) + "ذ ر ى ة و ز ظ".split(" ").map { KeyDef(it, 1f) } + listOf(KeyDef("DEL", 1.3f)),
-                          listOf(KeyDef("GLOBE", 1.0f), KeyDef("?123", 1.5f), KeyDef("SPACE", 5.0f), KeyDef("ENTER", 1.5f), KeyDef("MIC", 1.0f)) 
+                          listOf(KeyDef("?123", 1.5f), KeyDef("SPACE", 6.0f), KeyDef("ENTER", 1.5f)) 
                       )
                       else -> listOf(
                           "q w e r t y u i o p".split(" ").map { KeyDef(if (isCaps) it.uppercase() else it.replace("q","a").replace("w","z"), 1f) },
                           "a s d f g h j k l m".split(" ").map { KeyDef(if (isCaps) it.uppercase() else it.replace("a","q"), 1f) },
                           listOf(KeyDef("SHIFT", 1.3f)) + "z x c v b n".split(" ").map { KeyDef(if (isCaps) it.uppercase() else it.replace("z","w"), 1f) } + listOf(KeyDef("'", 1f), KeyDef("DEL", 1.3f)),
-                          listOf(KeyDef("GLOBE", 1.0f), KeyDef("?123", 1.5f), KeyDef("SPACE", 5.0f), KeyDef("ENTER", 1.5f), KeyDef("MIC", 1.0f)) 
+                          listOf(KeyDef("?123", 1.5f), KeyDef("SPACE", 6.0f), KeyDef("ENTER", 1.5f)) 
                       )
                   }
               }
 
-              override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) { super.onStartInputView(info, restarting); currentTypedWord.clear(); updateSuggestions(); rebuildKeysLayout() }
+              override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) { 
+                  super.onStartInputView(info, restarting)
+                  // تحديث الحجم في حال تغييره من الإعدادات
+                  heightRatio = prefs.getFloat("kb_height_ratio", 1.0f)
+                  currentTypedWord.clear(); updateSuggestions(); rebuildKeysLayout() 
+              }
 
               private fun showAltMenu(anchor: View, chars: List<String>) {
                   val container = LinearLayout(this).apply {
@@ -527,7 +586,7 @@ jobs:
               private fun rebuildKeysLayout() {
                   keysContainer.removeAllViews()
                   val rows = getLayoutRows()
-                  val baseKeyHeight = (42 * density).toInt() 
+                  val baseKeyHeight = (42 * density * heightRatio).toInt() // تطبيق شريط الحجم هنا
                   val keyMarginH = (3f * density).toInt() 
                   val keyMarginV = (6f * density).toInt() 
                   
@@ -551,45 +610,19 @@ jobs:
                                   
                                   val isSpecial = label == "DEL" || label == "SHIFT" || label == "?123" || label == "ABC"
                                   val isEnter = label == "ENTER"
-                                  val isTransparentBtn = label == "GLOBE" || label == "MIC"
                                   
-                                  if (!isTransparentBtn) {
-                                      setBackgroundResource(if (isEnter) R.drawable.key_return_selector else if (isSpecial) R.drawable.key_special_selector else R.drawable.key_selector)
-                                  }
+                                  setBackgroundResource(if (isEnter) R.drawable.key_return_selector else if (isSpecial) R.drawable.key_special_selector else R.drawable.key_selector)
                                   isClickable = true
                                   
-                                  if (label == "SHIFT" || label == "DEL" || label == "ENTER" || label == "GLOBE" || label == "MIC") {
-                                      if (label == "MIC") {
-                                          val micLayout = LinearLayout(this@KeyboardService).apply { 
-                                              orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER
-                                              layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                                          }
-                                          micLayout.addView(ImageView(this@KeyboardService).apply {
-                                              setImageResource(R.drawable.ic_mic); setColorFilter(iconColorInt)
-                                              layoutParams = LinearLayout.LayoutParams((26*density).toInt(), (26*density).toInt())
-                                          })
-                                          micLayout.addView(ImageView(this@KeyboardService).apply {
-                                              setImageResource(R.drawable.ic_keyboard_picker); setColorFilter(iconColorInt)
-                                              layoutParams = LinearLayout.LayoutParams((16*density).toInt(), (16*density).toInt()).apply { setMargins((4*density).toInt(),0,0,0) }
-                                              alpha = 0.5f
-                                              setOnClickListener { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
-                                          })
-                                          addView(micLayout)
-                                      } else {
-                                          val iconView = ImageView(this@KeyboardService).apply {
-                                              layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER)
-                                              val iconRes = when (label) { "SHIFT" -> R.drawable.ic_shift; "DEL" -> R.drawable.ic_delete; "ENTER" -> R.drawable.ic_enter; "GLOBE" -> R.drawable.ic_globe; else -> R.drawable.ic_enter }
-                                              setImageResource(iconRes)
-                                              if (label == "GLOBE") {
-                                                  setColorFilter(iconColorInt)
-                                                  layoutParams = FrameLayout.LayoutParams((28*density).toInt(), (28*density).toInt(), Gravity.CENTER)
-                                              } else {
-                                                  setColorFilter(if (isEnter) textReturnColorInt else textColorInt)
-                                              }
-                                              if(label == "SHIFT" && isCaps) alpha = 1.0f else if(label == "SHIFT") alpha = 0.6f
-                                          }
-                                          addView(iconView)
+                                  if (label == "SHIFT" || label == "DEL" || label == "ENTER") {
+                                      val iconView = ImageView(this@KeyboardService).apply {
+                                          layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER)
+                                          val iconRes = when (label) { "SHIFT" -> R.drawable.ic_shift; "DEL" -> R.drawable.ic_delete; "ENTER" -> R.drawable.ic_enter; else -> R.drawable.ic_enter }
+                                          setImageResource(iconRes)
+                                          setColorFilter(if (isEnter) textReturnColorInt else textColorInt)
+                                          if(label == "SHIFT" && isCaps) alpha = 1.0f else if(label == "SHIFT") alpha = 0.6f
                                       }
+                                      addView(iconView)
                                   } else {
                                       val textView = TextView(this@KeyboardService).apply {
                                           text = when (label) { "SPACE" -> ""; else -> label }
@@ -607,7 +640,7 @@ jobs:
                                   setOnTouchListener { v, event ->
                                       when (event.action) {
                                           MotionEvent.ACTION_DOWN -> { 
-                                              if(!isTransparentBtn) v.isPressed = true 
+                                              v.isPressed = true 
                                               isLongPressTriggered = false; v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                                               if (label.length == 1 && label != " ") {
                                                   val keyX = v.x + rowLayout.x; val keyY = v.y + rowLayout.y + keysContainer.y + (44*density) 
@@ -617,7 +650,7 @@ jobs:
                                                   val alternates = altChars[label.lowercase()]
                                                   if (alternates != null) {
                                                       longPressRunnable = Runnable { isLongPressTriggered = true; keyPreviewBubble.visibility = View.GONE; v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS); showAltMenu(v, alternates) }
-                                                      handler.postDelayed(longPressRunnable!!, 400)
+                                                      handler.postDelayed(longPressRunnable!!, 350)
                                                   }
                                               }
                                               true 
@@ -650,7 +683,7 @@ jobs:
                   }
                   
                   val matches = mutableListOf<String>()
-                  for (item in dict) { if (item.length > word.length && item.startsWith(word, ignoreCase = true)) { matches.add(item) } }
+                  for (item in dict) { if (item.length >= word.length && item.startsWith(word, ignoreCase = true)) { matches.add(item) } }
                   
                   sug1.text = if (matches.size > 0) matches[0] else ""
                   sug2.text = word 
@@ -668,12 +701,23 @@ jobs:
                   val ic = currentInputConnection ?: return
                   when (key) {
                       "DEL" -> { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL)); if (currentTypedWord.isNotEmpty()) currentTypedWord.deleteCharAt(currentTypedWord.length - 1) }
-                      "SPACE", "ENTER" -> { if (key == "SPACE") ic.commitText(" ", 1) else { ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)) }; currentTypedWord.clear() }
+                      "SPACE", "ENTER" -> { 
+                          if (key == "SPACE") {
+                              val autoCorrect = sug1.text.toString()
+                              if (autoCorrect.isNotEmpty() && autoCorrect != arDict[0] && autoCorrect != frDict[0] && currentTypedWord.isNotEmpty()) {
+                                  // التصحيح التلقائي عند الضغط على المسافة
+                                  ic.deleteSurroundingText(currentTypedWord.length, 0); ic.commitText(autoCorrect + " ", 1)
+                              } else {
+                                  ic.commitText(" ", 1) 
+                              }
+                          } else { 
+                              ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)); ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)) 
+                          }
+                          currentTypedWord.clear() 
+                      }
                       "SHIFT" -> { isCaps = !isCaps; rebuildKeysLayout() }
                       "?123" -> { isSymbols = true; rebuildKeysLayout(); updateSuggestions() }
                       "ABC" -> { isSymbols = false; rebuildKeysLayout(); updateSuggestions() }
-                      "GLOBE" -> { currentLang = if(currentLang == "FR") "AR" else "FR"; currentTypedWord.clear(); updateSuggestions(); rebuildKeysLayout() }
-                      "MIC" -> { /* Voice typing placeholder */ }
                       else -> { val letter = if (isCaps && !isSymbols && currentLang != "AR") key.uppercase() else key; ic.commitText(letter, 1); if (isCaps) { isCaps = false; rebuildKeysLayout() }; if (key.length == 1 && !isSymbols) { currentTypedWord.append(letter) } }
                   }
                   updateSuggestions()
@@ -742,9 +786,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: aikeyboard-v50.1.1
-          name: "AI Keyboard Pro - Phase 50.1.1 (Fully Fixed ✅)"
-          body: "1. 🛠️ **إصلاح شاشة الإعدادات:** تمت كتابة كود MainActivity بالكامل لتمكين الأزرار وحفظ مفتاح API.\n2. 🔙 **إصلاح أيقونة الرجوع:** تمت إضافة ic_arrow_back لضمان عمل شريط الذكاء الاصطناعي بشكل سليم.\n3. 📱 **جاهز للاستخدام:** التطبيق يعمل الآن بدون أي أخطاء في الـ Build."
+          tag_name: aikeyboard-v50.2
+          name: "AI Keyboard Pro - Phase 50.2 (Ultimate iOS Experience 📱)"
+          body: "1. 📐 **تلوين شريط النظام السفلي:** اختفى الفراغ الأسود وتم إكمال الواجهة للأسفل.\n2. 🎙️ **نقل الأدوات للأسفل:** نقل الميكروفون وعلامة الأرض للمنطقة السفلية تماماً كجهاز الآيفون.\n3. 🔍 **شريط تكبير مرن:** تمت إضافة سلايدر في الإعدادات للتحكم بحجم الكيبورد.\n4. 👆 **انبثاق الحروف (ا، ى، ة، ه، و):** يخرج منها الحروف المتصلة بضغطة مطولة.\n5. 📖 **تصحيح تلقائي فعّال:** بالضغط على المسافة (Space) يتم اختيار أول كلمة في شريط الاقتراحات."
           files: release-output/AI-Keyboard-Pro-Phase50.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
