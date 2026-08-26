@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 10; versionName = "10.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 11; versionName = "11.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -145,17 +145,21 @@ jobs:
               private val handler = Handler(Looper.getMainLooper())
               
               private lateinit var rootLayout: LinearLayout
-              private lateinit var headerContainer: FrameLayout
+              private lateinit var headerContainer: LinearLayout
               private lateinit var predictionContainer: LinearLayout
+              private lateinit var toolbarContainer: LinearLayout
               private lateinit var sliderContainer: View
               private lateinit var keysContainer: LinearLayout
               
               private val keyViews = mutableListOf<View>()
               private var popupWindow: PopupWindow? = null
               private var popupTextView: TextView? = null
-              
               private var altPopupWindow: PopupWindow? = null
               private val altViews = mutableListOf<TextView>()
+
+              // Mini Dictionary
+              private val arabicDict = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله")
+              private val frenchDict = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "salut", "bien", "pourquoi")
 
               override fun onCreate() {
                   super.onCreate()
@@ -175,33 +179,67 @@ jobs:
                       setPadding((4 * dp).toInt(), (8 * dp).toInt(), (4 * dp).toInt(), (8 * dp).toInt())
                   }
 
-                  val toolbar = LinearLayout(this).apply {
+                  // Top Header Container (holds Toggle + Predictions/Toolbar)
+                  headerContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      setPadding((4 * dp).toInt(), 0, (4 * dp).toInt(), 0)
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (40 * dp).toInt())
                       gravity = Gravity.CENTER_VERTICAL
                   }
-                  
-                  toolbar.addView(createQuickSettingPill("😊", "رموز") {})
-                  toolbar.addView(createQuickSettingPill("✨", "ذكاء") { 
-                      updatePredictions(listOf("🤖 جاري التفكير...", "تحليل...")) 
-                  })
-                  toolbar.addView(createQuickSettingPill("🎚️", "حجم") { toggleSlider() })
-                  toolbar.addView(createQuickSettingPill("⚙️", "ضبط") { openSettings() })
-                  rootLayout.addView(toolbar)
-                  rootLayout.addView(Space((8 * dp).toInt()))
 
-                  headerContainer = FrameLayout(this).apply {
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (40 * dp).toInt())
+                  // Material You Square Toggle Button
+                  val toggleBtn = TextView(this).apply {
+                      text = "⊞"
+                      textSize = 20f
+                      setTextColor(Color.WHITE)
+                      gravity = Gravity.CENTER
+                      layoutParams = LinearLayout.LayoutParams((40 * dp).toInt(), (40 * dp).toInt()).apply {
+                          setMargins(0, 0, (8 * dp).toInt(), 0)
+                      }
+                      background = getRoundRect(iosKeyControlBg, 12f * dp) // Material You Square-ish
+                      setOnClickListener {
+                          vibrate()
+                          if (toolbarContainer.visibility == View.VISIBLE) {
+                              toolbarContainer.visibility = View.GONE
+                              predictionContainer.visibility = View.VISIBLE
+                          } else {
+                              toolbarContainer.visibility = View.VISIBLE
+                              predictionContainer.visibility = View.GONE
+                              sliderContainer.visibility = View.GONE
+                          }
+                      }
                   }
 
+                  val dynamicArea = FrameLayout(this).apply {
+                      layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+                  }
+
+                  // 1. Predictions Container
                   predictionContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                       gravity = Gravity.CENTER_VERTICAL
                   }
-                  updatePredictions(if(isArabic) listOf("مرحبا", "نعم", "شكرا") else listOf("bonjour", "merci", "oui"))
                   
+                  // 2. Toolbar Container (Hidden by default)
+                  toolbarContainer = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                      gravity = Gravity.CENTER_VERTICAL
+                      visibility = View.GONE
+                  }
+                  toolbarContainer.addView(createQuickSettingPill("😊", "رموز") {})
+                  toolbarContainer.addView(createQuickSettingPill("✨", "ذكاء") { 
+                      updatePredictionsUi(listOf("🤖 تفكير..."), "") 
+                      toolbarContainer.visibility = View.GONE
+                      predictionContainer.visibility = View.VISIBLE
+                  })
+                  toolbarContainer.addView(createQuickSettingPill("🎚️", "حجم") { 
+                      toolbarContainer.visibility = View.GONE
+                      sliderContainer.visibility = View.VISIBLE
+                  })
+                  toolbarContainer.addView(createQuickSettingPill("⚙️", "ضبط") { openSettings() })
+
+                  // 3. Slider Container (Hidden by default)
                   sliderContainer = createMaterialSlider(this, keyHeightDp, 35f, 65f) { newVal ->
                       keyHeightDp = newVal
                       prefs.edit().putFloat("key_height", newVal).apply()
@@ -212,8 +250,12 @@ jobs:
                       }
                   }.apply { visibility = View.GONE }
 
-                  headerContainer.addView(predictionContainer)
-                  headerContainer.addView(sliderContainer)
+                  dynamicArea.addView(predictionContainer)
+                  dynamicArea.addView(toolbarContainer)
+                  dynamicArea.addView(sliderContainer)
+
+                  headerContainer.addView(toggleBtn)
+                  headerContainer.addView(dynamicArea)
                   rootLayout.addView(headerContainer)
                   rootLayout.addView(Space((8 * dp).toInt()))
 
@@ -223,6 +265,7 @@ jobs:
                   }
                   rootLayout.addView(keysContainer)
 
+                  updateSmartPredictions()
                   renderKeys()
 
                   return rootLayout
@@ -260,7 +303,11 @@ jobs:
                       })
                       row3Container.addView(createKeysRow(finalR3, finalR3.size.toFloat(), 6))
                       row3Container.addView(createSpecialKey("⌫", iosKeyControlBg, 1.2f).apply {
-                          setOnClickListener { vibrate(); currentInputConnection?.deleteSurroundingText(1, 0) }
+                          setOnClickListener { 
+                              vibrate()
+                              currentInputConnection?.deleteSurroundingText(1, 0)
+                              updateSmartPredictions()
+                          }
                       })
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space((10 * dp).toInt()))
@@ -269,16 +316,17 @@ jobs:
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
-                      bottomRow.addView(createSpecialKey("?123", iosKeyControlBg, 1.5f).apply {
+                      // الأوزان الجديدة لتصغير return وتكبير space
+                      bottomRow.addView(createSpecialKey("?123", iosKeyControlBg, 1.2f).apply {
                           setOnClickListener { vibrate(); keyboardMode = 1; renderKeys() }
                       })
                       bottomRow.addView(createSpecialKey("🌐", iosKeyControlBg, 1.2f).apply {
-                          setOnClickListener { vibrate(); isArabic = !isArabic; isShifted = false; renderKeys() }
+                          setOnClickListener { vibrate(); isArabic = !isArabic; isShifted = false; updateSmartPredictions(); renderKeys() }
                       })
-                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 4f, 0.4f).apply {
-                          setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1) }
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 5f, 0.4f).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1); updateSmartPredictions() }
                       })
-                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 2f).apply {
+                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
                       })
                       keysContainer.addView(bottomRow)
@@ -303,7 +351,7 @@ jobs:
                       })
                       row3Container.addView(createKeysRow(r3, r3.size.toFloat(), 6))
                       row3Container.addView(createSpecialKey("⌫", iosKeyControlBg, 1.5f).apply {
-                          setOnClickListener { vibrate(); currentInputConnection?.deleteSurroundingText(1, 0) }
+                          setOnClickListener { vibrate(); currentInputConnection?.deleteSurroundingText(1, 0); updateSmartPredictions() }
                       })
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space((10 * dp).toInt()))
@@ -312,19 +360,59 @@ jobs:
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
-                      bottomRow.addView(createSpecialKey("ABC", iosKeyControlBg, 1.5f).apply {
+                      bottomRow.addView(createSpecialKey("ABC", iosKeyControlBg, 1.2f).apply {
                           setOnClickListener { vibrate(); keyboardMode = 0; renderKeys() }
                       })
                       bottomRow.addView(createSpecialKey("🌐", iosKeyControlBg, 1.2f).apply {
                           setOnClickListener { vibrate(); isArabic = !isArabic; keyboardMode = 0; renderKeys() }
                       })
-                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 4f, 0.4f).apply {
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 5f, 0.4f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1) }
                       })
-                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 2f).apply {
+                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
                       })
                       keysContainer.addView(bottomRow)
+                  }
+              }
+
+              // Dictionary Engine
+              private fun updateSmartPredictions() {
+                  val textBeforeCursor = currentInputConnection?.getTextBeforeCursor(30, 0)?.toString() ?: ""
+                  val lastWord = textBeforeCursor.split(Regex("\\s+")).lastOrNull() ?: ""
+
+                  val suggestions = if (lastWord.isEmpty()) {
+                      if (isArabic) listOf("مرحبا", "نعم", "شكرا") else listOf("bonjour", "merci", "oui")
+                  } else {
+                      val dict = if (isArabic) arabicDict else frenchDict
+                      val matches = dict.filter { it.startsWith(lastWord, ignoreCase = true) }.take(3)
+                      if (matches.isEmpty()) listOf(lastWord) else matches
+                  }
+                  updatePredictionsUi(suggestions, lastWord)
+              }
+
+              private fun updatePredictionsUi(words: List<String>, wordToReplace: String) {
+                  predictionContainer.removeAllViews()
+                  val dp = resources.displayMetrics.density
+                  words.forEach { word ->
+                      predictionContainer.addView(TextView(this).apply {
+                          text = word
+                          textSize = 16f
+                          setTextColor(Color.argb((255 * 0.9f).toInt(), 255, 255, 255))
+                          gravity = Gravity.CENTER
+                          layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+                          isClickable = true
+                          background = getRoundRect(Color.TRANSPARENT, 8f * dp)
+                          
+                          setOnClickListener {
+                              vibrate()
+                              if (wordToReplace.isNotEmpty()) {
+                                  currentInputConnection?.deleteSurroundingText(wordToReplace.length, 0)
+                              }
+                              currentInputConnection?.commitText("$word ", 1)
+                              updateSmartPredictions()
+                          }
+                      })
                   }
               }
 
@@ -459,6 +547,9 @@ jobs:
                                           }
                                       }
                                   }
+                                  if (event.action == MotionEvent.ACTION_UP) {
+                                      updateSmartPredictions()
+                                  }
                               }
                           }
                           true
@@ -493,18 +584,6 @@ jobs:
                   try { vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE)) } catch (e: Exception) {}
               }
               
-              private fun toggleSlider() {
-                  vibrate()
-                  if (sliderContainer.visibility == View.VISIBLE) {
-                      sliderContainer.visibility = View.GONE
-                      predictionContainer.visibility = View.VISIBLE
-                  } else {
-                      sliderContainer.visibility = View.VISIBLE
-                      predictionContainer.visibility = View.GONE
-                      sliderContainer.requestLayout()
-                  }
-              }
-
               private fun createQuickSettingPill(icon: String, text: String, onClick: () -> Unit): View {
                   val dp = resources.displayMetrics.density
                   return LinearLayout(this).apply {
@@ -512,16 +591,16 @@ jobs:
                       gravity = Gravity.CENTER
                       background = getRoundRect(Color.parseColor("#2D322F"), 100f * dp)
                       layoutParams = LinearLayout.LayoutParams(0, (36 * dp).toInt(), 1f).apply {
-                          setMargins((4*dp).toInt(), 0, (4*dp).toInt(), 0)
+                          setMargins((2*dp).toInt(), 0, (2*dp).toInt(), 0)
                       }
-                      setPadding((8*dp).toInt(), 0, (8*dp).toInt(), 0)
+                      setPadding((4*dp).toInt(), 0, (4*dp).toInt(), 0)
                       
                       addView(TextView(context).apply {
                           this.text = icon
                           textSize = 14f
                           setTextColor(Color.parseColor("#BCEBCE"))
                       })
-                      addView(Space((6*dp).toInt(), true))
+                      addView(Space((4*dp).toInt(), true))
                       addView(TextView(context).apply {
                           this.text = text
                           textSize = 12f
@@ -553,19 +632,6 @@ jobs:
               }
 
               private fun dismissPopup() { popupWindow?.dismiss() }
-
-              private fun updatePredictions(words: List<String>) {
-                  predictionContainer.removeAllViews()
-                  words.forEach { word ->
-                      predictionContainer.addView(TextView(this).apply {
-                          text = word
-                          textSize = 16f
-                          setTextColor(Color.argb((255 * 0.9f).toInt(), 255, 255, 255))
-                          gravity = Gravity.CENTER
-                          layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
-                      })
-                  }
-              }
 
               private fun createSpecialKey(label: String, bgColor: Int, weight: Float, textAlpha: Float = 1f): TextView {
                   val dp = resources.displayMetrics.density
@@ -606,9 +672,7 @@ jobs:
                   val iconCol = Color.parseColor("#102015")
 
                   val container = FrameLayout(context).apply {
-                      layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, containerHeight).apply {
-                          setMargins((8*dp).toInt(), 0, (8*dp).toInt(), 0)
-                      }
+                      layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, containerHeight)
                       background = getRoundRect(bgCol, containerHeight / 2f)
                   }
                   
