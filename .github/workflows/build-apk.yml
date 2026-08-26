@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 14; versionName = "14.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 15; versionName = "15.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -89,14 +89,6 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@drawable/ic_launcher_bg"/><foreground android:drawable="@drawable/ic_launcher_fg"/></adaptive-icon>
           INNER_EOF
 
-          cat << 'INNER_EOF' > app/src/main/res/drawable/kb_background.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <shape xmlns:android="http://schemas.android.com/apk/res/android">
-              <solid android:color="#101010" />
-              <corners android:topLeftRadius="16dp" android:topRightRadius="16dp" />
-          </shape>
-          INNER_EOF
-
           cat << 'INNER_EOF' > app/src/main/res/drawable/ic_language.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
               <path android:fillColor="#FFFFFF" android:pathData="M11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM18.92,8h-2.95c-0.32,-1.25 -0.78,-2.45 -1.38,-3.56 1.84,0.63 3.37,1.91 4.33,3.56zM12,4.04c0.83,1.2 1.48,2.53 1.91,3.96h-3.82c0.43,-1.43 1.08,-2.76 1.91,-3.96zM4.26,14C4.09,13.36 4,12.69 4,12s0.09,-1.36 0.26,-2h3.38c-0.08,0.66 -0.14,1.32 -0.14,2s0.06,1.34 0.14,2H4.26zM5.08,16h2.95c0.32,1.25 0.78,2.45 1.38,3.56 -1.84,-0.63 -3.37,-1.9 -4.33,-3.56zM8.03,8H5.08c0.96,-1.66 2.49,-2.93 4.33,-3.56C8.81,5.55 8.35,6.75 8.03,8zM12,19.96c-0.83,-1.2 -1.48,-2.53 -1.91,-3.96h3.82c-0.43,1.43 -1.08,2.76 -1.91,3.96zM14.34,14H9.66c-0.09,-0.66 -0.16,-1.32 -0.16,-2s0.07,-1.35 0.16,-2h4.68c0.09,0.65 0.16,1.32 0.16,2s-0.07,1.34 -0.16,2zM14.59,19.56c0.6,-1.11 1.06,-2.31 1.38,-3.56h2.95c-0.96,1.65 -2.49,2.93 -4.33,3.56zM16.22,14c0.08,-0.66 0.14,-1.32 0.14,-2s-0.06,-1.34 -0.14,-2h3.38c0.17,0.64 0.26,1.31 0.26,2s-0.09,1.36 -0.26,2h-3.38z"/>
@@ -123,6 +115,7 @@ jobs:
           import android.content.Context
           import android.content.Intent
           import android.content.SharedPreferences
+          import android.content.res.Configuration
           import android.graphics.Color
           import android.graphics.Typeface
           import android.graphics.drawable.GradientDrawable
@@ -143,10 +136,13 @@ jobs:
           import android.widget.ImageView
 
           class KeyboardService : InputMethodService() {
-              private val iosKeyNormalBg = Color.parseColor("#3A3A3C")
-              private val iosKeyControlBg = Color.parseColor("#2C2C2E")
+              // Dynamic Theme Colors
+              private var isDarkMode = true
+              private var kbBgColor = Color.BLACK
+              private var keyNormalBg = Color.BLACK
+              private var keyControlBg = Color.BLACK
+              private var txtColor = Color.WHITE
               private val iosActionBlueColor = Color.parseColor("#007AFF")
-              private val iosTxtWhiteColor = Color.parseColor("#FFFFFF")
               
               private var isArabic = false
               private var isShifted = false
@@ -179,9 +175,36 @@ jobs:
                   vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
               }
 
+              private fun updateThemeColors() {
+                  val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                  isDarkMode = currentNightMode == Configuration.UI_MODE_NIGHT_YES
+                  
+                  if (isDarkMode) {
+                      kbBgColor = Color.parseColor("#101010")
+                      keyNormalBg = Color.parseColor("#3A3A3C")
+                      keyControlBg = Color.parseColor("#2C2C2E")
+                      txtColor = Color.parseColor("#FFFFFF")
+                  } else {
+                      kbBgColor = Color.parseColor("#D1D4D9")
+                      keyNormalBg = Color.parseColor("#FFFFFF")
+                      keyControlBg = Color.parseColor("#B3B8C3")
+                      txtColor = Color.parseColor("#000000")
+                  }
+              }
+
+              private fun getTopRoundRect(bgColor: Int, radius: Float): GradientDrawable {
+                  return GradientDrawable().apply {
+                      shape = GradientDrawable.RECTANGLE
+                      setColor(bgColor)
+                      cornerRadii = floatArrayOf(radius, radius, radius, radius, 0f, 0f, 0f, 0f)
+                  }
+              }
+
               override fun onCreateInputView(): View {
+                  updateThemeColors()
+                  
                   try {
-                      window?.window?.navigationBarColor = Color.parseColor("#101010")
+                      window?.window?.navigationBarColor = kbBgColor
                   } catch (e: Exception) {}
 
                   keyViews.clear()
@@ -190,7 +213,7 @@ jobs:
 
                   rootLayout = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
-                      setBackgroundResource(R.drawable.kb_background)
+                      background = getTopRoundRect(kbBgColor, 16f * dp)
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       setPadding((4 * dp).toInt(), (8 * dp).toInt(), (4 * dp).toInt(), (4 * dp).toInt())
                   }
@@ -204,12 +227,12 @@ jobs:
                   val toggleBtn = TextView(this).apply {
                       text = "⊞"
                       textSize = 20f
-                      setTextColor(Color.WHITE)
+                      setTextColor(txtColor)
                       gravity = Gravity.CENTER
                       layoutParams = LinearLayout.LayoutParams((40 * dp).toInt(), (40 * dp).toInt()).apply {
                           setMargins(0, 0, (8 * dp).toInt(), 0)
                       }
-                      background = getRoundRect(iosKeyControlBg, 12f * dp)
+                      background = getRoundRect(keyControlBg, 12f * dp)
                       setOnClickListener {
                           vibrate()
                           if (toolbarContainer.visibility == View.VISIBLE) {
@@ -290,7 +313,9 @@ jobs:
                   if (keyboardMode == 0) {
                       val r1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
                       val r2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
-                      val r3 = if(isArabic) listOf("ذ","ئ","ء","ؤ","ر","لا","ى","ة","و","ز","ظ") else listOf("w", "x", "c", "v", "b", "n")
+                      
+                      // السطر الثالث تم تحسينه وإزالة الحروف المخفية في العربية لتوفير مساحة
+                      val r3 = if(isArabic) listOf("ظ","ز","و","ة","ى","لا","ر","ء") else listOf("w", "x", "c", "v", "b", "n")
 
                       val finalR1 = if(isShifted && !isArabic) r1.map { it.uppercase() } else r1
                       val finalR2 = if(isShifted && !isArabic) r2.map { it.uppercase() } else r2
@@ -307,18 +332,22 @@ jobs:
                       }
                       
                       if (!isArabic) {
-                          row3Container.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1.5f) })
+                          // زر الشفت للفرنسية (مكانه الصحيح في السطر الثالث)
+                          val shiftBg = if(isShifted) txtColor else keyControlBg
+                          val shiftTxtColor = if(isShifted) kbBgColor else txtColor
+                          row3Container.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.5f, shiftTxtColor).apply {
+                              setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
+                          })
+                      } else {
+                          // مساحة فارغة لضبط التوازن في العربية (بدون شفت)
+                          row3Container.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 0.5f) })
                       }
                       
                       row3Container.addView(createKeysRow(finalR3, finalR3.size.toFloat(), 0))
                       
-                      row3Container.addView(createSpecialKey("⌫", iosKeyControlBg, 1.5f).apply {
-                          setOnClickListener { 
-                              vibrate()
-                              currentInputConnection?.deleteSurroundingText(1, 0)
-                              updateSmartPredictions()
-                          }
-                      })
+                      // إضافة زر الحذف مع وظيفة المسح المستمر السريع
+                      row3Container.addView(createBackspaceKey())
+                      
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space((10 * dp).toInt()))
 
@@ -326,19 +355,19 @@ jobs:
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
-                      bottomRow.addView(createSpecialKey("?123", iosKeyControlBg, 1.5f).apply {
+                      bottomRow.addView(createSpecialKey("?123", keyControlBg, 1.5f, txtColor).apply {
                           setOnClickListener { vibrate(); keyboardMode = 1; renderKeys() }
                       })
-                      val shiftBg = if(isShifted) Color.WHITE else iosKeyControlBg
-                      val shiftTxtColor = if(isShifted) Color.BLACK else iosTxtWhiteColor
-                      bottomRow.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.5f).apply {
-                          setTextColor(shiftTxtColor)
-                          setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
+                      
+                      // إضافة زر الفاصلة بجانب الأرقام (تم استبدال مكان الشفت في السطر الرابع)
+                      bottomRow.addView(createSpecialKey(",", keyControlBg, 1.0f, txtColor).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.commitText(",", 1); updateSmartPredictions() }
                       })
-                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 6f, 0.4f).apply {
+                      
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", keyNormalBg, 6f, txtColor, 1f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1); updateSmartPredictions() }
                       })
-                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f).apply {
+                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f, Color.WHITE).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
                       })
                       keysContainer.addView(bottomRow)
@@ -358,13 +387,11 @@ jobs:
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
                       val symToggle = if(keyboardMode == 1) "#+=" else "123"
-                      row3Container.addView(createSpecialKey(symToggle, iosKeyControlBg, 1.5f).apply {
+                      row3Container.addView(createSpecialKey(symToggle, keyControlBg, 1.5f, txtColor).apply {
                           setOnClickListener { vibrate(); keyboardMode = if(keyboardMode == 1) 2 else 1; renderKeys() }
                       })
                       row3Container.addView(createKeysRow(r3, r3.size.toFloat(), 6))
-                      row3Container.addView(createSpecialKey("⌫", iosKeyControlBg, 1.5f).apply {
-                          setOnClickListener { vibrate(); currentInputConnection?.deleteSurroundingText(1, 0); updateSmartPredictions() }
-                      })
+                      row3Container.addView(createBackspaceKey())
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space((10 * dp).toInt()))
 
@@ -372,16 +399,16 @@ jobs:
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
-                      bottomRow.addView(createSpecialKey("ABC", iosKeyControlBg, 1.5f).apply {
+                      bottomRow.addView(createSpecialKey("ABC", keyControlBg, 1.5f, txtColor).apply {
                           setOnClickListener { vibrate(); keyboardMode = 0; renderKeys() }
                       })
-                      bottomRow.addView(createSpecialKey(",", iosKeyControlBg, 1.5f).apply {
+                      bottomRow.addView(createSpecialKey(",", keyControlBg, 1.5f, txtColor).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(",", 1) }
                       })
-                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 6f, 0.4f).apply {
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", keyNormalBg, 6f, txtColor, 1f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1) }
                       })
-                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f).apply {
+                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f, Color.WHITE).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
                       })
                       keysContainer.addView(bottomRow)
@@ -397,8 +424,8 @@ jobs:
 
                   val globeBtn = ImageView(this).apply {
                       setImageResource(R.drawable.ic_language)
-                      setColorFilter(Color.WHITE) // نضمن أن يكون اللون أبيض
-                      alpha = 0.5f // شفافية 50%
+                      setColorFilter(txtColor) // يتغير حسب الثيم
+                      alpha = 0.5f 
                       scaleType = ImageView.ScaleType.FIT_CENTER
                       setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
                       layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
@@ -416,8 +443,8 @@ jobs:
 
                   val dismissBtn = ImageView(this).apply {
                       setImageResource(R.drawable.ic_keyboard_hide)
-                      setColorFilter(Color.WHITE) // نضمن أن يكون اللون أبيض
-                      alpha = 0.5f // شفافية 50%
+                      setColorFilter(txtColor) // يتغير حسب الثيم
+                      alpha = 0.5f
                       scaleType = ImageView.ScaleType.FIT_CENTER
                       setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
                       layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
@@ -431,6 +458,50 @@ jobs:
 
                   keysContainer.addView(Space((2 * dp).toInt()))
                   keysContainer.addView(footerRow)
+              }
+
+              // دالة زر المسح المستمر الصاروخي
+              private fun createBackspaceKey(): TextView {
+                  val dp = resources.displayMetrics.density
+                  val key = TextView(this).apply {
+                      text = "⌫"
+                      textSize = 18f
+                      setTextColor(txtColor)
+                      gravity = Gravity.CENTER
+                      layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), 1.5f).apply {
+                          setMargins((4 * dp).toInt(), 0, 0, 0)
+                      }
+                      background = getRoundRect(keyControlBg, 6f * dp)
+                      isClickable = true
+                      
+                      var deleteRunnable: Runnable? = null
+
+                      setOnTouchListener { v, event ->
+                          when (event.action) {
+                              MotionEvent.ACTION_DOWN -> {
+                                  vibrate()
+                                  v.alpha = 0.5f
+                                  currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
+                                  
+                                  deleteRunnable = object : Runnable {
+                                      override fun run() {
+                                          currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
+                                          handler.postDelayed(this, 50) // سرعة المسح
+                                      }
+                                  }
+                                  handler.postDelayed(deleteRunnable!!, 400) // يبدأ المسح المستمر بعد 400 جزء من الثانية
+                              }
+                              MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                                  v.alpha = 1f
+                                  deleteRunnable?.let { handler.removeCallbacks(it) }
+                                  updateSmartPredictions()
+                              }
+                          }
+                          true
+                      }
+                  }
+                  keyViews.add(key)
+                  return key
               }
 
               private fun updateSmartPredictions() {
@@ -454,7 +525,8 @@ jobs:
                       predictionContainer.addView(TextView(this).apply {
                           text = word
                           textSize = 16f
-                          setTextColor(Color.argb((255 * 0.9f).toInt(), 255, 255, 255))
+                          setTextColor(txtColor)
+                          alpha = 0.9f
                           gravity = Gravity.CENTER
                           layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
                           isClickable = true
@@ -472,13 +544,15 @@ jobs:
                   }
               }
 
+              // قاموس دمج الحروف للحصول على مساحة أكبر
               private fun getAltChars(base: String): List<String> {
                   val lower = base.lowercase()
                   val map = mapOf(
-                      "ا" to listOf("أ", "إ", "آ", "ا"),
-                      "ى" to listOf("ئ", "ى"),
-                      "ي" to listOf("ئ", "ي"),
-                      "و" to listOf("ؤ", "و"),
+                      "د" to listOf("ذ", "د"), // دمج الذال مع الدال
+                      "و" to listOf("ؤ", "و"), // دمج ؤ مع و
+                      "ى" to listOf("ئ", "ى"), // دمج ئ مع ى
+                      "ي" to listOf("ئ", "ي"), // دمج ئ مع ي
+                      "ا" to listOf("أ", "إ", "آ", "ا"), // دمج عائلة الألف
                       "ه" to listOf("ة", "ه"),
                       "a" to listOf("à", "â", "æ", "ä", "a"),
                       "e" to listOf("é", "è", "ê", "ë", "e"),
@@ -498,7 +572,7 @@ jobs:
                   val dp = resources.displayMetrics.density
                   val container = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
-                      background = getRoundRect(Color.parseColor("#2C2C2E"), 12f * dp)
+                      background = getRoundRect(keyControlBg, 12f * dp)
                       setPadding((6*dp).toInt(), (6*dp).toInt(), (6*dp).toInt(), (6*dp).toInt())
                   }
                   altViews.clear()
@@ -506,12 +580,12 @@ jobs:
                       val tv = TextView(this).apply {
                           text = char
                           textSize = 24f
-                          setTextColor(Color.WHITE)
+                          setTextColor(txtColor)
                           gravity = Gravity.CENTER
                           layoutParams = LinearLayout.LayoutParams((44*dp).toInt(), (50*dp).toInt()).apply {
                               setMargins((2*dp).toInt(), 0, (2*dp).toInt(), 0)
                           }
-                          background = getRoundRect(Color.parseColor("#3A3A3C"), 8f * dp)
+                          background = getRoundRect(keyNormalBg, 8f * dp)
                       }
                       altViews.add(tv)
                       container.addView(tv)
@@ -531,10 +605,10 @@ jobs:
                   val key = TextView(this).apply {
                       text = char
                       textSize = 21f
-                      setTextColor(iosTxtWhiteColor)
+                      setTextColor(txtColor)
                       gravity = Gravity.CENTER
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), 1f)
-                      background = getRoundRect(iosKeyNormalBg, 6f * dp)
+                      background = getRoundRect(keyNormalBg, 6f * dp)
                       isClickable = true
                       
                       var isLongPressing = false
@@ -549,7 +623,7 @@ jobs:
                                   hoveredIndex = -1
                                   
                                   showPopup(v, char)
-                                  v.background = getRoundRect(Color.LTGRAY, 6f * dp)
+                                  v.background = getRoundRect(if(isDarkMode) Color.LTGRAY else Color.parseColor("#E5E5EA"), 6f * dp)
                                   (v as TextView).setTextColor(Color.BLACK)
 
                                   val alts = getAltChars(char)
@@ -569,20 +643,20 @@ jobs:
                                           val loc = IntArray(2)
                                           tv.getLocationOnScreen(loc)
                                           if (rawX >= loc[0] && rawX <= loc[0] + tv.width) {
-                                              tv.setBackgroundColor(Color.LTGRAY)
+                                              tv.setBackgroundColor(if(isDarkMode) Color.LTGRAY else Color.parseColor("#E5E5EA"))
                                               tv.setTextColor(Color.BLACK)
                                               hoveredIndex = index
                                           } else {
-                                              tv.background = getRoundRect(Color.parseColor("#3A3A3C"), 8f * dp)
-                                              tv.setTextColor(Color.WHITE)
+                                              tv.background = getRoundRect(keyNormalBg, 8f * dp)
+                                              tv.setTextColor(txtColor)
                                           }
                                       }
                                   }
                               }
                               MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                                   longPressRunnable?.let { handler.removeCallbacks(it) }
-                                  v.background = getRoundRect(iosKeyNormalBg, 6f * dp)
-                                  (v as TextView).setTextColor(iosTxtWhiteColor)
+                                  v.background = getRoundRect(keyNormalBg, 6f * dp)
+                                  (v as TextView).setTextColor(txtColor)
 
                                   if (isLongPressing) {
                                       if (hoveredIndex != -1 && event.action == MotionEvent.ACTION_UP) {
@@ -645,7 +719,7 @@ jobs:
                   return LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       gravity = Gravity.CENTER
-                      background = getRoundRect(Color.parseColor("#2D322F"), 100f * dp)
+                      background = getRoundRect(keyControlBg, 100f * dp)
                       layoutParams = LinearLayout.LayoutParams(0, (36 * dp).toInt(), 1f).apply {
                           setMargins((2*dp).toInt(), 0, (2*dp).toInt(), 0)
                       }
@@ -654,13 +728,12 @@ jobs:
                       addView(TextView(context).apply {
                           this.text = icon
                           textSize = 14f
-                          setTextColor(Color.parseColor("#BCEBCE"))
                       })
                       addView(Space((4*dp).toInt(), true))
                       addView(TextView(context).apply {
                           this.text = text
                           textSize = 12f
-                          setTextColor(Color.parseColor("#E0E3E0"))
+                          setTextColor(txtColor)
                           setTypeface(null, Typeface.BOLD)
                       })
                       setOnClickListener { onClick() }
@@ -672,9 +745,9 @@ jobs:
                   if (popupWindow == null) {
                       popupTextView = TextView(this).apply {
                           textSize = 32f
-                          setTextColor(Color.WHITE)
+                          setTextColor(txtColor)
                           gravity = Gravity.CENTER
-                          background = getRoundRect(Color.parseColor("#5A5A5C"), 8f * dp)
+                          background = getRoundRect(keyControlBg, 8f * dp)
                           setPadding(0, 0, 0, (8 * dp).toInt())
                       }
                       popupWindow = PopupWindow(popupTextView, (view.width * 1.5).toInt(), (view.height * 1.8).toInt()).apply {
@@ -689,12 +762,12 @@ jobs:
 
               private fun dismissPopup() { popupWindow?.dismiss() }
 
-              private fun createSpecialKey(label: String, bgColor: Int, weight: Float, textAlpha: Float = 1f): TextView {
+              private fun createSpecialKey(label: String, bgColor: Int, weight: Float, textColorParam: Int, textAlpha: Float = 1f): TextView {
                   val dp = resources.displayMetrics.density
                   val key = TextView(this).apply {
                       text = label
                       textSize = if (label == "return") 14f else 16f
-                      setTextColor(Color.argb((255 * textAlpha).toInt(), 255, 255, 255))
+                      setTextColor(Color.argb((255 * textAlpha).toInt(), Color.red(textColorParam), Color.green(textColorParam), Color.blue(textColorParam)))
                       gravity = Gravity.CENTER
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), weight).apply {
                           if (label != "?123" && label != "⇧" && label != "ABC" && label != "⬆" && label != "#+=") setMargins((4 * dp).toInt(), 0, 0, 0)
@@ -723,13 +796,12 @@ jobs:
                   val dp = context.resources.displayMetrics.density
                   val containerHeight = (36 * dp).toInt()
                   
-                  val bgCol = Color.parseColor("#2D322F")
-                  val fillCol = Color.parseColor("#BCEBCE")
-                  val iconCol = Color.parseColor("#102015")
+                  val fillCol = if(isDarkMode) Color.parseColor("#BCEBCE") else iosActionBlueColor
+                  val iconCol = if(isDarkMode) Color.parseColor("#102015") else Color.WHITE
 
                   val container = FrameLayout(context).apply {
                       layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, containerHeight)
-                      background = getRoundRect(bgCol, containerHeight / 2f)
+                      background = getRoundRect(keyControlBg, containerHeight / 2f)
                   }
                   
                   val fillView = View(context).apply {
@@ -740,7 +812,7 @@ jobs:
                   val textLabel = TextView(context).apply {
                       text = "الحجم: ${currentVal.toInt()}"
                       textSize = 16f
-                      setTextColor(Color.WHITE)
+                      setTextColor(if(isDarkMode) Color.WHITE else Color.BLACK)
                       gravity = Gravity.CENTER
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                       setTypeface(null, Typeface.BOLD)
