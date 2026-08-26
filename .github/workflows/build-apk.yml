@@ -35,7 +35,6 @@ jobs:
       - name: Generate iOS 26 Keyboard Project Files
         run: |
           rm -rf app/src/main/res app/src/main/java
-          # تم إضافة مجلد drawable هنا لكي لا يحدث الخطأ!
           mkdir -p app/src/main/res/values app/src/main/res/xml app/src/main/res/layout app/src/main/res/drawable app/src/main/java/com/aikeyboard/pro app/src/main/res/mipmap-anydpi-v26
 
           cat << 'EOF' > gradle.properties
@@ -358,7 +357,6 @@ jobs:
           </manifest>
           EOF
           
-          # إنشاء ملف gradlew لكي يعمل أمر Clean الخاص بك
           gradle wrapper
 
       - name: Grant Execute Permission for Gradlew
@@ -373,13 +371,10 @@ jobs:
           mkdir -p release-output
           cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro.apk
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      # هذه هي الخطوة السحرية التي ستظهر التطبيق في شاشة Artifacts للتحميل المباشر
+      - name: Upload APK to Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ai-keyboard-ios26-v2.1
-          name: "AI Keyboard Pro - iOS 26 Fixed Layout 🍎"
-          body: "تم إصلاح مسار drawable. تم تطبيق مقاسات 42.dp بدقة، مع مسح الكاش لضمان بناء التطبيق بالشكل الجديد."
-          files: release-output/AI-Keyboard-Pro.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: AI-Keyboard-Pro-APK
+          path: release-output/AI-Keyboard-Pro.apk
+          retention-days: 5
