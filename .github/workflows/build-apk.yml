@@ -128,7 +128,7 @@ jobs:
           import android.widget.TextView
 
           class KeyboardService : InputMethodService() {
-              private val iosKeyNormalBg = Color.parseColor("#3A3A3C") // لون خلفية الحروف أكثر وضوحاً
+              private val iosKeyNormalBg = Color.parseColor("#3A3A3C")
               private val iosKeyControlBg = Color.parseColor("#2C2C2E")
               private val iosActionBlueColor = Color.parseColor("#007AFF")
               private val iosTxtWhiteColor = Color.parseColor("#FFFFFF")
@@ -164,7 +164,6 @@ jobs:
                       setPadding((4 * dp).toInt(), (8 * dp).toInt(), (4 * dp).toInt(), (8 * dp).toInt())
                   }
 
-                  // شريط الأدوات بتصميم Material You (نفس فكرة Quick Settings بالصورة 3)
                   val toolbar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -183,9 +182,8 @@ jobs:
                       openSettings() 
                   })
                   rootLayout.addView(toolbar)
-                  rootLayout.addView(Space((8 * dp).toInt())) // مسافة هندسية صريحة لمنع التداخل
+                  rootLayout.addView(Space((8 * dp).toInt()))
 
-                  // مساحة الهيدر التي ستحتوي إما الكلمات المقترحة أو شريط التكبير
                   headerContainer = FrameLayout(this).apply {
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (40 * dp).toInt())
                   }
@@ -210,7 +208,7 @@ jobs:
                   headerContainer.addView(predictionContainer)
                   headerContainer.addView(sliderContainer)
                   rootLayout.addView(headerContainer)
-                  rootLayout.addView(Space((8 * dp).toInt())) // مسافة صريحة قبل الحروف
+                  rootLayout.addView(Space((8 * dp).toInt()))
 
                   val row1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
                   val row2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
@@ -270,7 +268,6 @@ jobs:
                   }
               }
 
-              // تصميم كبسولات الأزرار مطابق للصورة 3
               private fun createQuickSettingPill(icon: String, text: String, onClick: () -> Unit): View {
                   val dp = resources.displayMetrics.density
                   return LinearLayout(this).apply {
@@ -431,7 +428,6 @@ jobs:
                       background = getRoundRect(fillCol, containerHeight / 2f)
                   }
                   
-                  // تم إضافة نص توضيحي داخل الشريط
                   val textLabel = TextView(context).apply {
                       text = "الحجم: ${currentVal.toInt()}"
                       textSize = 16f
@@ -640,11 +636,13 @@ jobs:
                           updateFillWidth(width)
                       }
                   }
+
                   container.post { updateFillWidth(container.width) }
 
                   container.setOnTouchListener { v, event ->
                       val totalWidth = v.width
                       if (totalWidth <= 0) return@setOnTouchListener false
+                      
                       var newWidth = event.x.toInt()
                       if (newWidth < containerHeight) newWidth = containerHeight
                       if (newWidth > totalWidth) newWidth = totalWidth
@@ -685,4 +683,22 @@ jobs:
           INNER_EOF
           
           gradle wrapper
-EOF
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+
+      - name: Clean Project Cache
+        run: ./gradlew clean
+
+      - name: Build APK
+        run: |
+          ./gradlew assembleDebug -x test -x lint
+          mkdir -p release-output
+          cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro.apk
+
+      - name: Upload APK to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Keyboard-Pro-Ultimate
+          path: release-output/AI-Keyboard-Pro.apk
+          retention-days: 5
