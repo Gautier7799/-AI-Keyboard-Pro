@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 17; versionName = "17.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 18; versionName = "18.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -172,7 +172,6 @@ jobs:
               private val arabicDict = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله")
               private val frenchDict = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "salut", "bien", "pourquoi")
               
-              // قائمة الأيقونات (الإيموجي) الجديدة
               private val emojiList = listOf(
                   "😀","😂","🤣","😍","🥰","😘","😊","😎","😢","😭",
                   "😡","👍","👎","❤️","💔","🔥","✨","🎉","💯","✅",
@@ -215,10 +214,7 @@ jobs:
 
               override fun onCreateInputView(): View {
                   updateThemeColors()
-                  
-                  try {
-                      window?.window?.navigationBarColor = kbBgColor
-                  } catch (e: Exception) {}
+                  try { window?.window?.navigationBarColor = kbBgColor } catch (e: Exception) {}
 
                   keyViews.clear()
                   keyHeightDp = prefs.getFloat("key_height", 42f)
@@ -276,7 +272,6 @@ jobs:
                       visibility = View.GONE
                   }
                   
-                  // تفعيل كيبورد الأيقونات (الإيموجي)
                   toolbarContainer.addView(createQuickSettingPill("😊", "رموز") { 
                       vibrate()
                       keyboardMode = 3
@@ -330,7 +325,7 @@ jobs:
                   keyViews.clear()
                   val dp = resources.displayMetrics.density
 
-                  if (keyboardMode == 3) { // كيبورد الأيقونات (الإيموجي)
+                  if (keyboardMode == 3) {
                       val scrollView = ScrollView(this).apply {
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (200 * dp).toInt(), 1f)
                       }
@@ -342,13 +337,13 @@ jobs:
                       val columns = 8
                       val rows = emojiList.chunked(columns)
                       rows.forEach { rowEmojis ->
-                          val rowLayout = LinearLayout(this).apply {
+                          val rowLayout = LinearLayout(this@KeyboardService).apply {
                               orientation = LinearLayout.HORIZONTAL
                               layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                               setPadding(0, (4 * dp).toInt(), 0, (4 * dp).toInt())
                           }
                           rowEmojis.forEach { emoji ->
-                              rowLayout.addView(TextView(this).apply {
+                              rowLayout.addView(TextView(this@KeyboardService).apply {
                                   text = emoji
                                   textSize = 28f
                                   gravity = Gravity.CENTER
@@ -361,10 +356,9 @@ jobs:
                                   }
                               })
                           }
-                          // تعبئة الفراغات إذا كان السطر غير مكتمل
                           if (rowEmojis.size < columns) {
                               for (i in 0 until (columns - rowEmojis.size)) {
-                                  rowLayout.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) })
+                                  rowLayout.addView(View(this@KeyboardService).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) })
                               }
                           }
                           emojiContainer.addView(rowLayout)
@@ -389,7 +383,7 @@ jobs:
                       })
                       keysContainer.addView(bottomRow)
 
-                  } else if (keyboardMode == 0) { // الكيبورد العادي (حروف)
+                  } else if (keyboardMode == 0) { 
                       val r1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
                       val r2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
                       val r3 = if(isArabic) listOf("ظ","ز","و","ة","ى","لا","ر","ء") else listOf("w", "x", "c", "v", "b", "n")
@@ -452,7 +446,7 @@ jobs:
                       })
                       keysContainer.addView(bottomRow)
                       
-                  } else { // كيبورد الأرقام والرموز
+                  } else {
                       val r1 = if(keyboardMode == 1) listOf("1","2","3","4","5","6","7","8","9","0") else listOf("[","]","{","}","#","%","^","*","+","=")
                       val r2 = if(keyboardMode == 1) listOf("-","/",":",";","(",")","$","&","@","\"") else listOf("_","\\","|","~","<",">","€","£","¥","•")
                       val r3 = listOf(".",",","?","!","'")
@@ -494,7 +488,6 @@ jobs:
                       keysContainer.addView(bottomRow)
                   }
 
-                  // === Footer ===
                   if (keyboardMode != 3) {
                       val footerRow = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL
@@ -545,7 +538,7 @@ jobs:
               private fun createBackspaceKey(): TextView {
                   val dp = resources.displayMetrics.density
                   val key = TextView(this).apply {
-                          text = "⌫"
+                      text = "⌫"
                       textSize = 18f
                       setTextColor(txtColor)
                       gravity = Gravity.CENTER
@@ -648,7 +641,6 @@ jobs:
                   return list
               }
 
-              // إصلاح الشفافية للحروف المنبثقة (أ، إ، آ، ذ، ؤ)
               private fun showAltPopup(view: View, alts: List<String>) {
                   val dp = resources.displayMetrics.density
                   val container = LinearLayout(this).apply {
@@ -673,8 +665,8 @@ jobs:
                   }
                   altPopupWindow = PopupWindow(container, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                       isClippingEnabled = false
-                      isTouchable = false // يمنع سرقة اللمسات لتبقى سلسة
-                      setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)) // سر إظهار النافذة في أندرويد
+                      isTouchable = false 
+                      setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                   }
                   val loc = IntArray(2)
                   view.getLocationOnScreen(loc)
@@ -793,11 +785,10 @@ jobs:
                   return row
               }
 
-              // إضافة الصوت الاحترافي (Click Sound)
               private fun vibrate() {
                   try { 
                       vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE)) 
-                      audioManager.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD, 1.0f) // صوت النقر هنا
+                      audioManager.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD, 1.0f)
                   } catch (e: Exception) {}
               }
               
@@ -827,7 +818,6 @@ jobs:
                   }
               }
 
-              // إصلاح الشفافية للحرف الكبير المنبثق عند الضغط العادي
               private fun showPopup(view: View, char: String) {
                   val dp = resources.displayMetrics.density
                   if (popupWindow == null) {
@@ -841,7 +831,7 @@ jobs:
                       popupWindow = PopupWindow(popupTextView, (view.width * 1.5).toInt(), (view.height * 1.8).toInt()).apply {
                           isClippingEnabled = false
                           isTouchable = false
-                          setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)) // سر إظهار النافذة
+                          setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                       }
                   }
                   popupTextView?.text = char
@@ -1153,17 +1143,17 @@ jobs:
           </manifest>
           INNER_EOF
           
-          gradle wrapper
+          gradle wrapper --gradle-version 8.4 --no-daemon
 
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
 
       - name: Clean Project Cache
-        run: ./gradlew clean
+        run: ./gradlew clean --no-daemon
 
       - name: Build APK
         run: |
-          ./gradlew assembleDebug -x test -x lint
+          ./gradlew assembleDebug --no-daemon --stacktrace -x test -x lint
           mkdir -p release-output
           cp app/build/outputs/apk/debug/*.apk release-output/AI-Keyboard-Pro.apk
 
