@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 18; versionName = "18.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 19; versionName = "19.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -87,18 +87,6 @@ jobs:
           
           cat << 'INNER_EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           <?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@drawable/ic_launcher_bg"/><foreground android:drawable="@drawable/ic_launcher_fg"/></adaptive-icon>
-          INNER_EOF
-
-          cat << 'INNER_EOF' > app/src/main/res/drawable/ic_language.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-              <path android:fillColor="#FFFFFF" android:pathData="M11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM18.92,8h-2.95c-0.32,-1.25 -0.78,-2.45 -1.38,-3.56 1.84,0.63 3.37,1.91 4.33,3.56zM12,4.04c0.83,1.2 1.48,2.53 1.91,3.96h-3.82c0.43,-1.43 1.08,-2.76 1.91,-3.96zM4.26,14C4.09,13.36 4,12.69 4,12s0.09,-1.36 0.26,-2h3.38c-0.08,0.66 -0.14,1.32 -0.14,2s0.06,1.34 0.14,2H4.26zM5.08,16h2.95c0.32,1.25 0.78,2.45 1.38,3.56 -1.84,-0.63 -3.37,-1.9 -4.33,-3.56zM8.03,8H5.08c0.96,-1.66 2.49,-2.93 4.33,-3.56C8.81,5.55 8.35,6.75 8.03,8zM12,19.96c-0.83,-1.2 -1.48,-2.53 -1.91,-3.96h3.82c-0.43,1.43 -1.08,2.76 -1.91,3.96zM14.34,14H9.66c-0.09,-0.66 -0.16,-1.32 -0.16,-2s0.07,-1.35 0.16,-2h4.68c0.09,0.65 0.16,1.32 0.16,2s-0.07,1.34 -0.16,2zM14.59,19.56c0.6,-1.11 1.06,-2.31 1.38,-3.56h2.95c-0.96,1.65 -2.49,2.93 -4.33,3.56zM16.22,14c0.08,-0.66 0.14,-1.32 0.14,-2s-0.06,-1.34 -0.14,-2h3.38c0.17,0.64 0.26,1.31 0.26,2s-0.09,1.36 -0.26,2h-3.38z"/>
-          </vector>
-          INNER_EOF
-
-          cat << 'INNER_EOF' > app/src/main/res/drawable/ic_keyboard_hide.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-              <path android:fillColor="#FFFFFF" android:pathData="M20,3H4C2.9,3 2.01,3.9 2.01,5L2,15c0,1.1 0.89,2 2,2h16c1.1,0 2,-0.9 2,-2V5C22,3.9 21.1,3 20,3zM11,6h2v2h-2V6zM11,9h2v2h-2V9zM8,6h2v2H8V6zM8,9h2v2H8V9zM5,9h2v2H5V9zM5,6h2v2H5V6zM16,15H8v-2h8V15zM15,11h-2V9h2V11zM15,8h-2V6h2V8zM19,11h-2V9h2V11zM19,8h-2V6h2V8zM12,23l4,-4H8L12,23z"/>
-          </vector>
           INNER_EOF
 
           cat << 'INNER_EOF' > app/src/main/res/xml/method.xml
@@ -150,6 +138,7 @@ jobs:
               private var isShifted = false
               private var keyboardMode = 0 
               private var keyHeightDp = 42f
+              private var isSoundEnabled = true // متغير التحكم بالصوت
               
               private lateinit var prefs: SharedPreferences
               private lateinit var vibrator: Vibrator
@@ -185,6 +174,7 @@ jobs:
                   prefs = getSharedPreferences("kb_settings", Context.MODE_PRIVATE)
                   vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                   audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                  isSoundEnabled = prefs.getBoolean("sound_enabled", true)
               }
 
               private fun updateThemeColors() {
@@ -283,10 +273,17 @@ jobs:
                       toolbarContainer.visibility = View.GONE
                       predictionContainer.visibility = View.VISIBLE
                   })
-                  toolbarContainer.addView(createQuickSettingPill("🎚️", "حجم") { 
-                      toolbarContainer.visibility = View.GONE
-                      sliderContainer.visibility = View.VISIBLE
-                  })
+                  
+                  // زر كتم / تشغيل الصوت
+                  val soundPill = createQuickSettingPill(if(isSoundEnabled) "🔊" else "🔇", "صوت") {}
+                  soundPill.setOnClickListener {
+                      isSoundEnabled = !isSoundEnabled
+                      prefs.edit().putBoolean("sound_enabled", isSoundEnabled).apply()
+                      (soundPill.getChildAt(0) as TextView).text = if(isSoundEnabled) "🔊" else "🔇"
+                      vibrate(force = true)
+                  }
+                  toolbarContainer.addView(soundPill)
+
                   toolbarContainer.addView(createQuickSettingPill("⚙️", "ضبط") { openSettings() })
 
                   sliderContainer = createMaterialSlider(this, keyHeightDp, 35f, 65f) { newVal ->
@@ -495,13 +492,10 @@ jobs:
                           gravity = Gravity.CENTER_VERTICAL
                           setPadding((12 * dp).toInt(), 0, (12 * dp).toInt(), 0)
                       }
-
-                      val globeBtn = ImageView(this).apply {
-                          setImageResource(R.drawable.ic_language)
-                          setColorFilter(txtColor) 
-                          alpha = 0.5f 
-                          scaleType = ImageView.ScaleType.FIT_CENTER
-                          setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
+                      val globeBtn = TextView(this).apply {
+                          text = "🌐"
+                          textSize = 20f
+                          gravity = Gravity.CENTER
                           layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
                           background = getRoundRect(Color.TRANSPARENT, 24f * dp)
                           setOnClickListener {
@@ -512,20 +506,15 @@ jobs:
                               renderKeys()
                           }
                       }
-
                       val emptySpacer = View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) }
-
-                      val dismissBtn = ImageView(this).apply {
-                          setImageResource(R.drawable.ic_keyboard_hide)
-                          setColorFilter(txtColor) 
-                          alpha = 0.5f
-                          scaleType = ImageView.ScaleType.FIT_CENTER
-                          setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
+                      val dismissBtn = TextView(this).apply {
+                          text = "⬇️"
+                          textSize = 20f
+                          gravity = Gravity.CENTER
                           layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
                           background = getRoundRect(Color.TRANSPARENT, 24f * dp)
                           setOnClickListener { vibrate(); requestHideSelf(0) }
                       }
-
                       footerRow.addView(globeBtn)
                       footerRow.addView(emptySpacer)
                       footerRow.addView(dismissBtn)
@@ -641,6 +630,7 @@ jobs:
                   return list
               }
 
+              // الحسابات الدقيقة للنافذة المنبثقة للأعلى (Fixed Popup Math)
               private fun showAltPopup(view: View, alts: List<String>) {
                   val dp = resources.displayMetrics.density
                   val container = LinearLayout(this).apply {
@@ -668,11 +658,37 @@ jobs:
                       isTouchable = false 
                       setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                   }
-                  val loc = IntArray(2)
-                  view.getLocationOnScreen(loc)
+                  
+                  // استخدام showAsDropDown بقيم سالبة لإجبارها على الظهور فوق الزر تماماً 
                   val popupWidth = alts.size * (48 * dp) + (12 * dp)
-                  val xOffset = loc[0] - (popupWidth / 2) + (view.width / 2)
-                  altPopupWindow?.showAtLocation(view, Gravity.NO_GRAVITY, xOffset.toInt(), loc[1] - (70 * dp).toInt())
+                  val xOffset = (view.width / 2f) - (popupWidth / 2f)
+                  val yOffset = -(view.height + (65 * dp).toInt()) // للأعلى إجبارياً
+                  
+                  altPopupWindow?.showAsDropDown(view, xOffset.toInt(), yOffset)
+              }
+
+              // الحسابات الدقيقة للحرف الواحد للأعلى
+              private fun showPopup(view: View, char: String) {
+                  val dp = resources.displayMetrics.density
+                  if (popupWindow == null) {
+                      popupTextView = TextView(this).apply {
+                          textSize = 32f
+                          setTextColor(txtColor)
+                          gravity = Gravity.CENTER
+                          background = getRoundRect(keyControlBg, 8f * dp)
+                          setPadding(0, 0, 0, (8 * dp).toInt())
+                      }
+                      popupWindow = PopupWindow(popupTextView, (view.width * 1.5).toInt(), (view.height * 1.8).toInt()).apply {
+                          isClippingEnabled = false
+                          isTouchable = false
+                          setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                      }
+                  }
+                  popupTextView?.text = char
+                  
+                  // للأعلى إجبارياً
+                  val yOffset = -(view.height + (view.height * 1.8).toInt())
+                  popupWindow?.showAsDropDown(view, -(view.width / 4), yOffset)
               }
 
               private fun createKey(char: String): TextView {
@@ -785,14 +801,16 @@ jobs:
                   return row
               }
 
-              private fun vibrate() {
+              private fun vibrate(force: Boolean = false) {
                   try { 
                       vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE)) 
-                      audioManager.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD, 1.0f)
+                      if (isSoundEnabled || force) {
+                          audioManager.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD, 1.0f)
+                      }
                   } catch (e: Exception) {}
               }
               
-              private fun createQuickSettingPill(icon: String, text: String, onClick: () -> Unit): View {
+              private fun createQuickSettingPill(icon: String, text: String, onClick: () -> Unit): LinearLayout {
                   val dp = resources.displayMetrics.density
                   return LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
@@ -816,28 +834,6 @@ jobs:
                       })
                       setOnClickListener { onClick() }
                   }
-              }
-
-              private fun showPopup(view: View, char: String) {
-                  val dp = resources.displayMetrics.density
-                  if (popupWindow == null) {
-                      popupTextView = TextView(this).apply {
-                          textSize = 32f
-                          setTextColor(txtColor)
-                          gravity = Gravity.CENTER
-                          background = getRoundRect(keyControlBg, 8f * dp)
-                          setPadding(0, 0, 0, (8 * dp).toInt())
-                      }
-                      popupWindow = PopupWindow(popupTextView, (view.width * 1.5).toInt(), (view.height * 1.8).toInt()).apply {
-                          isClippingEnabled = false
-                          isTouchable = false
-                          setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                      }
-                  }
-                  popupTextView?.text = char
-                  val location = IntArray(2)
-                  view.getLocationOnScreen(location)
-                  popupWindow?.showAtLocation(view, Gravity.NO_GRAVITY, location[0] - view.width/4, location[1] - (view.height * 1.2).toInt())
               }
 
               private fun dismissPopup() { popupWindow?.dismiss() }
@@ -985,41 +981,43 @@ jobs:
                   prefs = getSharedPreferences("kb_settings", Context.MODE_PRIVATE)
                   val dp = resources.displayMetrics.density
 
+                  // ألوان Material You المطابقة تماماً لصورة الـ Quick Settings الخاصة بك
                   val isS = android.os.Build.VERSION.SDK_INT >= 31
-                  val bgDarkGreen = if(isS) resources.getColor(android.R.color.system_neutral1_900, theme) else Color.parseColor("#171C18")
-                  val pillLightGreen = if(isS) resources.getColor(android.R.color.system_accent1_200, theme) else Color.parseColor("#BCEBCE")
-                  val pillDarkGray = if(isS) resources.getColor(android.R.color.system_neutral2_800, theme) else Color.parseColor("#2E322F")
-                  val textOnLight = if(isS) resources.getColor(android.R.color.system_accent1_900, theme) else Color.parseColor("#102015")
-                  val textOnDark = if(isS) resources.getColor(android.R.color.system_neutral1_100, theme) else Color.parseColor("#E0E3E0")
+                  val bgDark = if(isS) resources.getColor(android.R.color.system_neutral1_900, theme) else Color.parseColor("#101411")
+                  val pillActive = if(isS) resources.getColor(android.R.color.system_accent1_200, theme) else Color.parseColor("#A8E5BA")
+                  val pillInactive = if(isS) resources.getColor(android.R.color.system_neutral2_800, theme) else Color.parseColor("#2D322E")
+                  val textOnActive = if(isS) resources.getColor(android.R.color.system_accent1_900, theme) else Color.parseColor("#0F2015")
+                  val textOnInactive = if(isS) resources.getColor(android.R.color.system_neutral1_100, theme) else Color.parseColor("#E1E3DF")
 
                   val root = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
-                      setBackgroundColor(bgDarkGreen)
-                      setPadding((24*dp).toInt(), (48*dp).toInt(), (24*dp).toInt(), (24*dp).toInt())
+                      setBackgroundColor(bgDark)
+                      setPadding((16*dp).toInt(), (40*dp).toInt(), (16*dp).toInt(), (24*dp).toInt())
                       gravity = Gravity.CENTER_HORIZONTAL
                   }
 
                   root.addView(TextView(this).apply { 
-                      text = "AI Keyboard"
-                      textSize = 36f
-                      setTextColor(textOnDark)
+                      text = "إعدادات الكيبورد"
+                      textSize = 32f
+                      setTextColor(textOnInactive)
                       setPadding(0, 0, 0, (40*dp).toInt())
                       typeface = android.graphics.Typeface.DEFAULT_BOLD 
                   })
                   
                   val heightLabel = TextView(this).apply { 
-                      text = "حجم الكيبورد: ${prefs.getFloat("key_height", 42f).toInt()} dp"
-                      textSize = 18f
-                      setTextColor(textOnDark)
+                      text = "حجم الكيبورد: ${prefs.getFloat("key_height", 42f).toInt()}"
+                      textSize = 16f
+                      setTextColor(textOnInactive)
                       gravity = Gravity.START
                       layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                          setMargins(0, 0, 0, (8*dp).toInt())
+                          setMargins((8*dp).toInt(), 0, 0, (8*dp).toInt())
                       }
                   }
                   root.addView(heightLabel)
                   
-                  val slider = createMaterialSlider(this, prefs.getFloat("key_height", 42f), 35f, 65f, pillDarkGray, pillLightGreen, textOnLight) { newVal ->
-                      heightLabel.text = "حجم الكيبورد: ${newVal.toInt()} dp"
+                  // تصميم الـ Slider ليكون مطابقاً تماماً لمؤشر الإضاءة في صورتك (عريض وممتلئ)
+                  val slider = createMaterialSlider(this, prefs.getFloat("key_height", 42f), 35f, 65f, pillInactive, pillActive, textOnActive) { newVal ->
+                      heightLabel.text = "حجم الكيبورد: ${newVal.toInt()}"
                       prefs.edit().putFloat("key_height", newVal).apply()
                   }
                   root.addView(slider)
@@ -1027,39 +1025,41 @@ jobs:
                   fun createMaterialPill(icon: String, text: String, isActive: Boolean, onClick: () -> Unit): LinearLayout {
                       val pill = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL
-                          background = GradientDrawable().apply { setColor(if(isActive) pillLightGreen else pillDarkGray); cornerRadius = 100f * dp }
-                          layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (72*dp).toInt()).apply { setMargins(0,0,0,(16*dp).toInt()) }
+                          background = GradientDrawable().apply { setColor(if(isActive) pillActive else pillInactive); cornerRadius = 24f * dp }
+                          layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (80*dp).toInt()).apply { setMargins(0,0,0,(12*dp).toInt()) }
                           gravity = Gravity.CENTER_VERTICAL
                           setPadding((24*dp).toInt(), 0, (24*dp).toInt(), 0)
                           setOnClickListener { onClick() }
                       }
                       pill.addView(TextView(this).apply { 
                           this.text = icon
-                          textSize = 28f
-                          setTextColor(if(isActive) textOnLight else textOnDark)
+                          textSize = 24f
+                          setTextColor(if(isActive) textOnActive else textOnInactive)
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0,0,(16*dp).toInt(),0) } 
                       })
                       pill.addView(TextView(this).apply { 
                           this.text = text
-                          textSize = 20f
-                          setTextColor(if(isActive) textOnLight else textOnDark)
+                          textSize = 18f
+                          setTextColor(if(isActive) textOnActive else textOnInactive)
                           typeface = android.graphics.Typeface.DEFAULT_BOLD 
                       })
                       return pill
                   }
 
-                  root.addView(createMaterialPill("⌨️", "1. تفعيل الكيبورد", false) { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) })
+                  root.addView(createMaterialPill("⚙️", "1. تفعيل الكيبورد", false) { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) })
                   root.addView(createMaterialPill("✅", "2. اختياره كافتراضي", true) { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() })
+                  // زر إضافة لغة جديد
+                  root.addView(createMaterialPill("🌐", "3. إعدادات اللغات", false) { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) })
                   
                   setContentView(root)
               }
               
               private fun createMaterialSlider(context: Context, currentVal: Float, min: Float, max: Float, bgCol: Int, fillCol: Int, iconCol: Int, onUpdate: (Float) -> Unit): View {
                   val dp = context.resources.displayMetrics.density
-                  val containerHeight = (64 * dp).toInt()
+                  val containerHeight = (64 * dp).toInt() // نفس عرض شريط الإضاءة في الصورة
                   val container = FrameLayout(context).apply {
                       layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, containerHeight).apply {
-                          setMargins(0, 0, 0, (40*dp).toInt())
+                          setMargins(0, 0, 0, (32*dp).toInt())
                       }
                       background = GradientDrawable().apply { setColor(bgCol); cornerRadius = containerHeight / 2f }
                   }
@@ -1068,17 +1068,8 @@ jobs:
                       layoutParams = FrameLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT)
                       background = GradientDrawable().apply { setColor(fillCol); cornerRadius = containerHeight / 2f }
                   }
-                  
-                  val icon = TextView(context).apply {
-                      text = "↔"
-                      textSize = 24f
-                      setTextColor(iconCol)
-                      gravity = Gravity.CENTER
-                      layoutParams = FrameLayout.LayoutParams(containerHeight, ViewGroup.LayoutParams.MATCH_PARENT)
-                  }
 
                   container.addView(fillView)
-                  container.addView(icon)
 
                   var currentWidth = currentVal
 
@@ -1097,7 +1088,6 @@ jobs:
                           updateFillWidth(width)
                       }
                   }
-
                   container.post { updateFillWidth(container.width) }
 
                   container.setOnTouchListener { v, event ->
