@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 13; versionName = "13.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 14; versionName = "14.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -387,7 +387,7 @@ jobs:
                       keysContainer.addView(bottomRow)
                   }
 
-                  // Footer مع أيقونات Material الحقيقية المضافة كشفافة
+                  // === Footer (الأيقونات الشفافة الاحترافية Material) ===
                   val footerRow = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * dp).toInt())
@@ -397,9 +397,10 @@ jobs:
 
                   val globeBtn = ImageView(this).apply {
                       setImageResource(R.drawable.ic_language)
-                      alpha = 0.45f // شفافة وأنيقة جداً
+                      setColorFilter(Color.WHITE) // نضمن أن يكون اللون أبيض
+                      alpha = 0.5f // شفافية 50%
                       scaleType = ImageView.ScaleType.FIT_CENTER
-                      setPadding((8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt())
+                      setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
                       layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
                       background = getRoundRect(Color.TRANSPARENT, 24f * dp)
                       setOnClickListener {
@@ -415,9 +416,10 @@ jobs:
 
                   val dismissBtn = ImageView(this).apply {
                       setImageResource(R.drawable.ic_keyboard_hide)
-                      alpha = 0.45f // شفافة وأنيقة جداً
+                      setColorFilter(Color.WHITE) // نضمن أن يكون اللون أبيض
+                      alpha = 0.5f // شفافية 50%
                       scaleType = ImageView.ScaleType.FIT_CENTER
-                      setPadding((8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt())
+                      setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
                       layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
                       background = getRoundRect(Color.TRANSPARENT, 24f * dp)
                       setOnClickListener { vibrate(); requestHideSelf(0) }
