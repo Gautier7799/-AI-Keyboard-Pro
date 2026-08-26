@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 4; versionName = "4.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 6; versionName = "6.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -77,7 +77,6 @@ jobs:
           </resources>
           EOF
 
-          # --- تم إعادة إضافة أكواد الأيقونة هنا لتجنب الخطأ ---
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_bg.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#1C1C1E"/></shape>
           EOF
@@ -89,13 +88,11 @@ jobs:
           cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           <?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@drawable/ic_launcher_bg"/><foreground android:drawable="@drawable/ic_launcher_fg"/></adaptive-icon>
           EOF
-          # --------------------------------------------------
 
-          # تصميم الخلفية الضبابية (Blur) مع الزوايا المقوسة
           cat << 'EOF' > app/src/main/res/drawable/kb_background.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
-              <solid android:color="#D90A0A0A" /> <!-- أسود شفاف بنسبة 85% للضبابية -->
+              <solid android:color="#D90A0A0A" />
               <corners android:topLeftRadius="16dp" android:topRightRadius="16dp" />
           </shape>
           EOF
@@ -108,7 +105,6 @@ jobs:
           </input-method>
           EOF
 
-          # ---- الكود الرئيسي للكيبورد ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
 
@@ -141,8 +137,12 @@ jobs:
               private var keyHeightDp = 42f
               private lateinit var prefs: SharedPreferences
               private lateinit var vibrator: Vibrator
+              
+              private lateinit var headerContainer: FrameLayout
               private lateinit var predictionContainer: LinearLayout
-
+              private lateinit var sliderContainer: View
+              
+              private val keyViews = mutableListOf<View>()
               private var popupWindow: PopupWindow? = null
               private var popupTextView: TextView? = null
 
@@ -153,6 +153,7 @@ jobs:
               }
 
               override fun onCreateInputView(): View {
+                  keyViews.clear()
                   keyHeightDp = prefs.getFloat("key_height", 42f)
                   val dp = resources.displayMetrics.density
 
@@ -176,17 +177,39 @@ jobs:
                           updatePredictions(listOf("🤖 جاري التفكير...", "تحليل النص...")) 
                       }
                   })
-                  toolbar.addView(createToolbarIcon("Aa", 1f))
+                  
+                  // شريط التكبير والتصغير داخل الكيبورد مباشرة!
+                  toolbar.addView(createToolbarIcon("🎚️", 1f).apply { 
+                      setOnClickListener { vibrate(); toggleSlider() } 
+                  })
+                  
                   toolbar.addView(createToolbarIcon("⚙️", 1f).apply { setOnClickListener { vibrate(); openSettings() } })
                   rootLayout.addView(toolbar)
 
+                  headerContainer = FrameLayout(this).apply {
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (35 * dp).toInt())
+                  }
+
                   predictionContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (35 * dp).toInt())
+                      layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                       gravity = Gravity.CENTER_VERTICAL
                   }
                   updatePredictions(if(isArabic) listOf("مرحبا", "نعم", "شكرا") else listOf("bonjour", "merci", "oui"))
-                  rootLayout.addView(predictionContainer)
+                  
+                  sliderContainer = createMaterialSlider(this, keyHeightDp, 35f, 65f) { newVal ->
+                      keyHeightDp = newVal
+                      prefs.edit().putFloat("key_height", newVal).apply()
+                      val px = (newVal * dp).toInt()
+                      keyViews.forEach { 
+                          it.layoutParams.height = px
+                          it.requestLayout()
+                      }
+                  }.apply { visibility = View.GONE }
+
+                  headerContainer.addView(predictionContainer)
+                  headerContainer.addView(sliderContainer)
+                  rootLayout.addView(headerContainer)
 
                   val row1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
                   val row2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
@@ -216,11 +239,7 @@ jobs:
                   bottomRow.addView(createSpecialKey("?123", iosKeyControlBg, 1.5f))
                   
                   bottomRow.addView(createSpecialKey("🌐", iosKeyControlBg, 1.2f).apply {
-                      setOnClickListener {
-                          vibrate()
-                          isArabic = !isArabic
-                          setInputView(onCreateInputView())
-                      }
+                      setOnClickListener { vibrate(); isArabic = !isArabic; setInputView(onCreateInputView()) }
                   })
 
                   bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 4f, 0.4f).apply {
@@ -236,6 +255,16 @@ jobs:
 
               private fun vibrate() {
                   try { vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE)) } catch (e: Exception) {}
+              }
+              
+              private fun toggleSlider() {
+                  if (sliderContainer.visibility == View.VISIBLE) {
+                      sliderContainer.visibility = View.GONE
+                      predictionContainer.visibility = View.VISIBLE
+                  } else {
+                      sliderContainer.visibility = View.VISIBLE
+                      predictionContainer.visibility = View.GONE
+                  }
               }
 
               private fun showPopup(view: View, char: String) {
@@ -290,7 +319,7 @@ jobs:
 
               private fun createKey(char: String): TextView {
                   val dp = resources.displayMetrics.density
-                  return TextView(this).apply {
+                  val key = TextView(this).apply {
                       text = char
                       textSize = 21f
                       setTextColor(iosTxtWhiteColor)
@@ -317,11 +346,13 @@ jobs:
                           true
                       }
                   }
+                  keyViews.add(key)
+                  return key
               }
 
               private fun createSpecialKey(label: String, bgColor: Int, weight: Float, textAlpha: Float = 1f): TextView {
                   val dp = resources.displayMetrics.density
-                  return TextView(this).apply {
+                  val key = TextView(this).apply {
                       text = label
                       textSize = 16f
                       setTextColor(Color.argb((255 * textAlpha).toInt(), 255, 255, 255))
@@ -341,6 +372,8 @@ jobs:
                           false
                       }
                   }
+                  keyViews.add(key)
+                  return key
               }
 
               private fun createToolbarIcon(icon: String, weight: Float, isBold: Boolean = false): TextView {
@@ -356,6 +389,57 @@ jobs:
 
               private fun getRoundRect(bgColor: Int, radius: Float): GradientDrawable {
                   return GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; setColor(bgColor); cornerRadius = radius }
+              }
+              
+              private fun createMaterialSlider(context: Context, currentVal: Float, min: Float, max: Float, onUpdate: (Float) -> Unit): View {
+                  val dp = context.resources.displayMetrics.density
+                  val containerHeight = (35 * dp).toInt()
+                  val container = FrameLayout(context).apply {
+                      layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, containerHeight).apply {
+                          setMargins((12*dp).toInt(), 0, (12*dp).toInt(), 0)
+                      }
+                      background = getRoundRect(Color.parseColor("#4C2C2C2E"), containerHeight / 2f)
+                  }
+                  
+                  val fillView = View(context).apply {
+                      layoutParams = FrameLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT)
+                      background = getRoundRect(Color.parseColor("#C4EED0"), containerHeight / 2f)
+                  }
+                  
+                  val icon = TextView(context).apply {
+                      text = "↔️"
+                      textSize = 16f
+                      setTextColor(Color.parseColor("#102115"))
+                      gravity = Gravity.CENTER
+                      layoutParams = FrameLayout.LayoutParams(containerHeight, ViewGroup.LayoutParams.MATCH_PARENT)
+                  }
+
+                  container.addView(fillView)
+                  container.addView(icon)
+
+                  container.post {
+                      val totalWidth = container.width
+                      val progress = ((currentVal - min) / (max - min)).coerceIn(0f, 1f)
+                      val fillWidth = (containerHeight + progress * (totalWidth - containerHeight)).toInt()
+                      fillView.layoutParams = FrameLayout.LayoutParams(fillWidth, ViewGroup.LayoutParams.MATCH_PARENT)
+                      fillView.requestLayout()
+                  }
+
+                  container.setOnTouchListener { v, event ->
+                      val totalWidth = v.width
+                      var newWidth = event.x.toInt()
+                      if (newWidth < containerHeight) newWidth = containerHeight
+                      if (newWidth > totalWidth) newWidth = totalWidth
+                      
+                      fillView.layoutParams = FrameLayout.LayoutParams(newWidth, ViewGroup.LayoutParams.MATCH_PARENT)
+                      fillView.requestLayout()
+                      
+                      val progress = (newWidth - containerHeight).toFloat() / (totalWidth - containerHeight).toFloat()
+                      val newVal = min + (progress * (max - min))
+                      onUpdate(newVal)
+                      true
+                  }
+                  return container
               }
 
               private fun Space(size: Int, isHorizontal: Boolean = false): View {
@@ -378,12 +462,13 @@ jobs:
           import android.view.inputmethod.InputMethodManager
           import android.widget.LinearLayout
           import android.widget.TextView
-          import android.widget.SeekBar
           import androidx.appcompat.app.AppCompatActivity
           import android.graphics.Color
           import android.view.Gravity
           import android.graphics.drawable.GradientDrawable
           import android.view.ViewGroup
+          import android.view.View
+          import android.widget.FrameLayout
 
           class MainActivity : AppCompatActivity() {
               private lateinit var prefs: SharedPreferences
@@ -393,10 +478,11 @@ jobs:
                   prefs = getSharedPreferences("kb_settings", Context.MODE_PRIVATE)
                   val dp = resources.displayMetrics.density
 
-                  val bgDarkGreen = Color.parseColor("#191C1A")
-                  val pillLightGreen = Color.parseColor("#C4EED0")
-                  val pillDarkGray = Color.parseColor("#2D322F")
-                  val textOnLight = Color.parseColor("#102115")
+                  // ألوان Material You المطابقة للصورة 3
+                  val bgDarkGreen = Color.parseColor("#171C18")
+                  val pillLightGreen = Color.parseColor("#BCEBCE")
+                  val pillDarkGray = Color.parseColor("#2E322F")
+                  val textOnLight = Color.parseColor("#102015")
                   val textOnDark = Color.parseColor("#E0E3E0")
 
                   val root = LinearLayout(this).apply {
@@ -406,26 +492,29 @@ jobs:
                       gravity = Gravity.CENTER_HORIZONTAL
                   }
 
-                  root.addView(TextView(this).apply { text = "AI Keyboard"; textSize = 32f; setTextColor(textOnDark); setPadding(0, 0, 0, (40*dp).toInt()); typeface = android.graphics.Typeface.DEFAULT_BOLD })
+                  root.addView(TextView(this).apply { 
+                      text = "AI Keyboard"
+                      textSize = 36f
+                      setTextColor(textOnDark)
+                      setPadding(0, 0, 0, (40*dp).toInt())
+                      typeface = android.graphics.Typeface.DEFAULT_BOLD 
+                  })
                   
-                  root.addView(TextView(this).apply { text = "حجم الكيبورد"; textSize = 16f; setTextColor(textOnDark); gravity = Gravity.START; layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT) })
-                  val heightLabel = TextView(this).apply { text = "${prefs.getFloat("key_height", 42f).toInt()} dp"; textSize = 20f; setTextColor(pillLightGreen); gravity = Gravity.CENTER; setPadding(0,(8*dp).toInt(),0,(8*dp).toInt()); typeface = android.graphics.Typeface.DEFAULT_BOLD }
-                  
-                  val slider = SeekBar(this).apply {
-                      max = 30
-                      progress = (prefs.getFloat("key_height", 42f) - 35f).toInt()
-                      layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0,0,0,(40*dp).toInt()) }
-                      setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                          override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                              val newHeight = progress + 35f
-                              heightLabel.text = "${newHeight.toInt()} dp"
-                              prefs.edit().putFloat("key_height", newHeight).apply()
-                          }
-                          override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                          override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-                      })
+                  val heightLabel = TextView(this).apply { 
+                      text = "حجم الكيبورد: ${prefs.getFloat("key_height", 42f).toInt()} dp"
+                      textSize = 18f
+                      setTextColor(textOnDark)
+                      gravity = Gravity.START
+                      layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                          setMargins(0, 0, 0, (8*dp).toInt())
+                      }
                   }
                   root.addView(heightLabel)
+                  
+                  val slider = createMaterialSlider(this, prefs.getFloat("key_height", 42f), 35f, 65f) { newVal ->
+                      heightLabel.text = "حجم الكيبورد: ${newVal.toInt()} dp"
+                      prefs.edit().putFloat("key_height", newVal).apply()
+                  }
                   root.addView(slider)
 
                   fun createMaterialPill(icon: String, text: String, isActive: Boolean, onClick: () -> Unit): LinearLayout {
@@ -437,8 +526,18 @@ jobs:
                           setPadding((24*dp).toInt(), 0, (24*dp).toInt(), 0)
                           setOnClickListener { onClick() }
                       }
-                      pill.addView(TextView(this).apply { this.text = icon; textSize = 24f; setTextColor(if(isActive) textOnLight else textOnDark); layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0,0,(16*dp).toInt(),0) } })
-                      pill.addView(TextView(this).apply { this.text = text; textSize = 18f; setTextColor(if(isActive) textOnLight else textOnDark); typeface = android.graphics.Typeface.DEFAULT_BOLD })
+                      pill.addView(TextView(this).apply { 
+                          this.text = icon
+                          textSize = 28f
+                          setTextColor(if(isActive) textOnLight else textOnDark)
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0,0,(16*dp).toInt(),0) } 
+                      })
+                      pill.addView(TextView(this).apply { 
+                          this.text = text
+                          textSize = 20f
+                          setTextColor(if(isActive) textOnLight else textOnDark)
+                          typeface = android.graphics.Typeface.DEFAULT_BOLD 
+                      })
                       return pill
                   }
 
@@ -446,6 +545,57 @@ jobs:
                   root.addView(createMaterialPill("✅", "2. اختياره كافتراضي", true) { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() })
                   
                   setContentView(root)
+              }
+              
+              private fun createMaterialSlider(context: Context, currentVal: Float, min: Float, max: Float, onUpdate: (Float) -> Unit): View {
+                  val dp = context.resources.displayMetrics.density
+                  val containerHeight = (64 * dp).toInt()
+                  val container = FrameLayout(context).apply {
+                      layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, containerHeight).apply {
+                          setMargins(0, 0, 0, (40*dp).toInt())
+                      }
+                      background = GradientDrawable().apply { setColor(Color.parseColor("#2E322F")); cornerRadius = containerHeight / 2f }
+                  }
+                  
+                  val fillView = View(context).apply {
+                      layoutParams = FrameLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT)
+                      background = GradientDrawable().apply { setColor(Color.parseColor("#BCEBCE")); cornerRadius = containerHeight / 2f }
+                  }
+                  
+                  val icon = TextView(context).apply {
+                      text = "↔️"
+                      textSize = 24f
+                      setTextColor(Color.parseColor("#102015"))
+                      gravity = Gravity.CENTER
+                      layoutParams = FrameLayout.LayoutParams(containerHeight, ViewGroup.LayoutParams.MATCH_PARENT)
+                  }
+
+                  container.addView(fillView)
+                  container.addView(icon)
+
+                  container.post {
+                      val totalWidth = container.width
+                      val progress = ((currentVal - min) / (max - min)).coerceIn(0f, 1f)
+                      val fillWidth = (containerHeight + progress * (totalWidth - containerHeight)).toInt()
+                      fillView.layoutParams = FrameLayout.LayoutParams(fillWidth, ViewGroup.LayoutParams.MATCH_PARENT)
+                      fillView.requestLayout()
+                  }
+
+                  container.setOnTouchListener { v, event ->
+                      val totalWidth = v.width
+                      var newWidth = event.x.toInt()
+                      if (newWidth < containerHeight) newWidth = containerHeight
+                      if (newWidth > totalWidth) newWidth = totalWidth
+                      
+                      fillView.layoutParams = FrameLayout.LayoutParams(newWidth, ViewGroup.LayoutParams.MATCH_PARENT)
+                      fillView.requestLayout()
+                      
+                      val progress = (newWidth - containerHeight).toFloat() / (totalWidth - containerHeight).toFloat()
+                      val newVal = min + (progress * (max - min))
+                      onUpdate(newVal)
+                      true
+                  }
+                  return container
               }
           }
           EOF
