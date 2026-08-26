@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 8; versionName = "8.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 10; versionName = "10.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -115,6 +115,8 @@ jobs:
           import android.graphics.Typeface
           import android.graphics.drawable.GradientDrawable
           import android.inputmethodservice.InputMethodService
+          import android.os.Handler
+          import android.os.Looper
           import android.os.VibrationEffect
           import android.os.Vibrator
           import android.view.Gravity
@@ -134,17 +136,26 @@ jobs:
               private val iosTxtWhiteColor = Color.parseColor("#FFFFFF")
               
               private var isArabic = false
+              private var isShifted = false
+              private var keyboardMode = 0 // 0: Text, 1: Numbers, 2: Symbols
               private var keyHeightDp = 42f
+              
               private lateinit var prefs: SharedPreferences
               private lateinit var vibrator: Vibrator
+              private val handler = Handler(Looper.getMainLooper())
               
+              private lateinit var rootLayout: LinearLayout
               private lateinit var headerContainer: FrameLayout
               private lateinit var predictionContainer: LinearLayout
               private lateinit var sliderContainer: View
+              private lateinit var keysContainer: LinearLayout
               
               private val keyViews = mutableListOf<View>()
               private var popupWindow: PopupWindow? = null
               private var popupTextView: TextView? = null
+              
+              private var altPopupWindow: PopupWindow? = null
+              private val altViews = mutableListOf<TextView>()
 
               override fun onCreate() {
                   super.onCreate()
@@ -157,7 +168,7 @@ jobs:
                   keyHeightDp = prefs.getFloat("key_height", 42f)
                   val dp = resources.displayMetrics.density
 
-                  val rootLayout = LinearLayout(this).apply {
+                  rootLayout = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
                       setBackgroundResource(R.drawable.kb_background)
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -175,12 +186,8 @@ jobs:
                   toolbar.addView(createQuickSettingPill("✨", "ذكاء") { 
                       updatePredictions(listOf("🤖 جاري التفكير...", "تحليل...")) 
                   })
-                  toolbar.addView(createQuickSettingPill("🎚️", "حجم") { 
-                      toggleSlider() 
-                  })
-                  toolbar.addView(createQuickSettingPill("⚙️", "ضبط") { 
-                      openSettings() 
-                  })
+                  toolbar.addView(createQuickSettingPill("🎚️", "حجم") { toggleSlider() })
+                  toolbar.addView(createQuickSettingPill("⚙️", "ضبط") { openSettings() })
                   rootLayout.addView(toolbar)
                   rootLayout.addView(Space((8 * dp).toInt()))
 
@@ -210,46 +217,276 @@ jobs:
                   rootLayout.addView(headerContainer)
                   rootLayout.addView(Space((8 * dp).toInt()))
 
-                  val row1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
-                  val row2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
-                  val row3 = if(isArabic) listOf("ئ","ء","ؤ","ر","لا","ى","ة","و","ز","ظ") else listOf("w", "x", "c", "v", "b", "n")
-                  
-                  rootLayout.addView(createKeysRow(row1))
-                  rootLayout.addView(Space((10 * dp).toInt()))
-                  rootLayout.addView(createKeysRow(row2, isSubRow = true))
-                  rootLayout.addView(Space((10 * dp).toInt()))
-
-                  val row3Container = LinearLayout(this).apply {
-                      orientation = LinearLayout.HORIZONTAL
+                  keysContainer = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
-                  row3Container.addView(createSpecialKey("⇧", iosKeyControlBg, 1.2f))
-                  row3Container.addView(createKeysRow(row3, isSubRow = true, weightSum = row3.size.toFloat()))
-                  row3Container.addView(createSpecialKey("⌫", iosKeyControlBg, 1.2f).apply {
-                      setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)) }
-                  })
-                  rootLayout.addView(row3Container)
-                  rootLayout.addView(Space((10 * dp).toInt()))
+                  rootLayout.addView(keysContainer)
 
-                  val bottomRow = LinearLayout(this).apply {
-                      orientation = LinearLayout.HORIZONTAL
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                  }
-                  bottomRow.addView(createSpecialKey("?123", iosKeyControlBg, 1.5f))
-                  
-                  bottomRow.addView(createSpecialKey("🌐", iosKeyControlBg, 1.2f).apply {
-                      setOnClickListener { vibrate(); isArabic = !isArabic; setInputView(onCreateInputView()) }
-                  })
-
-                  bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 4f, 0.4f).apply {
-                      setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1) }
-                  })
-                  bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 2f).apply {
-                      setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
-                  })
-                  rootLayout.addView(bottomRow)
+                  renderKeys()
 
                   return rootLayout
+              }
+
+              private fun renderKeys() {
+                  keysContainer.removeAllViews()
+                  keyViews.clear()
+                  val dp = resources.displayMetrics.density
+
+                  if (keyboardMode == 0) { // Text Mode
+                      val r1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
+                      val r2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
+                      val r3 = if(isArabic) listOf("ذ","ئ","ء","ؤ","ر","لا","ى","ة","و","ز","ظ") else listOf("w", "x", "c", "v", "b", "n")
+
+                      val finalR1 = if(isShifted && !isArabic) r1.map { it.uppercase() } else r1
+                      val finalR2 = if(isShifted && !isArabic) r2.map { it.uppercase() } else r2
+                      val finalR3 = if(isShifted && !isArabic) r3.map { it.uppercase() } else r3
+
+                      keysContainer.addView(createKeysRow(finalR1, 0f, 0))
+                      keysContainer.addView(Space((10 * dp).toInt()))
+                      keysContainer.addView(createKeysRow(finalR2, 0f, if(isArabic) 12 else 16))
+                      keysContainer.addView(Space((10 * dp).toInt()))
+
+                      val row3Container = LinearLayout(this).apply {
+                          orientation = LinearLayout.HORIZONTAL
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      }
+                      
+                      val shiftBg = if(isShifted) Color.WHITE else iosKeyControlBg
+                      val shiftTxtColor = if(isShifted) Color.BLACK else iosTxtWhiteColor
+                      row3Container.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.2f).apply {
+                          setTextColor(shiftTxtColor)
+                          setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
+                      })
+                      row3Container.addView(createKeysRow(finalR3, finalR3.size.toFloat(), 6))
+                      row3Container.addView(createSpecialKey("⌫", iosKeyControlBg, 1.2f).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.deleteSurroundingText(1, 0) }
+                      })
+                      keysContainer.addView(row3Container)
+                      keysContainer.addView(Space((10 * dp).toInt()))
+
+                      val bottomRow = LinearLayout(this).apply {
+                          orientation = LinearLayout.HORIZONTAL
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      }
+                      bottomRow.addView(createSpecialKey("?123", iosKeyControlBg, 1.5f).apply {
+                          setOnClickListener { vibrate(); keyboardMode = 1; renderKeys() }
+                      })
+                      bottomRow.addView(createSpecialKey("🌐", iosKeyControlBg, 1.2f).apply {
+                          setOnClickListener { vibrate(); isArabic = !isArabic; isShifted = false; renderKeys() }
+                      })
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 4f, 0.4f).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1) }
+                      })
+                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 2f).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
+                      })
+                      keysContainer.addView(bottomRow)
+                      
+                  } else { // Numbers and Symbols Mode
+                      val r1 = if(keyboardMode == 1) listOf("1","2","3","4","5","6","7","8","9","0") else listOf("[","]","{","}","#","%","^","*","+","=")
+                      val r2 = if(keyboardMode == 1) listOf("-","/",":",";","(",")","$","&","@","\"") else listOf("_","\\","|","~","<",">","€","£","¥","•")
+                      val r3 = listOf(".",",","?","!","'")
+
+                      keysContainer.addView(createKeysRow(r1, 0f, 0))
+                      keysContainer.addView(Space((10 * dp).toInt()))
+                      keysContainer.addView(createKeysRow(r2, 0f, 0))
+                      keysContainer.addView(Space((10 * dp).toInt()))
+
+                      val row3Container = LinearLayout(this).apply {
+                          orientation = LinearLayout.HORIZONTAL
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      }
+                      val symToggle = if(keyboardMode == 1) "#+=" else "123"
+                      row3Container.addView(createSpecialKey(symToggle, iosKeyControlBg, 1.5f).apply {
+                          setOnClickListener { vibrate(); keyboardMode = if(keyboardMode == 1) 2 else 1; renderKeys() }
+                      })
+                      row3Container.addView(createKeysRow(r3, r3.size.toFloat(), 6))
+                      row3Container.addView(createSpecialKey("⌫", iosKeyControlBg, 1.5f).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.deleteSurroundingText(1, 0) }
+                      })
+                      keysContainer.addView(row3Container)
+                      keysContainer.addView(Space((10 * dp).toInt()))
+
+                      val bottomRow = LinearLayout(this).apply {
+                          orientation = LinearLayout.HORIZONTAL
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      }
+                      bottomRow.addView(createSpecialKey("ABC", iosKeyControlBg, 1.5f).apply {
+                          setOnClickListener { vibrate(); keyboardMode = 0; renderKeys() }
+                      })
+                      bottomRow.addView(createSpecialKey("🌐", iosKeyControlBg, 1.2f).apply {
+                          setOnClickListener { vibrate(); isArabic = !isArabic; keyboardMode = 0; renderKeys() }
+                      })
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 4f, 0.4f).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1) }
+                      })
+                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 2f).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
+                      })
+                      keysContainer.addView(bottomRow)
+                  }
+              }
+
+              private fun getAltChars(base: String): List<String> {
+                  val lower = base.lowercase()
+                  val map = mapOf(
+                      "ا" to listOf("أ", "إ", "آ", "ا"),
+                      "ى" to listOf("ئ", "ى"),
+                      "ي" to listOf("ئ", "ي"),
+                      "و" to listOf("ؤ", "و"),
+                      "ه" to listOf("ة", "ه"),
+                      "a" to listOf("à", "â", "æ", "ä", "a"),
+                      "e" to listOf("é", "è", "ê", "ë", "e"),
+                      "i" to listOf("î", "ï", "i"),
+                      "o" to listOf("ô", "œ", "ö", "o"),
+                      "u" to listOf("ù", "û", "ü", "u"),
+                      "c" to listOf("ç", "c")
+                  )
+                  val list = map[lower] ?: emptyList()
+                  if (base.isNotEmpty() && base[0].isUpperCase()) {
+                      return list.map { it.uppercase() }
+                  }
+                  return list
+              }
+
+              private fun showAltPopup(view: View, alts: List<String>) {
+                  val dp = resources.displayMetrics.density
+                  val container = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      background = getRoundRect(Color.parseColor("#2C2C2E"), 12f * dp)
+                      setPadding((6*dp).toInt(), (6*dp).toInt(), (6*dp).toInt(), (6*dp).toInt())
+                  }
+                  altViews.clear()
+                  alts.forEach { char ->
+                      val tv = TextView(this).apply {
+                          text = char
+                          textSize = 24f
+                          setTextColor(Color.WHITE)
+                          gravity = Gravity.CENTER
+                          layoutParams = LinearLayout.LayoutParams((44*dp).toInt(), (50*dp).toInt()).apply {
+                              setMargins((2*dp).toInt(), 0, (2*dp).toInt(), 0)
+                          }
+                          background = getRoundRect(Color.parseColor("#3A3A3C"), 8f * dp)
+                      }
+                      altViews.add(tv)
+                      container.addView(tv)
+                  }
+                  altPopupWindow = PopupWindow(container, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                      isClippingEnabled = false
+                  }
+                  val loc = IntArray(2)
+                  view.getLocationOnScreen(loc)
+                  val popupWidth = alts.size * (48 * dp) + (12 * dp)
+                  val xOffset = loc[0] - (popupWidth / 2) + (view.width / 2)
+                  altPopupWindow?.showAtLocation(view, Gravity.NO_GRAVITY, xOffset.toInt(), loc[1] - (70 * dp).toInt())
+              }
+
+              private fun createKey(char: String): TextView {
+                  val dp = resources.displayMetrics.density
+                  val key = TextView(this).apply {
+                      text = char
+                      textSize = 21f
+                      setTextColor(iosTxtWhiteColor)
+                      gravity = Gravity.CENTER
+                      layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), 1f)
+                      background = getRoundRect(iosKeyNormalBg, 6f * dp)
+                      isClickable = true
+                      
+                      var isLongPressing = false
+                      var hoveredIndex = -1
+                      var longPressRunnable: Runnable? = null
+
+                      setOnTouchListener { v, event ->
+                          when (event.action) {
+                              MotionEvent.ACTION_DOWN -> {
+                                  vibrate()
+                                  isLongPressing = false
+                                  hoveredIndex = -1
+                                  
+                                  showPopup(v, char)
+                                  v.background = getRoundRect(Color.LTGRAY, 6f * dp)
+                                  (v as TextView).setTextColor(Color.BLACK)
+
+                                  val alts = getAltChars(char)
+                                  if (alts.isNotEmpty()) {
+                                      longPressRunnable = Runnable {
+                                          isLongPressing = true
+                                          dismissPopup()
+                                          showAltPopup(v, alts)
+                                      }
+                                      handler.postDelayed(longPressRunnable!!, 350)
+                                  }
+                              }
+                              MotionEvent.ACTION_MOVE -> {
+                                  if (isLongPressing && altPopupWindow != null) {
+                                      val rawX = event.rawX
+                                      altViews.forEachIndexed { index, tv ->
+                                          val loc = IntArray(2)
+                                          tv.getLocationOnScreen(loc)
+                                          if (rawX >= loc[0] && rawX <= loc[0] + tv.width) {
+                                              tv.setBackgroundColor(Color.LTGRAY)
+                                              tv.setTextColor(Color.BLACK)
+                                              hoveredIndex = index
+                                          } else {
+                                              tv.background = getRoundRect(Color.parseColor("#3A3A3C"), 8f * dp)
+                                              tv.setTextColor(Color.WHITE)
+                                          }
+                                      }
+                                  }
+                              }
+                              MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                                  longPressRunnable?.let { handler.removeCallbacks(it) }
+                                  v.background = getRoundRect(iosKeyNormalBg, 6f * dp)
+                                  (v as TextView).setTextColor(iosTxtWhiteColor)
+
+                                  if (isLongPressing) {
+                                      if (hoveredIndex != -1 && event.action == MotionEvent.ACTION_UP) {
+                                          currentInputConnection?.commitText(altViews[hoveredIndex].text.toString(), 1)
+                                      } else if (event.action == MotionEvent.ACTION_UP) {
+                                          val alts = getAltChars(char)
+                                          if (alts.isNotEmpty()) currentInputConnection?.commitText(alts[0], 1)
+                                      }
+                                      altPopupWindow?.dismiss()
+                                      altPopupWindow = null
+                                  } else {
+                                      dismissPopup()
+                                      if (event.action == MotionEvent.ACTION_UP) {
+                                          currentInputConnection?.commitText(char, 1)
+                                          if (isShifted) {
+                                              isShifted = false
+                                              renderKeys()
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                          true
+                      }
+                  }
+                  keyViews.add(key)
+                  return key
+              }
+
+              private fun createKeysRow(keys: List<String>, weightInParent: Float = 0f, sidePaddingDp: Int = 0): LinearLayout {
+                  val dp = resources.displayMetrics.density
+                  val row = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      layoutParams = if (weightInParent > 0f) {
+                          LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, weightInParent)
+                      } else {
+                          LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      }
+                      if (sidePaddingDp > 0) {
+                          val padding = (sidePaddingDp * dp).toInt()
+                          setPadding(padding, 0, padding, 0)
+                      }
+                  }
+                  keys.forEachIndexed { index, char ->
+                      row.addView(createKey(char))
+                      if (index < keys.size - 1) row.addView(Space((4 * dp).toInt(), true))
+                  }
+                  return row
               }
 
               private fun vibrate() {
@@ -330,54 +567,6 @@ jobs:
                   }
               }
 
-              private fun createKeysRow(keys: List<String>, weightSum: Float = keys.size.toFloat(), isSubRow: Boolean = false): LinearLayout {
-                  val dp = resources.displayMetrics.density
-                  val row = LinearLayout(this).apply {
-                      orientation = LinearLayout.HORIZONTAL
-                      layoutParams = if (isSubRow) LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, weightSum)
-                                     else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                  }
-                  keys.forEachIndexed { index, char ->
-                      row.addView(createKey(char))
-                      if (index < keys.size - 1) row.addView(Space((4 * dp).toInt(), true))
-                  }
-                  if(isSubRow){ row.setPadding((12 * dp).toInt(), 0, (12 * dp).toInt(), 0) }
-                  return row
-              }
-
-              private fun createKey(char: String): TextView {
-                  val dp = resources.displayMetrics.density
-                  val key = TextView(this).apply {
-                      text = char
-                      textSize = 21f
-                      setTextColor(iosTxtWhiteColor)
-                      gravity = Gravity.CENTER
-                      layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), 1f)
-                      background = getRoundRect(iosKeyNormalBg, 6f * dp)
-                      isClickable = true
-                      
-                      setOnTouchListener { v, event ->
-                          when (event.action) {
-                              MotionEvent.ACTION_DOWN -> {
-                                  vibrate()
-                                  showPopup(v, char)
-                                  v.background = getRoundRect(Color.LTGRAY, 6f * dp)
-                                  (v as TextView).setTextColor(Color.BLACK)
-                              }
-                              MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                                  dismissPopup()
-                                  v.background = getRoundRect(iosKeyNormalBg, 6f * dp)
-                                  (v as TextView).setTextColor(iosTxtWhiteColor)
-                                  if (event.action == MotionEvent.ACTION_UP) currentInputConnection?.commitText(char, 1)
-                              }
-                          }
-                          true
-                      }
-                  }
-                  keyViews.add(key)
-                  return key
-              }
-
               private fun createSpecialKey(label: String, bgColor: Int, weight: Float, textAlpha: Float = 1f): TextView {
                   val dp = resources.displayMetrics.density
                   val key = TextView(this).apply {
@@ -386,7 +575,7 @@ jobs:
                       setTextColor(Color.argb((255 * textAlpha).toInt(), 255, 255, 255))
                       gravity = Gravity.CENTER
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), weight).apply {
-                          if (label != "?123" && label != "⇧") setMargins((4 * dp).toInt(), 0, 0, 0)
+                          if (label != "?123" && label != "⇧" && label != "ABC" && label != "⬆" && label != "#+=") setMargins((4 * dp).toInt(), 0, 0, 0)
                       }
                       background = getRoundRect(bgColor, 6f * dp)
                       isClickable = true
