@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 15; versionName = "15.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 16; versionName = "16.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -136,7 +136,6 @@ jobs:
           import android.widget.ImageView
 
           class KeyboardService : InputMethodService() {
-              // Dynamic Theme Colors
               private var isDarkMode = true
               private var kbBgColor = Color.BLACK
               private var keyNormalBg = Color.BLACK
@@ -151,7 +150,9 @@ jobs:
               
               private lateinit var prefs: SharedPreferences
               private lateinit var vibrator: Vibrator
-              private val handler = Handler(Looper.getMainLooper())
+              
+              // تغيير اسم المتغير لحل المشكلة (Fixing the Handler error)
+              private val mainHandler = Handler(Looper.getMainLooper())
               
               private lateinit var rootLayout: LinearLayout
               private lateinit var headerContainer: LinearLayout
@@ -314,7 +315,7 @@ jobs:
                       val r1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
                       val r2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
                       
-                      // السطر الثالث تم تحسينه وإزالة الحروف المخفية في العربية لتوفير مساحة
+                      // السطر الثالث للعربية بعد إخفاء الحروف لتوفير مساحة
                       val r3 = if(isArabic) listOf("ظ","ز","و","ة","ى","لا","ر","ء") else listOf("w", "x", "c", "v", "b", "n")
 
                       val finalR1 = if(isShifted && !isArabic) r1.map { it.uppercase() } else r1
@@ -332,20 +333,18 @@ jobs:
                       }
                       
                       if (!isArabic) {
-                          // زر الشفت للفرنسية (مكانه الصحيح في السطر الثالث)
+                          // الشفت يصعد للسطر الثالث في الفرنسية كما طلبت
                           val shiftBg = if(isShifted) txtColor else keyControlBg
                           val shiftTxtColor = if(isShifted) kbBgColor else txtColor
                           row3Container.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.5f, shiftTxtColor).apply {
                               setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
                           })
                       } else {
-                          // مساحة فارغة لضبط التوازن في العربية (بدون شفت)
+                          // إضافة مساحة فارغة بسيطة للحفاظ على التوازن في العربية
                           row3Container.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 0.5f) })
                       }
                       
                       row3Container.addView(createKeysRow(finalR3, finalR3.size.toFloat(), 0))
-                      
-                      // إضافة زر الحذف مع وظيفة المسح المستمر السريع
                       row3Container.addView(createBackspaceKey())
                       
                       keysContainer.addView(row3Container)
@@ -359,10 +358,18 @@ jobs:
                           setOnClickListener { vibrate(); keyboardMode = 1; renderKeys() }
                       })
                       
-                      // إضافة زر الفاصلة بجانب الأرقام (تم استبدال مكان الشفت في السطر الرابع)
-                      bottomRow.addView(createSpecialKey(",", keyControlBg, 1.0f, txtColor).apply {
-                          setOnClickListener { vibrate(); currentInputConnection?.commitText(",", 1); updateSmartPredictions() }
-                      })
+                      if (isArabic) {
+                          // الشفت يعود للأسفل في العربية كما طلبت
+                          val shiftBg = if(isShifted) txtColor else keyControlBg
+                          val shiftTxtColor = if(isShifted) kbBgColor else txtColor
+                          bottomRow.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.2f, shiftTxtColor).apply {
+                              setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
+                          })
+                      } else {
+                          bottomRow.addView(createSpecialKey(",", keyControlBg, 1.2f, txtColor).apply {
+                              setOnClickListener { vibrate(); currentInputConnection?.commitText(",", 1); updateSmartPredictions() }
+                          })
+                      }
                       
                       bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", keyNormalBg, 6f, txtColor, 1f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1); updateSmartPredictions() }
@@ -414,7 +421,7 @@ jobs:
                       keysContainer.addView(bottomRow)
                   }
 
-                  // === Footer (الأيقونات الشفافة الاحترافية Material) ===
+                  // === Footer ===
                   val footerRow = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * dp).toInt())
@@ -424,7 +431,7 @@ jobs:
 
                   val globeBtn = ImageView(this).apply {
                       setImageResource(R.drawable.ic_language)
-                      setColorFilter(txtColor) // يتغير حسب الثيم
+                      setColorFilter(txtColor) 
                       alpha = 0.5f 
                       scaleType = ImageView.ScaleType.FIT_CENTER
                       setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
@@ -443,7 +450,7 @@ jobs:
 
                   val dismissBtn = ImageView(this).apply {
                       setImageResource(R.drawable.ic_keyboard_hide)
-                      setColorFilter(txtColor) // يتغير حسب الثيم
+                      setColorFilter(txtColor) 
                       alpha = 0.5f
                       scaleType = ImageView.ScaleType.FIT_CENTER
                       setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
@@ -460,7 +467,7 @@ jobs:
                   keysContainer.addView(footerRow)
               }
 
-              // دالة زر المسح المستمر الصاروخي
+              // زر الحذف المستمر
               private fun createBackspaceKey(): TextView {
                   val dp = resources.displayMetrics.density
                   val key = TextView(this).apply {
@@ -486,14 +493,14 @@ jobs:
                                   deleteRunnable = object : Runnable {
                                       override fun run() {
                                           currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
-                                          handler.postDelayed(this, 50) // سرعة المسح
+                                          mainHandler.postDelayed(this, 50) 
                                       }
                                   }
-                                  handler.postDelayed(deleteRunnable!!, 400) // يبدأ المسح المستمر بعد 400 جزء من الثانية
+                                  mainHandler.postDelayed(deleteRunnable!!, 400) 
                               }
                               MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                                   v.alpha = 1f
-                                  deleteRunnable?.let { handler.removeCallbacks(it) }
+                                  deleteRunnable?.let { mainHandler.removeCallbacks(it) }
                                   updateSmartPredictions()
                               }
                           }
@@ -544,15 +551,15 @@ jobs:
                   }
               }
 
-              // قاموس دمج الحروف للحصول على مساحة أكبر
+              // الحروف المنبثقة والسلسة المدمجة كما طلبت
               private fun getAltChars(base: String): List<String> {
                   val lower = base.lowercase()
                   val map = mapOf(
-                      "د" to listOf("ذ", "د"), // دمج الذال مع الدال
-                      "و" to listOf("ؤ", "و"), // دمج ؤ مع و
-                      "ى" to listOf("ئ", "ى"), // دمج ئ مع ى
-                      "ي" to listOf("ئ", "ي"), // دمج ئ مع ي
-                      "ا" to listOf("أ", "إ", "آ", "ا"), // دمج عائلة الألف
+                      "د" to listOf("ذ", "د"),
+                      "و" to listOf("ؤ", "و"),
+                      "ى" to listOf("ئ", "ى"),
+                      "ي" to listOf("ئ", "ي"),
+                      "ا" to listOf("أ", "إ", "آ", "ا"),
                       "ه" to listOf("ة", "ه"),
                       "a" to listOf("à", "â", "æ", "ä", "a"),
                       "e" to listOf("é", "è", "ê", "ë", "e"),
@@ -633,7 +640,7 @@ jobs:
                                           dismissPopup()
                                           showAltPopup(v, alts)
                                       }
-                                      handler.postDelayed(longPressRunnable!!, 350)
+                                      mainHandler.postDelayed(longPressRunnable!!, 350)
                                   }
                               }
                               MotionEvent.ACTION_MOVE -> {
@@ -654,7 +661,7 @@ jobs:
                                   }
                               }
                               MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                                  longPressRunnable?.let { handler.removeCallbacks(it) }
+                                  longPressRunnable?.let { mainHandler.removeCallbacks(it) }
                                   v.background = getRoundRect(keyNormalBg, 6f * dp)
                                   (v as TextView).setTextColor(txtColor)
 
