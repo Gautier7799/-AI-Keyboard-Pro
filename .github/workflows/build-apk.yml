@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 11; versionName = "11.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 12; versionName = "12.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -137,7 +137,7 @@ jobs:
               
               private var isArabic = false
               private var isShifted = false
-              private var keyboardMode = 0 // 0: Text, 1: Numbers, 2: Symbols
+              private var keyboardMode = 0 
               private var keyHeightDp = 42f
               
               private lateinit var prefs: SharedPreferences
@@ -157,7 +157,6 @@ jobs:
               private var altPopupWindow: PopupWindow? = null
               private val altViews = mutableListOf<TextView>()
 
-              // Mini Dictionary
               private val arabicDict = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله")
               private val frenchDict = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "salut", "bien", "pourquoi")
 
@@ -168,6 +167,11 @@ jobs:
               }
 
               override fun onCreateInputView(): View {
+                  // جعل شريط التنقل السفلي للنظام بنفس لون الكيبورد ليصبح متصلاً
+                  try {
+                      window?.window?.navigationBarColor = Color.parseColor("#101010")
+                  } catch (e: Exception) {}
+
                   keyViews.clear()
                   keyHeightDp = prefs.getFloat("key_height", 42f)
                   val dp = resources.displayMetrics.density
@@ -176,17 +180,15 @@ jobs:
                       orientation = LinearLayout.VERTICAL
                       setBackgroundResource(R.drawable.kb_background)
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      setPadding((4 * dp).toInt(), (8 * dp).toInt(), (4 * dp).toInt(), (8 * dp).toInt())
+                      setPadding((4 * dp).toInt(), (8 * dp).toInt(), (4 * dp).toInt(), (4 * dp).toInt())
                   }
 
-                  // Top Header Container (holds Toggle + Predictions/Toolbar)
                   headerContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (40 * dp).toInt())
                       gravity = Gravity.CENTER_VERTICAL
                   }
 
-                  // Material You Square Toggle Button
                   val toggleBtn = TextView(this).apply {
                       text = "⊞"
                       textSize = 20f
@@ -195,7 +197,7 @@ jobs:
                       layoutParams = LinearLayout.LayoutParams((40 * dp).toInt(), (40 * dp).toInt()).apply {
                           setMargins(0, 0, (8 * dp).toInt(), 0)
                       }
-                      background = getRoundRect(iosKeyControlBg, 12f * dp) // Material You Square-ish
+                      background = getRoundRect(iosKeyControlBg, 12f * dp)
                       setOnClickListener {
                           vibrate()
                           if (toolbarContainer.visibility == View.VISIBLE) {
@@ -213,14 +215,12 @@ jobs:
                       layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
                   }
 
-                  // 1. Predictions Container
                   predictionContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                       gravity = Gravity.CENTER_VERTICAL
                   }
                   
-                  // 2. Toolbar Container (Hidden by default)
                   toolbarContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -239,7 +239,6 @@ jobs:
                   })
                   toolbarContainer.addView(createQuickSettingPill("⚙️", "ضبط") { openSettings() })
 
-                  // 3. Slider Container (Hidden by default)
                   sliderContainer = createMaterialSlider(this, keyHeightDp, 35f, 65f) { newVal ->
                       keyHeightDp = newVal
                       prefs.edit().putFloat("key_height", newVal).apply()
@@ -276,9 +275,10 @@ jobs:
                   keyViews.clear()
                   val dp = resources.displayMetrics.density
 
-                  if (keyboardMode == 0) { // Text Mode
+                  if (keyboardMode == 0) {
                       val r1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
                       val r2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
+                      // السطر الثالث صار أوسع وأريح بدون الشفت
                       val r3 = if(isArabic) listOf("ذ","ئ","ء","ؤ","ر","لا","ى","ة","و","ز","ظ") else listOf("w", "x", "c", "v", "b", "n")
 
                       val finalR1 = if(isShifted && !isArabic) r1.map { it.uppercase() } else r1
@@ -295,14 +295,14 @@ jobs:
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
                       
-                      val shiftBg = if(isShifted) Color.WHITE else iosKeyControlBg
-                      val shiftTxtColor = if(isShifted) Color.BLACK else iosTxtWhiteColor
-                      row3Container.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.2f).apply {
-                          setTextColor(shiftTxtColor)
-                          setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
-                      })
-                      row3Container.addView(createKeysRow(finalR3, finalR3.size.toFloat(), 6))
-                      row3Container.addView(createSpecialKey("⌫", iosKeyControlBg, 1.2f).apply {
+                      if (!isArabic) {
+                          // إضافة فراغ فارغ لليمين في اللغة الفرنسية لضبط التوازن
+                          row3Container.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1.5f) })
+                      }
+                      
+                      row3Container.addView(createKeysRow(finalR3, finalR3.size.toFloat(), 0))
+                      
+                      row3Container.addView(createSpecialKey("⌫", iosKeyControlBg, 1.5f).apply {
                           setOnClickListener { 
                               vibrate()
                               currentInputConnection?.deleteSurroundingText(1, 0)
@@ -312,26 +312,31 @@ jobs:
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space((10 * dp).toInt()))
 
+                      // السطر الرابع الجديد مع زر الشفت
                       val bottomRow = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
-                      // الأوزان الجديدة لتصغير return وتكبير space
-                      bottomRow.addView(createSpecialKey("?123", iosKeyControlBg, 1.2f).apply {
+                      bottomRow.addView(createSpecialKey("?123", iosKeyControlBg, 1.5f).apply {
                           setOnClickListener { vibrate(); keyboardMode = 1; renderKeys() }
                       })
-                      bottomRow.addView(createSpecialKey("🌐", iosKeyControlBg, 1.2f).apply {
-                          setOnClickListener { vibrate(); isArabic = !isArabic; isShifted = false; updateSmartPredictions(); renderKeys() }
+                      val shiftBg = if(isShifted) Color.WHITE else iosKeyControlBg
+                      val shiftTxtColor = if(isShifted) Color.BLACK else iosTxtWhiteColor
+                      bottomRow.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.5f).apply {
+                          setTextColor(shiftTxtColor)
+                          setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
                       })
-                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 5f, 0.4f).apply {
+                      // زر المسافة العملاق
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 6f, 0.4f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1); updateSmartPredictions() }
                       })
+                      // زر Return مٌقلّص
                       bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
                       })
                       keysContainer.addView(bottomRow)
                       
-                  } else { // Numbers and Symbols Mode
+                  } else {
                       val r1 = if(keyboardMode == 1) listOf("1","2","3","4","5","6","7","8","9","0") else listOf("[","]","{","}","#","%","^","*","+","=")
                       val r2 = if(keyboardMode == 1) listOf("-","/",":",";","(",")","$","&","@","\"") else listOf("_","\\","|","~","<",">","€","£","¥","•")
                       val r3 = listOf(".",",","?","!","'")
@@ -360,13 +365,13 @@ jobs:
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
-                      bottomRow.addView(createSpecialKey("ABC", iosKeyControlBg, 1.2f).apply {
+                      bottomRow.addView(createSpecialKey("ABC", iosKeyControlBg, 1.5f).apply {
                           setOnClickListener { vibrate(); keyboardMode = 0; renderKeys() }
                       })
-                      bottomRow.addView(createSpecialKey("🌐", iosKeyControlBg, 1.2f).apply {
-                          setOnClickListener { vibrate(); isArabic = !isArabic; keyboardMode = 0; renderKeys() }
+                      bottomRow.addView(createSpecialKey(",", iosKeyControlBg, 1.5f).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.commitText(",", 1) }
                       })
-                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 5f, 0.4f).apply {
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 6f, 0.4f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1) }
                       })
                       bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f).apply {
@@ -374,9 +379,51 @@ jobs:
                       })
                       keysContainer.addView(bottomRow)
                   }
+
+                  // السطر الخامس الجديد (Footer) الذي يحتوي الكرة ويغطي منطقة النظام السفلية
+                  val footerRow = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * dp).toInt())
+                      gravity = Gravity.CENTER_VERTICAL
+                      setPadding((8 * dp).toInt(), (4 * dp).toInt(), (8 * dp).toInt(), 0)
+                  }
+
+                  val globeBtn = TextView(this).apply {
+                      text = "🌐"
+                      textSize = 24f
+                      setTextColor(iosTxtWhiteColor)
+                      gravity = Gravity.CENTER
+                      layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
+                      background = getRoundRect(Color.TRANSPARENT, 24f * dp)
+                      setOnClickListener {
+                          vibrate()
+                          isArabic = !isArabic
+                          isShifted = false
+                          updateSmartPredictions()
+                          renderKeys()
+                      }
+                  }
+
+                  val emptySpacer = View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) }
+
+                  val dismissBtn = TextView(this).apply {
+                      text = "🔽"
+                      textSize = 20f
+                      setTextColor(iosTxtWhiteColor)
+                      gravity = Gravity.CENTER
+                      layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
+                      background = getRoundRect(Color.TRANSPARENT, 24f * dp)
+                      setOnClickListener { vibrate(); requestHideSelf(0) }
+                  }
+
+                  footerRow.addView(globeBtn)
+                  footerRow.addView(emptySpacer)
+                  footerRow.addView(dismissBtn)
+
+                  keysContainer.addView(Space((4 * dp).toInt()))
+                  keysContainer.addView(footerRow)
               }
 
-              // Dictionary Engine
               private fun updateSmartPredictions() {
                   val textBeforeCursor = currentInputConnection?.getTextBeforeCursor(30, 0)?.toString() ?: ""
                   val lastWord = textBeforeCursor.split(Regex("\\s+")).lastOrNull() ?: ""
@@ -637,7 +684,8 @@ jobs:
                   val dp = resources.displayMetrics.density
                   val key = TextView(this).apply {
                       text = label
-                      textSize = 16f
+                      // تصغير خط ال return ليصبح أنيق
+                      textSize = if (label == "return") 14f else 16f
                       setTextColor(Color.argb((255 * textAlpha).toInt(), 255, 255, 255))
                       gravity = Gravity.CENTER
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), weight).apply {
