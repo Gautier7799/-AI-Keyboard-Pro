@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 12; versionName = "12.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 13; versionName = "13.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -97,6 +97,18 @@ jobs:
           </shape>
           INNER_EOF
 
+          cat << 'INNER_EOF' > app/src/main/res/drawable/ic_language.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+              <path android:fillColor="#FFFFFF" android:pathData="M11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM18.92,8h-2.95c-0.32,-1.25 -0.78,-2.45 -1.38,-3.56 1.84,0.63 3.37,1.91 4.33,3.56zM12,4.04c0.83,1.2 1.48,2.53 1.91,3.96h-3.82c0.43,-1.43 1.08,-2.76 1.91,-3.96zM4.26,14C4.09,13.36 4,12.69 4,12s0.09,-1.36 0.26,-2h3.38c-0.08,0.66 -0.14,1.32 -0.14,2s0.06,1.34 0.14,2H4.26zM5.08,16h2.95c0.32,1.25 0.78,2.45 1.38,3.56 -1.84,-0.63 -3.37,-1.9 -4.33,-3.56zM8.03,8H5.08c0.96,-1.66 2.49,-2.93 4.33,-3.56C8.81,5.55 8.35,6.75 8.03,8zM12,19.96c-0.83,-1.2 -1.48,-2.53 -1.91,-3.96h3.82c-0.43,1.43 -1.08,2.76 -1.91,3.96zM14.34,14H9.66c-0.09,-0.66 -0.16,-1.32 -0.16,-2s0.07,-1.35 0.16,-2h4.68c0.09,0.65 0.16,1.32 0.16,2s-0.07,1.34 -0.16,2zM14.59,19.56c0.6,-1.11 1.06,-2.31 1.38,-3.56h2.95c-0.96,1.65 -2.49,2.93 -4.33,3.56zM16.22,14c0.08,-0.66 0.14,-1.32 0.14,-2s-0.06,-1.34 -0.14,-2h3.38c0.17,0.64 0.26,1.31 0.26,2s-0.09,1.36 -0.26,2h-3.38z"/>
+          </vector>
+          INNER_EOF
+
+          cat << 'INNER_EOF' > app/src/main/res/drawable/ic_keyboard_hide.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+              <path android:fillColor="#FFFFFF" android:pathData="M20,3H4C2.9,3 2.01,3.9 2.01,5L2,15c0,1.1 0.89,2 2,2h16c1.1,0 2,-0.9 2,-2V5C22,3.9 21.1,3 20,3zM11,6h2v2h-2V6zM11,9h2v2h-2V9zM8,6h2v2H8V6zM8,9h2v2H8V9zM5,9h2v2H5V9zM5,6h2v2H5V6zM16,15H8v-2h8V15zM15,11h-2V9h2V11zM15,8h-2V6h2V8zM19,11h-2V9h2V11zM19,8h-2V6h2V8zM12,23l4,-4H8L12,23z"/>
+          </vector>
+          INNER_EOF
+
           cat << 'INNER_EOF' > app/src/main/res/xml/method.xml
           <?xml version="1.0" encoding="utf-8"?>
           <input-method xmlns:android="http://schemas.android.com/apk/res/android" android:supportsInlineSuggestions="true">
@@ -128,6 +140,7 @@ jobs:
           import android.widget.LinearLayout
           import android.widget.PopupWindow
           import android.widget.TextView
+          import android.widget.ImageView
 
           class KeyboardService : InputMethodService() {
               private val iosKeyNormalBg = Color.parseColor("#3A3A3C")
@@ -167,7 +180,6 @@ jobs:
               }
 
               override fun onCreateInputView(): View {
-                  // جعل شريط التنقل السفلي للنظام بنفس لون الكيبورد ليصبح متصلاً
                   try {
                       window?.window?.navigationBarColor = Color.parseColor("#101010")
                   } catch (e: Exception) {}
@@ -278,7 +290,6 @@ jobs:
                   if (keyboardMode == 0) {
                       val r1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
                       val r2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
-                      // السطر الثالث صار أوسع وأريح بدون الشفت
                       val r3 = if(isArabic) listOf("ذ","ئ","ء","ؤ","ر","لا","ى","ة","و","ز","ظ") else listOf("w", "x", "c", "v", "b", "n")
 
                       val finalR1 = if(isShifted && !isArabic) r1.map { it.uppercase() } else r1
@@ -296,7 +307,6 @@ jobs:
                       }
                       
                       if (!isArabic) {
-                          // إضافة فراغ فارغ لليمين في اللغة الفرنسية لضبط التوازن
                           row3Container.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1.5f) })
                       }
                       
@@ -312,7 +322,6 @@ jobs:
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space((10 * dp).toInt()))
 
-                      // السطر الرابع الجديد مع زر الشفت
                       val bottomRow = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -326,11 +335,9 @@ jobs:
                           setTextColor(shiftTxtColor)
                           setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
                       })
-                      // زر المسافة العملاق
                       bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", iosKeyNormalBg, 6f, 0.4f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1); updateSmartPredictions() }
                       })
-                      // زر Return مٌقلّص
                       bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
                       })
@@ -380,19 +387,19 @@ jobs:
                       keysContainer.addView(bottomRow)
                   }
 
-                  // السطر الخامس الجديد (Footer) الذي يحتوي الكرة ويغطي منطقة النظام السفلية
+                  // Footer مع أيقونات Material الحقيقية المضافة كشفافة
                   val footerRow = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * dp).toInt())
                       gravity = Gravity.CENTER_VERTICAL
-                      setPadding((8 * dp).toInt(), (4 * dp).toInt(), (8 * dp).toInt(), 0)
+                      setPadding((12 * dp).toInt(), 0, (12 * dp).toInt(), 0)
                   }
 
-                  val globeBtn = TextView(this).apply {
-                      text = "🌐"
-                      textSize = 24f
-                      setTextColor(iosTxtWhiteColor)
-                      gravity = Gravity.CENTER
+                  val globeBtn = ImageView(this).apply {
+                      setImageResource(R.drawable.ic_language)
+                      alpha = 0.45f // شفافة وأنيقة جداً
+                      scaleType = ImageView.ScaleType.FIT_CENTER
+                      setPadding((8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt())
                       layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
                       background = getRoundRect(Color.TRANSPARENT, 24f * dp)
                       setOnClickListener {
@@ -406,11 +413,11 @@ jobs:
 
                   val emptySpacer = View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) }
 
-                  val dismissBtn = TextView(this).apply {
-                      text = "🔽"
-                      textSize = 20f
-                      setTextColor(iosTxtWhiteColor)
-                      gravity = Gravity.CENTER
+                  val dismissBtn = ImageView(this).apply {
+                      setImageResource(R.drawable.ic_keyboard_hide)
+                      alpha = 0.45f // شفافة وأنيقة جداً
+                      scaleType = ImageView.ScaleType.FIT_CENTER
+                      setPadding((8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt())
                       layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
                       background = getRoundRect(Color.TRANSPARENT, 24f * dp)
                       setOnClickListener { vibrate(); requestHideSelf(0) }
@@ -420,7 +427,7 @@ jobs:
                   footerRow.addView(emptySpacer)
                   footerRow.addView(dismissBtn)
 
-                  keysContainer.addView(Space((4 * dp).toInt()))
+                  keysContainer.addView(Space((2 * dp).toInt()))
                   keysContainer.addView(footerRow)
               }
 
@@ -684,7 +691,6 @@ jobs:
                   val dp = resources.displayMetrics.density
                   val key = TextView(this).apply {
                       text = label
-                      // تصغير خط ال return ليصبح أنيق
                       textSize = if (label == "return") 14f else 16f
                       setTextColor(Color.argb((255 * textAlpha).toInt(), 255, 255, 255))
                       gravity = Gravity.CENTER
