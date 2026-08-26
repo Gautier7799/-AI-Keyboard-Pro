@@ -50,6 +50,11 @@ jobs:
           include(":app")
           EOF
 
+          # هذا هو السطر الذي نسيته في الكود السابق والذي تسبب في الخطأ!
+          cat << 'EOF' > build.gradle.kts
+          plugins { id("com.android.application") version "8.2.2" apply false; id("org.jetbrains.kotlin.android") version "1.9.22" apply false }
+          EOF
+
           cat << 'EOF' > app/build.gradle.kts
           plugins { id("com.android.application"); id("org.jetbrains.kotlin.android") }
           android {
@@ -73,11 +78,10 @@ jobs:
           </resources>
           EOF
 
-          # تصميم الخلفية الضبابية (Blur) مع الزوايا المقوسة (الطلبات 8 و 10)
           cat << 'EOF' > app/src/main/res/drawable/kb_background.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
-              <solid android:color="#D90A0A0A" /> <!-- أسود شفاف بنسبة 85% للضبابية -->
+              <solid android:color="#D90A0A0A" />
               <corners android:topLeftRadius="16dp" android:topRightRadius="16dp" />
           </shape>
           EOF
@@ -90,7 +94,6 @@ jobs:
           </input-method>
           EOF
 
-          # ---- الكود الرئيسي للكيبورد ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
 
@@ -140,19 +143,18 @@ jobs:
 
                   val rootLayout = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
-                      setBackgroundResource(R.drawable.kb_background) // الزوايا المقوسة والضبابية
+                      setBackgroundResource(R.drawable.kb_background)
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       setPadding((4 * dp).toInt(), (8 * dp).toInt(), (4 * dp).toInt(), (8 * dp).toInt())
                   }
 
-                  // 1. شريط الأدوات العلوية (Emoji Up)
                   val toolbar = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (40 * dp).toInt())
                       setPadding((12 * dp).toInt(), 0, (12 * dp).toInt(), 0)
                       gravity = Gravity.CENTER_VERTICAL
                   }
-                  toolbar.addView(createToolbarIcon("😊", 1f)) // الايموجي فوق
+                  toolbar.addView(createToolbarIcon("😊", 1f))
                   toolbar.addView(createToolbarIcon("✨ Ia", 1.5f, isBold = true).apply {
                       setOnClickListener { 
                           vibrate()
@@ -163,7 +165,6 @@ jobs:
                   toolbar.addView(createToolbarIcon("⚙️", 1f).apply { setOnClickListener { vibrate(); openSettings() } })
                   rootLayout.addView(toolbar)
 
-                  // 2. شريط المصحح والتنبؤات
                   predictionContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (35 * dp).toInt())
@@ -172,7 +173,6 @@ jobs:
                   updatePredictions(if(isArabic) listOf("مرحبا", "نعم", "شكرا") else listOf("bonjour", "merci", "oui"))
                   rootLayout.addView(predictionContainer)
 
-                  // 3. صفوف الحروف
                   val row1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
                   val row2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
                   val row3 = if(isArabic) listOf("ئ","ء","ؤ","ر","لا","ى","ة","و","ز","ظ") else listOf("w", "x", "c", "v", "b", "n")
@@ -194,14 +194,12 @@ jobs:
                   rootLayout.addView(row3Container)
                   rootLayout.addView(Space((10 * dp).toInt()))
 
-                  // 4. الصف السفلي (الكرة الأرضية تحت)
                   val bottomRow = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
                   bottomRow.addView(createSpecialKey("?123", iosKeyControlBg, 1.5f))
                   
-                  // زر اللغة 🌐
                   bottomRow.addView(createSpecialKey("🌐", iosKeyControlBg, 1.2f).apply {
                       setOnClickListener {
                           vibrate()
@@ -225,7 +223,6 @@ jobs:
                   try { vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE)) } catch (e: Exception) {}
               }
 
-              // نافذة الانبثاق (Popup) مثل الآيفون تماماً
               private fun showPopup(view: View, char: String) {
                   val dp = resources.displayMetrics.density
                   if (popupWindow == null) {
@@ -291,12 +288,12 @@ jobs:
                           when (event.action) {
                               MotionEvent.ACTION_DOWN -> {
                                   vibrate()
-                                  showPopup(v, char) // تفعيل الانبثاق
+                                  showPopup(v, char)
                                   v.background = getRoundRect(Color.LTGRAY, 6f * dp)
                                   (v as TextView).setTextColor(Color.BLACK)
                               }
                               MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                                  dismissPopup() // إخفاء الانبثاق
+                                  dismissPopup()
                                   v.background = getRoundRect(iosKeyNormalBg, 6f * dp)
                                   (v as TextView).setTextColor(iosTxtWhiteColor)
                                   if (event.action == MotionEvent.ACTION_UP) currentInputConnection?.commitText(char, 1)
@@ -356,7 +353,6 @@ jobs:
           }
           EOF
 
-          # ---- تطبيق الإعدادات بتصميم Material You (الصورة 3) ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
           package com.aikeyboard.pro
           import android.content.Context
@@ -372,6 +368,7 @@ jobs:
           import android.graphics.Color
           import android.view.Gravity
           import android.graphics.drawable.GradientDrawable
+          import android.view.ViewGroup
 
           class MainActivity : AppCompatActivity() {
               private lateinit var prefs: SharedPreferences
@@ -381,7 +378,6 @@ jobs:
                   prefs = getSharedPreferences("kb_settings", Context.MODE_PRIVATE)
                   val dp = resources.displayMetrics.density
 
-                  // ألوان Material You المطابقة للصورة 3
                   val bgDarkGreen = Color.parseColor("#191C1A")
                   val pillLightGreen = Color.parseColor("#C4EED0")
                   val pillDarkGray = Color.parseColor("#2D322F")
@@ -395,10 +391,8 @@ jobs:
                       gravity = Gravity.CENTER_HORIZONTAL
                   }
 
-                  // العنوان
                   root.addView(TextView(this).apply { text = "AI Keyboard"; textSize = 32f; setTextColor(textOnDark); setPadding(0, 0, 0, (40*dp).toInt()); typeface = android.graphics.Typeface.DEFAULT_BOLD })
                   
-                  // شريط التكبير Material You
                   root.addView(TextView(this).apply { text = "حجم الكيبورد"; textSize = 16f; setTextColor(textOnDark); gravity = Gravity.START; layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT) })
                   val heightLabel = TextView(this).apply { text = "${prefs.getFloat("key_height", 42f).toInt()} dp"; textSize = 20f; setTextColor(pillLightGreen); gravity = Gravity.CENTER; setPadding(0,(8*dp).toInt(),0,(8*dp).toInt()); typeface = android.graphics.Typeface.DEFAULT_BOLD }
                   
@@ -419,7 +413,6 @@ jobs:
                   root.addView(heightLabel)
                   root.addView(slider)
 
-                  // دالة لإنشاء أزرار Material You Pill
                   fun createMaterialPill(icon: String, text: String, isActive: Boolean, onClick: () -> Unit): LinearLayout {
                       val pill = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL
