@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 19; versionName = "19.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 20; versionName = "20.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -138,7 +138,7 @@ jobs:
               private var isShifted = false
               private var keyboardMode = 0 
               private var keyHeightDp = 42f
-              private var isSoundEnabled = true // متغير التحكم بالصوت
+              private var isSoundEnabled = true
               
               private lateinit var prefs: SharedPreferences
               private lateinit var vibrator: Vibrator
@@ -274,7 +274,6 @@ jobs:
                       predictionContainer.visibility = View.VISIBLE
                   })
                   
-                  // زر كتم / تشغيل الصوت
                   val soundPill = createQuickSettingPill(if(isSoundEnabled) "🔊" else "🔇", "صوت") {}
                   soundPill.setOnClickListener {
                       isSoundEnabled = !isSoundEnabled
@@ -394,20 +393,17 @@ jobs:
                       keysContainer.addView(createKeysRow(finalR2, 0f, if(isArabic) 12 else 16))
                       keysContainer.addView(Space((10 * dp).toInt()))
 
+                      // تعديل الصف الثالث: زر الـ Shift موجود دائماً على اليسار لكل اللغات
                       val row3Container = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
                       
-                      if (!isArabic) {
-                          val shiftBg = if(isShifted) txtColor else keyControlBg
-                          val shiftTxtColor = if(isShifted) kbBgColor else txtColor
-                          row3Container.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.5f, shiftTxtColor).apply {
-                              setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
-                          })
-                      } else {
-                          row3Container.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 0.5f) })
-                      }
+                      val shiftBg = if(isShifted) txtColor else keyControlBg
+                      val shiftTxtColor = if(isShifted) kbBgColor else txtColor
+                      row3Container.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.5f, shiftTxtColor).apply {
+                          setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
+                      })
                       
                       row3Container.addView(createKeysRow(finalR3, finalR3.size.toFloat(), 0))
                       row3Container.addView(createBackspaceKey())
@@ -415,6 +411,7 @@ jobs:
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space((10 * dp).toInt()))
 
+                      // تعديل الصف السفلي: شكل متناظر للغات مع النقطة والفاصلة
                       val bottomRow = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -422,21 +419,14 @@ jobs:
                       bottomRow.addView(createSpecialKey("?123", keyControlBg, 1.5f, txtColor).apply {
                           setOnClickListener { vibrate(); keyboardMode = 1; renderKeys() }
                       })
-                      
-                      if (isArabic) {
-                          val shiftBg = if(isShifted) txtColor else keyControlBg
-                          val shiftTxtColor = if(isShifted) kbBgColor else txtColor
-                          bottomRow.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.2f, shiftTxtColor).apply {
-                              setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
-                          })
-                      } else {
-                          bottomRow.addView(createSpecialKey(",", keyControlBg, 1.2f, txtColor).apply {
-                              setOnClickListener { vibrate(); currentInputConnection?.commitText(",", 1); updateSmartPredictions() }
-                          })
-                      }
-                      
-                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", keyNormalBg, 6f, txtColor, 1f).apply {
+                      bottomRow.addView(createSpecialKey(",", keyControlBg, 1f, txtColor).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.commitText(",", 1); updateSmartPredictions() }
+                      })
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", keyNormalBg, 5f, txtColor, 1f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1); updateSmartPredictions() }
+                      })
+                      bottomRow.addView(createSpecialKey(".", keyControlBg, 1f, txtColor).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.commitText(".", 1); updateSmartPredictions() }
                       })
                       bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f, Color.WHITE).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
@@ -473,11 +463,14 @@ jobs:
                       bottomRow.addView(createSpecialKey("ABC", keyControlBg, 1.5f, txtColor).apply {
                           setOnClickListener { vibrate(); keyboardMode = 0; renderKeys() }
                       })
-                      bottomRow.addView(createSpecialKey(",", keyControlBg, 1.5f, txtColor).apply {
+                      bottomRow.addView(createSpecialKey(",", keyControlBg, 1f, txtColor).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(",", 1) }
                       })
-                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", keyNormalBg, 6f, txtColor, 1f).apply {
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", keyNormalBg, 5f, txtColor, 1f).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1) }
+                      })
+                      bottomRow.addView(createSpecialKey(".", keyControlBg, 1f, txtColor).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.commitText(".", 1) }
                       })
                       bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f, Color.WHITE).apply {
                           setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
@@ -630,7 +623,6 @@ jobs:
                   return list
               }
 
-              // الحسابات الدقيقة للنافذة المنبثقة للأعلى (Fixed Popup Math)
               private fun showAltPopup(view: View, alts: List<String>) {
                   val dp = resources.displayMetrics.density
                   val container = LinearLayout(this).apply {
@@ -657,17 +649,16 @@ jobs:
                       isClippingEnabled = false
                       isTouchable = false 
                       setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                      if (android.os.Build.VERSION.SDK_INT >= 21) elevation = 12f * dp // ظلال 3D مبهرة
                   }
                   
-                  // استخدام showAsDropDown بقيم سالبة لإجبارها على الظهور فوق الزر تماماً 
                   val popupWidth = alts.size * (48 * dp) + (12 * dp)
                   val xOffset = (view.width / 2f) - (popupWidth / 2f)
-                  val yOffset = -(view.height + (65 * dp).toInt()) // للأعلى إجبارياً
+                  val yOffset = -(view.height + (65 * dp).toInt()) 
                   
                   altPopupWindow?.showAsDropDown(view, xOffset.toInt(), yOffset)
               }
 
-              // الحسابات الدقيقة للحرف الواحد للأعلى
               private fun showPopup(view: View, char: String) {
                   val dp = resources.displayMetrics.density
                   if (popupWindow == null) {
@@ -682,11 +673,11 @@ jobs:
                           isClippingEnabled = false
                           isTouchable = false
                           setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                          if (android.os.Build.VERSION.SDK_INT >= 21) elevation = 12f * dp // ظلال 3D مبهرة
                       }
                   }
                   popupTextView?.text = char
                   
-                  // للأعلى إجبارياً
                   val yOffset = -(view.height + (view.height * 1.8).toInt())
                   popupWindow?.showAsDropDown(view, -(view.width / 4), yOffset)
               }
@@ -817,15 +808,15 @@ jobs:
                       gravity = Gravity.CENTER
                       background = getRoundRect(keyControlBg, 100f * dp)
                       layoutParams = LinearLayout.LayoutParams(0, (36 * dp).toInt(), 1f).apply {
-                          setMargins((2*dp).toInt(), 0, (2*dp).toInt(), 0)
+                          setMargins((4*dp).toInt(), 0, (4*dp).toInt(), 0) // زيادة التوسعة بين الأزرار
                       }
-                      setPadding((4*dp).toInt(), 0, (4*dp).toInt(), 0)
+                      setPadding((8*dp).toInt(), 0, (8*dp).toInt(), 0)
                       
                       addView(TextView(context).apply {
                           this.text = icon
                           textSize = 14f
                       })
-                      addView(Space((4*dp).toInt(), true))
+                      addView(Space((6*dp).toInt(), true))
                       addView(TextView(context).apply {
                           this.text = text
                           textSize = 12f
@@ -981,7 +972,6 @@ jobs:
                   prefs = getSharedPreferences("kb_settings", Context.MODE_PRIVATE)
                   val dp = resources.displayMetrics.density
 
-                  // ألوان Material You المطابقة تماماً لصورة الـ Quick Settings الخاصة بك
                   val isS = android.os.Build.VERSION.SDK_INT >= 31
                   val bgDark = if(isS) resources.getColor(android.R.color.system_neutral1_900, theme) else Color.parseColor("#101411")
                   val pillActive = if(isS) resources.getColor(android.R.color.system_accent1_200, theme) else Color.parseColor("#A8E5BA")
@@ -1015,7 +1005,6 @@ jobs:
                   }
                   root.addView(heightLabel)
                   
-                  // تصميم الـ Slider ليكون مطابقاً تماماً لمؤشر الإضاءة في صورتك (عريض وممتلئ)
                   val slider = createMaterialSlider(this, prefs.getFloat("key_height", 42f), 35f, 65f, pillInactive, pillActive, textOnActive) { newVal ->
                       heightLabel.text = "حجم الكيبورد: ${newVal.toInt()}"
                       prefs.edit().putFloat("key_height", newVal).apply()
@@ -1048,7 +1037,6 @@ jobs:
 
                   root.addView(createMaterialPill("⚙️", "1. تفعيل الكيبورد", false) { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) })
                   root.addView(createMaterialPill("✅", "2. اختياره كافتراضي", true) { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() })
-                  // زر إضافة لغة جديد
                   root.addView(createMaterialPill("🌐", "3. إعدادات اللغات", false) { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) })
                   
                   setContentView(root)
@@ -1056,7 +1044,7 @@ jobs:
               
               private fun createMaterialSlider(context: Context, currentVal: Float, min: Float, max: Float, bgCol: Int, fillCol: Int, iconCol: Int, onUpdate: (Float) -> Unit): View {
                   val dp = context.resources.displayMetrics.density
-                  val containerHeight = (64 * dp).toInt() // نفس عرض شريط الإضاءة في الصورة
+                  val containerHeight = (64 * dp).toInt() 
                   val container = FrameLayout(context).apply {
                       layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, containerHeight).apply {
                           setMargins(0, 0, 0, (32*dp).toInt())
