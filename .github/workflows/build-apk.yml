@@ -50,7 +50,6 @@ jobs:
           include(":app")
           EOF
 
-          # هذا هو السطر الذي نسيته في الكود السابق والذي تسبب في الخطأ!
           cat << 'EOF' > build.gradle.kts
           plugins { id("com.android.application") version "8.2.2" apply false; id("org.jetbrains.kotlin.android") version "1.9.22" apply false }
           EOF
@@ -78,10 +77,25 @@ jobs:
           </resources>
           EOF
 
+          # --- تم إعادة إضافة أكواد الأيقونة هنا لتجنب الخطأ ---
+          cat << 'EOF' > app/src/main/res/drawable/ic_launcher_bg.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#1C1C1E"/></shape>
+          EOF
+          
+          cat << 'EOF' > app/src/main/res/drawable/ic_launcher_fg.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#007AFF" android:pathData="M34,54h40v10h-40zM34,34h40v10h-40zM34,74h20v10h-20z"/></vector>
+          EOF
+          
+          cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          <?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@drawable/ic_launcher_bg"/><foreground android:drawable="@drawable/ic_launcher_fg"/></adaptive-icon>
+          EOF
+          # --------------------------------------------------
+
+          # تصميم الخلفية الضبابية (Blur) مع الزوايا المقوسة
           cat << 'EOF' > app/src/main/res/drawable/kb_background.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
-              <solid android:color="#D90A0A0A" />
+              <solid android:color="#D90A0A0A" /> <!-- أسود شفاف بنسبة 85% للضبابية -->
               <corners android:topLeftRadius="16dp" android:topRightRadius="16dp" />
           </shape>
           EOF
@@ -94,6 +108,7 @@ jobs:
           </input-method>
           EOF
 
+          # ---- الكود الرئيسي للكيبورد ----
           cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/KeyboardService.kt
           package com.aikeyboard.pro
 
