@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 16; versionName = "16.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 17; versionName = "17.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -119,7 +119,9 @@ jobs:
           import android.graphics.Color
           import android.graphics.Typeface
           import android.graphics.drawable.GradientDrawable
+          import android.graphics.drawable.ColorDrawable
           import android.inputmethodservice.InputMethodService
+          import android.media.AudioManager
           import android.os.Handler
           import android.os.Looper
           import android.os.VibrationEffect
@@ -134,6 +136,7 @@ jobs:
           import android.widget.PopupWindow
           import android.widget.TextView
           import android.widget.ImageView
+          import android.widget.ScrollView
 
           class KeyboardService : InputMethodService() {
               private var isDarkMode = true
@@ -150,8 +153,7 @@ jobs:
               
               private lateinit var prefs: SharedPreferences
               private lateinit var vibrator: Vibrator
-              
-              // تغيير اسم المتغير لحل المشكلة (Fixing the Handler error)
+              private lateinit var audioManager: AudioManager
               private val mainHandler = Handler(Looper.getMainLooper())
               
               private lateinit var rootLayout: LinearLayout
@@ -169,11 +171,21 @@ jobs:
 
               private val arabicDict = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله")
               private val frenchDict = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "salut", "bien", "pourquoi")
+              
+              // قائمة الأيقونات (الإيموجي) الجديدة
+              private val emojiList = listOf(
+                  "😀","😂","🤣","😍","🥰","😘","😊","😎","😢","😭",
+                  "😡","👍","👎","❤️","💔","🔥","✨","🎉","💯","✅",
+                  "🤔","🙌","👏","🙏","💪","☕","🚗","✈️","📱","💻",
+                  "⭐","🌟","🌙","☀️","🍎","🍔","🍕","⚽","🏀","🏆",
+                  "🌹","🌸","🌺","🌻","🌼","🌿","🍀","🐾","🐶","🐱"
+              )
 
               override fun onCreate() {
                   super.onCreate()
                   prefs = getSharedPreferences("kb_settings", Context.MODE_PRIVATE)
                   vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                  audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
               }
 
               private fun updateThemeColors() {
@@ -263,7 +275,14 @@ jobs:
                       gravity = Gravity.CENTER_VERTICAL
                       visibility = View.GONE
                   }
-                  toolbarContainer.addView(createQuickSettingPill("😊", "رموز") {})
+                  
+                  // تفعيل كيبورد الأيقونات (الإيموجي)
+                  toolbarContainer.addView(createQuickSettingPill("😊", "رموز") { 
+                      vibrate()
+                      keyboardMode = 3
+                      renderKeys()
+                  })
+                  
                   toolbarContainer.addView(createQuickSettingPill("✨", "ذكاء") { 
                       updatePredictionsUi(listOf("🤖 تفكير..."), "") 
                       toolbarContainer.visibility = View.GONE
@@ -311,11 +330,68 @@ jobs:
                   keyViews.clear()
                   val dp = resources.displayMetrics.density
 
-                  if (keyboardMode == 0) {
+                  if (keyboardMode == 3) { // كيبورد الأيقونات (الإيموجي)
+                      val scrollView = ScrollView(this).apply {
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (200 * dp).toInt(), 1f)
+                      }
+                      val emojiContainer = LinearLayout(this).apply {
+                          orientation = LinearLayout.VERTICAL
+                          layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      }
+                      
+                      val columns = 8
+                      val rows = emojiList.chunked(columns)
+                      rows.forEach { rowEmojis ->
+                          val rowLayout = LinearLayout(this).apply {
+                              orientation = LinearLayout.HORIZONTAL
+                              layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                              setPadding(0, (4 * dp).toInt(), 0, (4 * dp).toInt())
+                          }
+                          rowEmojis.forEach { emoji ->
+                              rowLayout.addView(TextView(this).apply {
+                                  text = emoji
+                                  textSize = 28f
+                                  gravity = Gravity.CENTER
+                                  layoutParams = LinearLayout.LayoutParams(0, (45 * dp).toInt(), 1f)
+                                  isClickable = true
+                                  background = getRoundRect(Color.TRANSPARENT, 8f * dp)
+                                  setOnClickListener {
+                                      vibrate()
+                                      currentInputConnection?.commitText(emoji, 1)
+                                  }
+                              })
+                          }
+                          // تعبئة الفراغات إذا كان السطر غير مكتمل
+                          if (rowEmojis.size < columns) {
+                              for (i in 0 until (columns - rowEmojis.size)) {
+                                  rowLayout.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) })
+                              }
+                          }
+                          emojiContainer.addView(rowLayout)
+                      }
+                      scrollView.addView(emojiContainer)
+                      keysContainer.addView(scrollView)
+                      keysContainer.addView(Space((10 * dp).toInt()))
+
+                      val bottomRow = LinearLayout(this).apply {
+                          orientation = LinearLayout.HORIZONTAL
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      }
+                      bottomRow.addView(createSpecialKey("ABC", keyControlBg, 1.5f, txtColor).apply {
+                          setOnClickListener { vibrate(); keyboardMode = 0; renderKeys() }
+                      })
+                      bottomRow.addView(createSpecialKey(if(isArabic) "مسافة" else "espace", keyNormalBg, 6f, txtColor, 1f).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.commitText(" ", 1) }
+                      })
+                      bottomRow.addView(createBackspaceKey())
+                      bottomRow.addView(createSpecialKey("return", iosActionBlueColor, 1.5f, Color.WHITE).apply {
+                          setOnClickListener { vibrate(); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }
+                      })
+                      keysContainer.addView(bottomRow)
+
+                  } else if (keyboardMode == 0) { // الكيبورد العادي (حروف)
                       val r1 = if(isArabic) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a", "z", "e", "r", "t", "y", "u", "i", "o", "p")
                       val r2 = if(isArabic) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q", "s", "d", "f", "g", "h", "j", "k", "l", "m")
-                      
-                      // السطر الثالث للعربية بعد إخفاء الحروف لتوفير مساحة
                       val r3 = if(isArabic) listOf("ظ","ز","و","ة","ى","لا","ر","ء") else listOf("w", "x", "c", "v", "b", "n")
 
                       val finalR1 = if(isShifted && !isArabic) r1.map { it.uppercase() } else r1
@@ -333,14 +409,12 @@ jobs:
                       }
                       
                       if (!isArabic) {
-                          // الشفت يصعد للسطر الثالث في الفرنسية كما طلبت
                           val shiftBg = if(isShifted) txtColor else keyControlBg
                           val shiftTxtColor = if(isShifted) kbBgColor else txtColor
                           row3Container.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.5f, shiftTxtColor).apply {
                               setOnClickListener { vibrate(); isShifted = !isShifted; renderKeys() }
                           })
                       } else {
-                          // إضافة مساحة فارغة بسيطة للحفاظ على التوازن في العربية
                           row3Container.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 0.5f) })
                       }
                       
@@ -359,7 +433,6 @@ jobs:
                       })
                       
                       if (isArabic) {
-                          // الشفت يعود للأسفل في العربية كما طلبت
                           val shiftBg = if(isShifted) txtColor else keyControlBg
                           val shiftTxtColor = if(isShifted) kbBgColor else txtColor
                           bottomRow.addView(createSpecialKey(if(isShifted) "⬆" else "⇧", shiftBg, 1.2f, shiftTxtColor).apply {
@@ -379,7 +452,7 @@ jobs:
                       })
                       keysContainer.addView(bottomRow)
                       
-                  } else {
+                  } else { // كيبورد الأرقام والرموز
                       val r1 = if(keyboardMode == 1) listOf("1","2","3","4","5","6","7","8","9","0") else listOf("[","]","{","}","#","%","^","*","+","=")
                       val r2 = if(keyboardMode == 1) listOf("-","/",":",";","(",")","$","&","@","\"") else listOf("_","\\","|","~","<",">","€","£","¥","•")
                       val r3 = listOf(".",",","?","!","'")
@@ -422,56 +495,57 @@ jobs:
                   }
 
                   // === Footer ===
-                  val footerRow = LinearLayout(this).apply {
-                      orientation = LinearLayout.HORIZONTAL
-                      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * dp).toInt())
-                      gravity = Gravity.CENTER_VERTICAL
-                      setPadding((12 * dp).toInt(), 0, (12 * dp).toInt(), 0)
-                  }
-
-                  val globeBtn = ImageView(this).apply {
-                      setImageResource(R.drawable.ic_language)
-                      setColorFilter(txtColor) 
-                      alpha = 0.5f 
-                      scaleType = ImageView.ScaleType.FIT_CENTER
-                      setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
-                      layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
-                      background = getRoundRect(Color.TRANSPARENT, 24f * dp)
-                      setOnClickListener {
-                          vibrate()
-                          isArabic = !isArabic
-                          isShifted = false
-                          updateSmartPredictions()
-                          renderKeys()
+                  if (keyboardMode != 3) {
+                      val footerRow = LinearLayout(this).apply {
+                          orientation = LinearLayout.HORIZONTAL
+                          layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (45 * dp).toInt())
+                          gravity = Gravity.CENTER_VERTICAL
+                          setPadding((12 * dp).toInt(), 0, (12 * dp).toInt(), 0)
                       }
+
+                      val globeBtn = ImageView(this).apply {
+                          setImageResource(R.drawable.ic_language)
+                          setColorFilter(txtColor) 
+                          alpha = 0.5f 
+                          scaleType = ImageView.ScaleType.FIT_CENTER
+                          setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
+                          layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
+                          background = getRoundRect(Color.TRANSPARENT, 24f * dp)
+                          setOnClickListener {
+                              vibrate()
+                              isArabic = !isArabic
+                              isShifted = false
+                              updateSmartPredictions()
+                              renderKeys()
+                          }
+                      }
+
+                      val emptySpacer = View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) }
+
+                      val dismissBtn = ImageView(this).apply {
+                          setImageResource(R.drawable.ic_keyboard_hide)
+                          setColorFilter(txtColor) 
+                          alpha = 0.5f
+                          scaleType = ImageView.ScaleType.FIT_CENTER
+                          setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
+                          layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
+                          background = getRoundRect(Color.TRANSPARENT, 24f * dp)
+                          setOnClickListener { vibrate(); requestHideSelf(0) }
+                      }
+
+                      footerRow.addView(globeBtn)
+                      footerRow.addView(emptySpacer)
+                      footerRow.addView(dismissBtn)
+
+                      keysContainer.addView(Space((2 * dp).toInt()))
+                      keysContainer.addView(footerRow)
                   }
-
-                  val emptySpacer = View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, 1f) }
-
-                  val dismissBtn = ImageView(this).apply {
-                      setImageResource(R.drawable.ic_keyboard_hide)
-                      setColorFilter(txtColor) 
-                      alpha = 0.5f
-                      scaleType = ImageView.ScaleType.FIT_CENTER
-                      setPadding((10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt(), (10 * dp).toInt())
-                      layoutParams = LinearLayout.LayoutParams((45 * dp).toInt(), (45 * dp).toInt())
-                      background = getRoundRect(Color.TRANSPARENT, 24f * dp)
-                      setOnClickListener { vibrate(); requestHideSelf(0) }
-                  }
-
-                  footerRow.addView(globeBtn)
-                  footerRow.addView(emptySpacer)
-                  footerRow.addView(dismissBtn)
-
-                  keysContainer.addView(Space((2 * dp).toInt()))
-                  keysContainer.addView(footerRow)
               }
 
-              // زر الحذف المستمر
               private fun createBackspaceKey(): TextView {
                   val dp = resources.displayMetrics.density
                   val key = TextView(this).apply {
-                      text = "⌫"
+                          text = "⌫"
                       textSize = 18f
                       setTextColor(txtColor)
                       gravity = Gravity.CENTER
@@ -551,7 +625,6 @@ jobs:
                   }
               }
 
-              // الحروف المنبثقة والسلسة المدمجة كما طلبت
               private fun getAltChars(base: String): List<String> {
                   val lower = base.lowercase()
                   val map = mapOf(
@@ -575,6 +648,7 @@ jobs:
                   return list
               }
 
+              // إصلاح الشفافية للحروف المنبثقة (أ، إ، آ، ذ، ؤ)
               private fun showAltPopup(view: View, alts: List<String>) {
                   val dp = resources.displayMetrics.density
                   val container = LinearLayout(this).apply {
@@ -599,6 +673,8 @@ jobs:
                   }
                   altPopupWindow = PopupWindow(container, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                       isClippingEnabled = false
+                      isTouchable = false // يمنع سرقة اللمسات لتبقى سلسة
+                      setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)) // سر إظهار النافذة في أندرويد
                   }
                   val loc = IntArray(2)
                   view.getLocationOnScreen(loc)
@@ -717,8 +793,12 @@ jobs:
                   return row
               }
 
+              // إضافة الصوت الاحترافي (Click Sound)
               private fun vibrate() {
-                  try { vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE)) } catch (e: Exception) {}
+                  try { 
+                      vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE)) 
+                      audioManager.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD, 1.0f) // صوت النقر هنا
+                  } catch (e: Exception) {}
               }
               
               private fun createQuickSettingPill(icon: String, text: String, onClick: () -> Unit): View {
@@ -747,6 +827,7 @@ jobs:
                   }
               }
 
+              // إصلاح الشفافية للحرف الكبير المنبثق عند الضغط العادي
               private fun showPopup(view: View, char: String) {
                   val dp = resources.displayMetrics.density
                   if (popupWindow == null) {
@@ -759,6 +840,8 @@ jobs:
                       }
                       popupWindow = PopupWindow(popupTextView, (view.width * 1.5).toInt(), (view.height * 1.8).toInt()).apply {
                           isClippingEnabled = false
+                          isTouchable = false
+                          setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)) // سر إظهار النافذة
                       }
                   }
                   popupTextView?.text = char
