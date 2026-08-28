@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V36 Material You & Vector Icons)
+name: Build AI Keyboard Pro (V37 Dictionary & Stability)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard V36
+    name: Generate iOS Clone Keyboard V37
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 36; versionName = "36.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 37; versionName = "37.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -73,11 +73,10 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V36</string>
+              <string name="ime_name">iOS Keyboard V37</string>
           </resources>
           EOF
 
-          # Vector Icons Generation (Perfect iOS look)
           cat << 'EOF' > app/src/main/res/drawable/ic_shift.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
               <path android:fillColor="#000000" android:pathData="M12,4 L4,14 L9,14 L9,20 L15,20 L15,14 L20,14 Z"/>
@@ -188,7 +187,6 @@ jobs:
           }
           EOF
 
-          # Icons & Launcher setup
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_bg.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#007AFF"/></shape>
           EOF
@@ -226,6 +224,7 @@ jobs:
           import android.os.Handler
           import android.os.Looper
           import android.provider.Settings
+          import android.text.TextUtils
           import android.view.Gravity
           import android.view.HapticFeedbackConstants
           import android.view.KeyEvent
@@ -267,8 +266,11 @@ jobs:
               private val predictionViews = mutableListOf<TextView>()
               private val handler = Handler(Looper.getMainLooper())
 
-              private val dictionaryAr = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله", "صباح", "الخير", "مساء", "أين", "متى", "لماذا", "جميل", "جدا", "اليوم", "غدا", "الحمد", "لله", "يا", "ما", "هذا", "هنا", "هناك", "من", "هل")
-              private val dictionaryFr = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "bien", "salut", "je", "tu", "il", "nous", "vous", "ils", "suis", "est", "sont", "pour", "avec", "dans", "sur", "qui", "que", "quoi", "quand", "où", "pourquoi", "très", "beau", "bon", "c'est")
+              // قاموس ضخم وموسع للغة العربية
+              private val dictionaryAr = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله", "صباح", "الخير", "مساء", "أين", "متى", "لماذا", "جميل", "جدا", "اليوم", "غدا", "الحمد", "لله", "يا", "ما", "هذا", "هنا", "هناك", "من", "هل", "في", "على", "إلى", "أن", "كل", "لم", "لن", "عن", "كان", "الذي", "التي", "قال", "أو", "قد", "بعض", "غير", "بعد", "حتى", "فقط", "بين", "أكثر", "عند", "الآن", "ليس", "يوم", "شيء", "لو", "كما", "ثم", "أي", "قبل", "مع", "لكن", "أنا", "أنت", "هو", "هي", "نحن", "هم", "كثيرا", "جيد", "أريد", "يمكن", "وقت", "عمل", "حياة", "ناس", "رجل", "امرأة", "كبير", "صغير", "جديد", "قديم", "صحيح", "خطأ", "دائما", "أبدا", "ربما", "عفوا", "آسف", "أرجوك", "طبعا", "أجل", "بلى")
+              
+              // قاموس ضخم وموسع للغة الفرنسية
+              private val dictionaryFr = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "bien", "salut", "je", "tu", "il", "elle", "nous", "vous", "ils", "elles", "suis", "est", "sont", "pour", "avec", "dans", "sur", "qui", "que", "quoi", "quand", "où", "pourquoi", "très", "beau", "bon", "c'est", "le", "la", "les", "un", "une", "des", "et", "à", "en", "se", "pas", "plus", "par", "ce", "ne", "au", "aux", "du", "mon", "ton", "son", "ma", "ta", "sa", "mes", "tes", "ses", "mais", "ou", "donc", "or", "ni", "car", "faire", "dire", "pouvoir", "aller", "voir", "vouloir", "venir", "devoir", "prendre", "trouver", "donner", "falloir", "parler", "mettre", "savoir", "passer", "regarder", "aimer", "croire", "demander", "rester", "répondre", "entendre", "penser", "arriver", "connaître", "devenir", "sentir", "sembler", "tenir", "comprendre", "rendre", "attendre", "sortir")
 
               private val alternateChars = mapOf(
                   "ا" to listOf("أ", "إ", "آ", "ء", "ا"),
@@ -346,6 +348,7 @@ jobs:
                       layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
                   }
                   
+                  // إزالة الخطوط الفاصلة (Separators) وإضافة حماية للكلمات الطويلة (maxLines & ellipsize)
                   for (i in 0..2) {
                       val tv = TextView(this).apply {
                           text = ""
@@ -354,16 +357,11 @@ jobs:
                           gravity = Gravity.CENTER
                           layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
                           typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+                          maxLines = 1 // استقرار: يمنع النص الطويل من تخريب الشاشة
+                          ellipsize = TextUtils.TruncateAt.END // استقرار: يضع نقاط إذا كانت الكلمة طويلة جدا
                       }
                       predictionViews.add(tv)
                       wordsLayout.addView(tv)
-                      
-                      if (i < 2) {
-                          wordsLayout.addView(View(this).apply {
-                              layoutParams = LinearLayout.LayoutParams((1*dp).toInt(), (24 * dp).toInt()).apply { gravity = Gravity.CENTER_VERTICAL }
-                              setBackgroundColor(Color.parseColor("#B4B8C1"))
-                          })
-                      }
                   }
                   predictionContainer.addView(wordsLayout)
 
@@ -472,7 +470,7 @@ jobs:
                   val activeDict = if(currentLanguage == 0) dictionaryAr else dictionaryFr
 
                   val suggestions = if (lastWord.isEmpty()) {
-                      if(currentLanguage == 0) listOf("أنا", "كيف", "نعم") else listOf("Je", "Comment", "Oui")
+                      if(currentLanguage == 0) listOf("في", "كيف", "نعم") else listOf("Je", "Comment", "Oui")
                   } else {
                       val matches = activeDict.filter { it.startsWith(lastWord, ignoreCase = true) && !it.equals(lastWord, ignoreCase = true) }.take(2).toMutableList()
                       val left = if (matches.size > 0) matches[0] else ""
@@ -521,7 +519,6 @@ jobs:
                   }
               }
 
-              // تصميم أيقونات الفيكتور (Shift, Globe, Backspace, Enter)
               private fun createIconKey(iconResId: Int, faceColor: Int, pressedColor: Int, weight: Float): View {
                   val dp = resources.displayMetrics.density
                   return FrameLayout(this).apply {
@@ -533,7 +530,7 @@ jobs:
                               gravity = Gravity.CENTER
                           }
                           setImageResource(iconResId)
-                          setColorFilter(Color.BLACK) // لضمان لون الأيقونة الأسود تماماً على الخلفية الرمادية
+                          setColorFilter(Color.BLACK) 
                       }
                       addView(iv)
                       
