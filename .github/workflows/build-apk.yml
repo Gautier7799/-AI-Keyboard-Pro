@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V32 Fixed Build)
+name: Build AI Keyboard Pro (V33 Layout Fix)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard V32
+    name: Generate iOS Clone Keyboard V33
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 32; versionName = "32.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 33; versionName = "33.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -72,7 +72,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V32</string>
+              <string name="ime_name">iOS Keyboard V33</string>
           </resources>
           EOF
 
@@ -155,16 +155,18 @@ jobs:
               private val dictionaryAr = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله")
               private val dictionaryFr = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "bien", "salut", "je")
 
+              // إضافة الهمزة إلى الضغط المطول على بعض الحروف
               private val alternateChars = mapOf(
-                  "ا" to listOf("أ", "إ", "آ", "ا"),
+                  "ا" to listOf("أ", "إ", "آ", "ء", "ا"),
                   "ي" to listOf("ئ", "ى", "ي"),
                   "و" to listOf("ؤ", "و"),
                   "ى" to listOf("ي", "ئ", "ى"),
-                  "ئ" to listOf("ي", "ى", "ئ"),
+                  "ئ" to listOf("ء", "ئ"),
+                  "ؤ" to listOf("ء", "ؤ"),
                   "ة" to listOf("ه", "ة"),
                   "ه" to listOf("ة", "ه"),
                   "د" to listOf("ذ", "د"),
-                  "ل" to listOf("لا", "لأ", "لإ", "لآ", "ل") 
+                  "ل" to listOf("لا", "لأ", "لإ", "لآ", "ل")
               )
 
               override fun onCreateInputView(): View {
@@ -180,7 +182,6 @@ jobs:
                   val cornerRadius = 14f * dp
                   val roundedBg = GradientDrawable().apply {
                       setColor(kbBgColor)
-                      // الإصلاح هنا: استخدام الدالة بدلاً من علامة التساوي
                       setCornerRadii(floatArrayOf(cornerRadius, cornerRadius, cornerRadius, cornerRadius, 0f, 0f, 0f, 0f))
                   }
 
@@ -268,6 +269,7 @@ jobs:
                   absoluteRoot.addView(rootLayout)
 
                   popupView = TextView(this).apply {
+                      layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       visibility = View.GONE
                       textSize = 30f
                       setTextColor(txtColor)
@@ -275,14 +277,14 @@ jobs:
                       typeface = Typeface.create("sans-serif", Typeface.NORMAL)
                       
                       val popupShape = GradientDrawable().apply {
-                          setShape(GradientDrawable.RECTANGLE) // الإصلاح
+                          setShape(GradientDrawable.RECTANGLE)
                           setColor(keyNormalFace)
-                          setCornerRadius(6f * dp) // الإصلاح
+                          setCornerRadius(6f * dp)
                       }
                       val shadowShape = GradientDrawable().apply {
-                          setShape(GradientDrawable.RECTANGLE) // الإصلاح
+                          setShape(GradientDrawable.RECTANGLE)
                           setColor(keyShadow)
-                          setCornerRadius(6f * dp) // الإصلاح
+                          setCornerRadius(6f * dp)
                       }
                       val popupLayer = LayerDrawable(arrayOf(shadowShape, popupShape))
                       popupLayer.setLayerInset(1, 0, 0, 0, (2 * dp).toInt())
@@ -291,12 +293,14 @@ jobs:
                   }
                   absoluteRoot.addView(popupView)
 
+                  // الإصلاح هنا: تم إضافة WRAP_CONTENT لمنع النافذة من التمدد العشوائي للأسفل
                   optionsContainer = LinearLayout(this).apply {
+                      layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       orientation = LinearLayout.HORIZONTAL
                       visibility = View.GONE
                       background = GradientDrawable().apply {
                           setColor(keyNormalFace)
-                          setCornerRadius(8f * dp) // الإصلاح
+                          setCornerRadius(8f * dp)
                       }
                       elevation = 6f * dp
                       setPadding((4*dp).toInt(), (4*dp).toInt(), (4*dp).toInt(), (4*dp).toInt())
@@ -312,7 +316,6 @@ jobs:
                   val radius = 5f * dp
                   val shadowHeight = (1.2f * dp).toInt() 
 
-                  // الإصلاح هنا في خصائص الرسم
                   val normalFace = GradientDrawable().apply { setShape(GradientDrawable.RECTANGLE); setColor(faceColor); setCornerRadius(radius) }
                   val shadow = GradientDrawable().apply { setShape(GradientDrawable.RECTANGLE); setColor(keyShadow); setCornerRadius(radius) }
                   val normalLayer = LayerDrawable(arrayOf(shadow, normalFace))
@@ -394,9 +397,10 @@ jobs:
                   val rowGap = (10 * dp).toInt() 
                   
                   if (keyboardMode == 0) { 
+                      // الترتيب الجديد: 11 ثم 11 ثم 9
                       val r1 = if(currentLanguage == 0) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج") else listOf("a","z","e","r","t","y","u","i","o","p")
-                      val r2 = if(currentLanguage == 0) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط","د") else listOf("q","s","d","f","g","h","j","k","l","m")
-                      val r3 = if(currentLanguage == 0) listOf("ظ","ز","و","ة","ى","ر","ؤ","ء","ئ") else listOf("w","x","c","v","b","n")
+                      val r2 = if(currentLanguage == 0) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q","s","d","f","g","h","j","k","l","m")
+                      val r3 = if(currentLanguage == 0) listOf("ظ","ز","و","ة","ى","ر","ؤ","د","ئ") else listOf("w","x","c","v","b","n")
 
                       val displayR1 = if (isShifted && currentLanguage == 1) r1.map { it.uppercase() } else r1
                       val displayR2 = if (isShifted && currentLanguage == 1) r2.map { it.uppercase() } else r2
@@ -536,7 +540,7 @@ jobs:
                                       layoutParams = LinearLayout.LayoutParams((42 * dp).toInt(), (50 * dp).toInt())
                                       background = GradientDrawable().apply {
                                           setColor(Color.TRANSPARENT)
-                                          setCornerRadius(6f * dp) // الإصلاح
+                                          setCornerRadius(6f * dp)
                                       }
                                   }
                                   optionsContainer.addView(altTv)
