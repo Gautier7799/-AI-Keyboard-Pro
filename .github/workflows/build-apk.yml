@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V35 Icons & Toolbar Fix)
+name: Build AI Keyboard Pro (V36 Material You & Vector Icons)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard V35
+    name: Generate iOS Clone Keyboard V36
     runs-on: ubuntu-latest
 
     steps:
@@ -59,29 +59,142 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 35; versionName = "35.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 36; versionName = "36.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
           dependencies {
               implementation("androidx.core:core-ktx:1.12.0")
               implementation("androidx.appcompat:appcompat:1.6.1")
+              implementation("com.google.android.material:material:1.11.0")
           }
           EOF
 
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V35</string>
+              <string name="ime_name">iOS Keyboard V36</string>
           </resources>
           EOF
 
+          # Vector Icons Generation (Perfect iOS look)
+          cat << 'EOF' > app/src/main/res/drawable/ic_shift.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+              <path android:fillColor="#000000" android:pathData="M12,4 L4,14 L9,14 L9,20 L15,20 L15,14 L20,14 Z"/>
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/ic_backspace.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+              <path android:fillColor="#000000" android:pathData="M22,3H7C6.31,3 5.77,3.35 5.41,3.88L0,12L5.41,20.11C5.77,20.64 6.31,21 7,21H22C23.1,21 24,20.1 24,19V5C24,3.9 23.1,3 22,3ZM19,15.59L17.59,17L14,13.41L10.41,17L9,15.59L12.59,12L9,8.41L10.41,7L14,10.59L17.59,7L19,8.41L15.41,12L19,15.59Z"/>
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/ic_globe.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+              <path android:fillColor="#000000" android:pathData="M11.99,2C6.47,2 2,6.48 2,12C2,17.52 6.47,22 11.99,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 11.99,2ZM19.92,13H16.14C15.93,16.59 14.54,19.68 12.55,20.73C16.19,19.5 18.99,16.56 19.92,13ZM12,20.93C10.15,19.82 8.85,16.73 8.64,13H15.36C15.15,16.73 13.85,19.82 12,20.93ZM8.11,11C8.32,7.41 9.71,4.32 11.7,3.27C8.06,4.5 5.26,7.44 4.33,11H8.11ZM12,3.07C13.85,4.18 15.15,7.27 15.36,11H8.64C8.85,7.27 10.15,4.18 12,3.07ZM4.08,13H7.86C8.07,16.59 9.46,19.68 11.45,20.73C7.81,19.5 5.01,16.56 4.08,13ZM15.89,11H19.67C19.46,7.41 18.07,4.32 16.08,3.27C19.72,4.5 22.52,7.44 23.45,11H15.89Z"/>
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/ic_enter.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+              <path android:fillColor="#000000" android:pathData="M19,7v4H5.83l3.58,-3.59L8,6l-6,6l6,6l1.41,-1.41L5.83,13H21V7H19z"/>
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/layout/activity_main.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:padding="24dp"
+              android:background="#F2F2F7">
+
+              <TextView
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:text="إعدادات الكيبورد iOS"
+                  android:textSize="26sp"
+                  android:textStyle="bold"
+                  android:textColor="#000000"
+                  android:gravity="center"
+                  android:layout_marginTop="32dp"
+                  android:layout_marginBottom="40dp"/>
+
+              <com.google.android.material.button.MaterialButton
+                  android:id="@+id/btnEnable"
+                  android:layout_width="match_parent"
+                  android:layout_height="60dp"
+                  android:text="تفعيل الكيبورد في الإعدادات"
+                  app:cornerRadius="12dp"
+                  android:backgroundTint="#007AFF"
+                  android:layout_marginBottom="40dp"/>
+
+              <TextView
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:text="تكبير وتصغير حجم الكيبورد (المقاس):"
+                  android:textSize="16sp"
+                  android:textStyle="bold"
+                  android:textColor="#333333"
+                  android:layout_marginBottom="8dp"/>
+
+              <com.google.android.material.slider.Slider
+                  android:id="@+id/heightSlider"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:valueFrom="40.0"
+                  android:valueTo="75.0"
+                  android:value="52.0"
+                  android:stepSize="1.0"
+                  app:thumbColor="#007AFF"
+                  app:trackColorActive="#007AFF"
+                  app:trackColorInactive="#D1D4D9" />
+
+          </LinearLayout>
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/aikeyboard/pro/MainActivity.kt
+          package com.aikeyboard.pro
+
+          import android.content.Context
+          import android.content.Intent
+          import android.os.Bundle
+          import android.provider.Settings
+          import androidx.appcompat.app.AppCompatActivity
+          import com.google.android.material.button.MaterialButton
+          import com.google.android.material.slider.Slider
+
+          class MainActivity : AppCompatActivity() {
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  setContentView(R.layout.activity_main)
+
+                  val prefs = getSharedPreferences("keyboard_prefs", Context.MODE_PRIVATE)
+
+                  findViewById<MaterialButton>(R.id.btnEnable).setOnClickListener {
+                      startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+                  }
+
+                  val slider = findViewById<Slider>(R.id.heightSlider)
+                  slider.value = prefs.getFloat("key_height", 52f)
+
+                  slider.addOnChangeListener { _, value, _ ->
+                      prefs.edit().putFloat("key_height", value).apply()
+                  }
+              }
+          }
+          EOF
+
+          # Icons & Launcher setup
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_bg.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#D1D4D9"/></shape>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#007AFF"/></shape>
           EOF
           
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_fg.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#000000" android:pathData="M34,54h40v10h-40zM34,34h40v10h-40zM34,74h20v10h-20z"/></vector>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#FFFFFF" android:pathData="M34,54h40v10h-40zM34,34h40v10h-40zM34,74h20v10h-20z"/></vector>
           EOF
           
           cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
@@ -122,6 +235,7 @@ jobs:
           import android.view.ViewGroup
           import android.view.inputmethod.EditorInfo
           import android.widget.FrameLayout
+          import android.widget.ImageView
           import android.widget.LinearLayout
           import android.widget.TextView
           import android.widget.Toast
@@ -161,16 +275,27 @@ jobs:
                   "ي" to listOf("ئ", "ى", "ي"),
                   "و" to listOf("ؤ", "و"),
                   "ى" to listOf("ي", "ئ", "ى"),
-                  "ئ" to listOf("ء", "ئ"),
-                  "ؤ" to listOf("ء", "ؤ"),
                   "ة" to listOf("ه", "ة"),
                   "ه" to listOf("ة", "ه"),
                   "د" to listOf("ذ", "د"),
                   "ل" to listOf("لا", "لأ", "لإ", "لآ", "ل")
               )
 
+              override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
+                  super.onStartInputView(info, restarting)
+                  val prefs = getSharedPreferences("keyboard_prefs", Context.MODE_PRIVATE)
+                  val newHeight = prefs.getFloat("key_height", 52f)
+                  if (newHeight != keyHeightDp) {
+                      keyHeightDp = newHeight
+                      renderKeys()
+                  }
+                  handler.post { updatePredictions() }
+              }
+
               override fun onCreateInputView(): View {
                   val dp = resources.displayMetrics.density
+                  val prefs = getSharedPreferences("keyboard_prefs", Context.MODE_PRIVATE)
+                  keyHeightDp = prefs.getFloat("key_height", 52f)
                   
                   window.window?.navigationBarColor = kbBgColor
 
@@ -208,7 +333,7 @@ jobs:
                       setOnTouchListener { v, event -> 
                           if(event.action==MotionEvent.ACTION_DOWN) {
                               vibrateAndSound(v)
-                              val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
+                              val intent = Intent(this@KeyboardService, MainActivity::class.java)
                               intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                               startActivity(intent)
                           }
@@ -251,7 +376,7 @@ jobs:
                       setOnTouchListener { v, event -> 
                           if(event.action==MotionEvent.ACTION_DOWN) {
                               vibrateAndSound(v)
-                              Toast.makeText(this@KeyboardService, "✨ AI Assistant Ready", Toast.LENGTH_SHORT).show()
+                              Toast.makeText(this@KeyboardService, "✨ AI Ready", Toast.LENGTH_SHORT).show()
                           }
                           true 
                       }
@@ -330,12 +455,6 @@ jobs:
                   }
               }
 
-              // تفعيل وتحديث الشريط بمجرد ظهور الكيبورد في أي تطبيق
-              override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
-                  super.onStartInputView(info, restarting)
-                  handler.post { updatePredictions() }
-              }
-
               override fun onUpdateSelection(oldSelStart: Int, oldSelEnd: Int, newSelStart: Int, newSelEnd: Int, candidatesStart: Int, candidatesEnd: Int) {
                   super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
                   handler.post { updatePredictions() }
@@ -402,6 +521,30 @@ jobs:
                   }
               }
 
+              // تصميم أيقونات الفيكتور (Shift, Globe, Backspace, Enter)
+              private fun createIconKey(iconResId: Int, faceColor: Int, pressedColor: Int, weight: Float): View {
+                  val dp = resources.displayMetrics.density
+                  return FrameLayout(this).apply {
+                      layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), weight)
+                      background = createIosKeyDrawable(faceColor, pressedColor)
+                      
+                      val iv = ImageView(this@KeyboardService).apply {
+                          layoutParams = FrameLayout.LayoutParams((24*dp).toInt(), (24*dp).toInt()).apply {
+                              gravity = Gravity.CENTER
+                          }
+                          setImageResource(iconResId)
+                          setColorFilter(Color.BLACK) // لضمان لون الأيقونة الأسود تماماً على الخلفية الرمادية
+                      }
+                      addView(iv)
+                      
+                      setOnTouchListener { v, event ->
+                          if (event.action == MotionEvent.ACTION_DOWN) v.isPressed = true
+                          else if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) v.isPressed = false
+                          false 
+                      }
+                  }
+              }
+
               private fun renderKeys() {
                   keysContainer.removeAllViews()
                   val dp = resources.displayMetrics.density
@@ -411,8 +554,6 @@ jobs:
                   if (keyboardMode == 0) { 
                       val r1 = if(currentLanguage == 0) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج") else listOf("a","z","e","r","t","y","u","i","o","p")
                       val r2 = if(currentLanguage == 0) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q","s","d","f","g","h","j","k","l","m")
-                      
-                      // حذف حروف ؤ و ئ لتقليل التكرار
                       val r3 = if(currentLanguage == 0) listOf("ظ","ز","و","ة","ى","ر","د") else listOf("w","x","c","v","b","n")
 
                       val displayR1 = if (isShifted && currentLanguage == 1) r1.map { it.uppercase() } else r1
@@ -435,9 +576,8 @@ jobs:
                       
                       val shiftKeyFace = if (isShifted) keyNormalFace else keyControlFace
                       val shiftKeyPressed = if (isShifted) keyNormalPressed else keyControlPressed
-                      val shiftIcon = if (isShifted) "⬆" else "⇧"
                       
-                      row3Container.addView(createSpecialKey(shiftIcon, shiftKeyFace, shiftKeyPressed, 1.3f).apply {
+                      val shiftIcon = createIconKey(R.drawable.ic_shift, shiftKeyFace, shiftKeyPressed, 1.3f).apply {
                           setOnTouchListener { v, e -> 
                               if(e.action==MotionEvent.ACTION_DOWN) {
                                   vibrateAndSound(v)
@@ -446,7 +586,8 @@ jobs:
                               }
                               true 
                           }
-                      })
+                      }
+                      row3Container.addView(shiftIcon)
                       row3Container.addView(Space(gap, true))
                       
                       displayR3.forEach { char ->
@@ -454,7 +595,20 @@ jobs:
                           row3Container.addView(Space(gap, true))
                       }
                       
-                      row3Container.addView(createBackspaceKey())
+                      val backspaceIcon = createIconKey(R.drawable.ic_backspace, keyControlFace, keyControlPressed, 1.3f).apply {
+                          setOnTouchListener { v, e ->
+                              if(e.action==MotionEvent.ACTION_DOWN) {
+                                  v.isPressed = true
+                                  vibrateAndSound(v)
+                                  currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
+                                  handler.postDelayed({ updatePredictions() }, 50)
+                              } else if(e.action==MotionEvent.ACTION_UP || e.action==MotionEvent.ACTION_CANCEL) {
+                                  v.isPressed = false
+                              }
+                              true
+                          }
+                      }
+                      row3Container.addView(backspaceIcon)
                       row3Container.addView(Space((3*dp).toInt(), true))
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space(rowGap))
@@ -466,12 +620,37 @@ jobs:
                       bottomRow.addView(Space((3*dp).toInt(), true))
                       bottomRow.addView(createSpecialKey("123", keyControlFace, keyControlPressed, 1.4f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); keyboardMode = 1; renderKeys() }; true } })
                       bottomRow.addView(Space(gap, true))
-                      bottomRow.addView(createSpecialKey("🌐", keyControlFace, keyControlPressed, 1.2f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentLanguage = if(currentLanguage == 0) 1 else 0; renderKeys() }; true } })
+                      
+                      val globeIcon = createIconKey(R.drawable.ic_globe, keyControlFace, keyControlPressed, 1.2f).apply {
+                          setOnTouchListener { v, e ->
+                              if(e.action==MotionEvent.ACTION_DOWN) {
+                                  vibrateAndSound(v)
+                                  currentLanguage = if(currentLanguage == 0) 1 else 0
+                                  renderKeys()
+                              }
+                              true
+                          }
+                      }
+                      bottomRow.addView(globeIcon)
                       bottomRow.addView(Space(gap, true))
+                      
                       val spaceLabel = if(currentLanguage == 0) "مسافة" else "espace"
                       bottomRow.addView(createSpecialKey(spaceLabel, keyNormalFace, keyNormalPressed, 5f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentInputConnection?.commitText(" ", 1); handler.postDelayed({ updatePredictions() }, 50) }; true } })
                       bottomRow.addView(Space(gap, true))
-                      bottomRow.addView(createSpecialKey("↵", keyControlFace, keyControlPressed, 1.4f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }; true } })
+                      
+                      val enterIcon = createIconKey(R.drawable.ic_enter, keyControlFace, keyControlPressed, 1.4f).apply {
+                          setOnTouchListener { v, e ->
+                              if(e.action==MotionEvent.ACTION_DOWN) {
+                                  v.isPressed = true
+                                  vibrateAndSound(v)
+                                  currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
+                              } else if(e.action==MotionEvent.ACTION_UP || e.action==MotionEvent.ACTION_CANCEL) {
+                                  v.isPressed = false
+                              }
+                              true
+                          }
+                      }
+                      bottomRow.addView(enterIcon)
                       bottomRow.addView(Space((3*dp).toInt(), true))
                       keysContainer.addView(bottomRow)
                       
@@ -497,7 +676,21 @@ jobs:
                           row3Container.addView(createKey(char, weight = 1.2f))
                           row3Container.addView(Space(gap, true))
                       }
-                      row3Container.addView(createBackspaceKey())
+                      
+                      val backspaceIcon = createIconKey(R.drawable.ic_backspace, keyControlFace, keyControlPressed, 1.3f).apply {
+                          setOnTouchListener { v, e ->
+                              if(e.action==MotionEvent.ACTION_DOWN) {
+                                  v.isPressed = true
+                                  vibrateAndSound(v)
+                                  currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
+                                  handler.postDelayed({ updatePredictions() }, 50)
+                              } else if(e.action==MotionEvent.ACTION_UP || e.action==MotionEvent.ACTION_CANCEL) {
+                                  v.isPressed = false
+                              }
+                              true
+                          }
+                      }
+                      row3Container.addView(backspaceIcon)
                       row3Container.addView(Space((3*dp).toInt(), true))
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space(rowGap))
@@ -510,12 +703,37 @@ jobs:
                       val langLabel = if(currentLanguage == 0) "أ ب ج" else "ABC"
                       bottomRow.addView(createSpecialKey(langLabel, keyControlFace, keyControlPressed, 1.4f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); keyboardMode = 0; renderKeys() }; true } })
                       bottomRow.addView(Space(gap, true))
-                      bottomRow.addView(createSpecialKey("🌐", keyControlFace, keyControlPressed, 1.2f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentLanguage = if(currentLanguage == 0) 1 else 0; renderKeys() }; true } })
+                      
+                      val globeIcon = createIconKey(R.drawable.ic_globe, keyControlFace, keyControlPressed, 1.2f).apply {
+                          setOnTouchListener { v, e ->
+                              if(e.action==MotionEvent.ACTION_DOWN) {
+                                  vibrateAndSound(v)
+                                  currentLanguage = if(currentLanguage == 0) 1 else 0
+                                  renderKeys()
+                              }
+                              true
+                          }
+                      }
+                      bottomRow.addView(globeIcon)
                       bottomRow.addView(Space(gap, true))
+                      
                       val spaceLabel = if(currentLanguage == 0) "مسافة" else "espace"
                       bottomRow.addView(createSpecialKey(spaceLabel, keyNormalFace, keyNormalPressed, 5f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentInputConnection?.commitText(" ", 1); handler.postDelayed({ updatePredictions() }, 50) }; true } })
                       bottomRow.addView(Space(gap, true))
-                      bottomRow.addView(createSpecialKey("↵", keyControlFace, keyControlPressed, 1.4f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }; true } })
+                      
+                      val enterIcon = createIconKey(R.drawable.ic_enter, keyControlFace, keyControlPressed, 1.4f).apply {
+                          setOnTouchListener { v, e ->
+                              if(e.action==MotionEvent.ACTION_DOWN) {
+                                  v.isPressed = true
+                                  vibrateAndSound(v)
+                                  currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
+                              } else if(e.action==MotionEvent.ACTION_UP || e.action==MotionEvent.ACTION_CANCEL) {
+                                  v.isPressed = false
+                              }
+                              true
+                          }
+                      }
+                      bottomRow.addView(enterIcon)
                       bottomRow.addView(Space((3*dp).toInt(), true))
                       keysContainer.addView(bottomRow)
                   }
@@ -638,50 +856,14 @@ jobs:
                   }
               }
 
-              // أيقونة الرجوع: كبيرة (28)، لون أسود، وعريضة (Bold)
-              private fun createBackspaceKey(): TextView {
-                  val dp = resources.displayMetrics.density
-                  return TextView(this).apply {
-                      text = "⌫"
-                      textSize = 28f 
-                      setTextColor(Color.BLACK) 
-                      gravity = Gravity.CENTER
-                      typeface = Typeface.DEFAULT_BOLD 
-                      layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), 1.3f)
-                      background = createIosKeyDrawable(keyControlFace, keyControlPressed) // الخلفية رمادية (keyControlFace)
-                      
-                      setOnTouchListener { v, event ->
-                          if (event.action == MotionEvent.ACTION_DOWN) {
-                              v.isPressed = true
-                              vibrateAndSound(v)
-                              currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL))
-                              handler.postDelayed({ updatePredictions() }, 50)
-                          } else if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
-                              v.isPressed = false
-                          }
-                          true
-                      }
-                  }
-              }
-
-              // الأيقونات الخاصة (123، السهم، Enter، الكرة الأرضية): أسود عريض وخلفية رمادية
               private fun createSpecialKey(label: String, faceColor: Int, pressedColor: Int, weight: Float): TextView {
                   val dp = resources.displayMetrics.density
                   return TextView(this).apply {
                       text = label
-                      textSize = when(label) {
-                          "مسافة", "espace" -> 16f
-                          "⬆", "⇧", "⌫" -> 28f 
-                          else -> 20f
-                      }
-                      
-                      // اللون أسود لكل الأزرار ما عدا المسافة
+                      textSize = if (label == "مسافة" || label == "espace") 16f else 20f
                       setTextColor(if (label == "مسافة" || label == "espace") txtColor else Color.BLACK) 
                       gravity = Gravity.CENTER
-                      
-                      // الخط عريض لكل الأزرار ما عدا المسافة
                       typeface = if (label == "مسافة" || label == "espace") Typeface.create("sans-serif", Typeface.NORMAL) else Typeface.DEFAULT_BOLD
-                      
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), weight)
                       background = createIosKeyDrawable(faceColor, pressedColor)
                       
@@ -728,7 +910,13 @@ jobs:
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round">
+              <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
                   <service android:name=".KeyboardService" android:exported="true" android:permission="android.permission.BIND_INPUT_METHOD">
                       <intent-filter>
                           <action android:name="android.view.InputMethod" />
