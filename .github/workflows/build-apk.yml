@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V28 Final)
+name: Build AI Keyboard Pro (V29 Final UI)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard V28
+    name: Generate iOS Clone Keyboard V29
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 28; versionName = "28.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 29; versionName = "29.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -72,7 +72,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V28</string>
+              <string name="ime_name">iOS Keyboard V29</string>
           </resources>
           EOF
 
@@ -103,6 +103,7 @@ jobs:
           package com.aikeyboard.pro
 
           import android.content.Context
+          import android.content.Intent
           import android.graphics.Color
           import android.graphics.Typeface
           import android.graphics.drawable.GradientDrawable
@@ -111,6 +112,7 @@ jobs:
           import android.inputmethodservice.InputMethodService
           import android.os.Handler
           import android.os.Looper
+          import android.provider.Settings
           import android.view.Gravity
           import android.view.HapticFeedbackConstants
           import android.view.KeyEvent
@@ -121,6 +123,7 @@ jobs:
           import android.widget.FrameLayout
           import android.widget.LinearLayout
           import android.widget.TextView
+          import android.widget.Toast
 
           class KeyboardService : InputMethodService() {
               
@@ -152,9 +155,13 @@ jobs:
 
               override fun onCreateInputView(): View {
                   val dp = resources.displayMetrics.density
+                  
+                  // تلوين المنطقة السوداء السفلية (Navigation Bar) لتختفي تماماً وتندمج مع الكيبورد
+                  window.window?.navigationBarColor = kbBgColor
 
                   absoluteRoot = FrameLayout(this).apply {
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                      setBackgroundColor(kbBgColor) // ضمان تلوين أي فراغ بالأسفل
                   }
 
                   rootLayout = LinearLayout(this).apply {
@@ -171,13 +178,22 @@ jobs:
                       gravity = Gravity.CENTER_VERTICAL
                   }
                   
+                  // تفعيل زر الإعدادات
                   predictionContainer.addView(TextView(this).apply {
                       text = "⚙️"
                       textSize = 20f
                       gravity = Gravity.CENTER
                       layoutParams = LinearLayout.LayoutParams((44 * dp).toInt(), ViewGroup.LayoutParams.MATCH_PARENT)
                       isClickable = true
-                      setOnTouchListener { v, event -> if(event.action==MotionEvent.ACTION_DOWN) vibrateAndSound(v); true }
+                      setOnTouchListener { v, event -> 
+                          if(event.action==MotionEvent.ACTION_DOWN) {
+                              vibrateAndSound(v)
+                              val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
+                              intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                              startActivity(intent)
+                          }
+                          true 
+                      }
                   })
 
                   val wordsLayout = LinearLayout(this).apply {
@@ -206,13 +222,20 @@ jobs:
                   }
                   predictionContainer.addView(wordsLayout)
 
+                  // تفعيل زر الذكاء الاصطناعي
                   predictionContainer.addView(TextView(this).apply {
                       text = "✨"
                       textSize = 20f
                       gravity = Gravity.CENTER
                       layoutParams = LinearLayout.LayoutParams((44 * dp).toInt(), ViewGroup.LayoutParams.MATCH_PARENT)
                       isClickable = true
-                      setOnTouchListener { v, event -> if(event.action==MotionEvent.ACTION_DOWN) vibrateAndSound(v); true }
+                      setOnTouchListener { v, event -> 
+                          if(event.action==MotionEvent.ACTION_DOWN) {
+                              vibrateAndSound(v)
+                              Toast.makeText(this@KeyboardService, "✨ AI Assistant Ready", Toast.LENGTH_SHORT).show()
+                          }
+                          true 
+                      }
                   })
                   
                   rootLayout.addView(predictionContainer)
