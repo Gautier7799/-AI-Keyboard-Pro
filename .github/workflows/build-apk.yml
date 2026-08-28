@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V26 Zero Lag)
+name: Build AI Keyboard Pro (V27 Zero Lag)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard V26
+    name: Generate iOS Clone Keyboard V27
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 26; versionName = "26.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 27; versionName = "27.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -72,8 +72,21 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V26</string>
+              <string name="ime_name">iOS Keyboard V27</string>
           </resources>
+          EOF
+          
+          # الملفات التي كانت مفقودة وتسببت بالخطأ تمت إعادتها هنا:
+          cat << 'EOF' > app/src/main/res/drawable/ic_launcher_bg.xml
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#D1D4D9"/></shape>
+          EOF
+          
+          cat << 'EOF' > app/src/main/res/drawable/ic_launcher_fg.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#000000" android:pathData="M34,54h40v10h-40zM34,34h40v10h-40zM34,74h20v10h-20z"/></vector>
+          EOF
+          
+          cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          <?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@drawable/ic_launcher_bg"/><foreground android:drawable="@drawable/ic_launcher_fg"/></adaptive-icon>
           EOF
 
           cat << 'EOF' > app/src/main/res/xml/method.xml
@@ -145,10 +158,9 @@ jobs:
                       orientation = LinearLayout.VERTICAL
                       setBackgroundColor(kbBgColor)
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      setPadding(0, 0, 0, (4 * dp).toInt()) // إلغاء الهوامش السفلية تقريباً
+                      setPadding(0, 0, 0, (4 * dp).toInt()) 
                   }
 
-                  // 3. & 4. Toolbar Plus AI & Settings
                   predictionContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (44 * dp).toInt())
@@ -156,7 +168,6 @@ jobs:
                       gravity = Gravity.CENTER_VERTICAL
                   }
                   
-                  // أيقونة الإعدادات (Settings)
                   predictionContainer.addView(TextView(this).apply {
                       text = "⚙️"
                       textSize = 20f
@@ -166,7 +177,6 @@ jobs:
                       setOnTouchListener { v, event -> if(event.action==MotionEvent.ACTION_DOWN) vibrateAndSound(v); true }
                   })
 
-                  // قسم التنبؤات في المنتصف
                   val wordsLayout = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
@@ -193,7 +203,6 @@ jobs:
                   }
                   predictionContainer.addView(wordsLayout)
 
-                  // أيقونة الذكاء الاصطناعي (AI Plus)
                   predictionContainer.addView(TextView(this).apply {
                       text = "✨"
                       textSize = 20f
@@ -206,19 +215,17 @@ jobs:
                   rootLayout.addView(predictionContainer)
                   rootLayout.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (1*dp).toInt()); setBackgroundColor(Color.parseColor("#B4B8C1")) })
                   
-                  // 1. تكميل الكيبورد للأخير بدون زيادة (إلغاء الهوامش الجانبية بالكامل)
                   keysContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      setPadding(0, (6 * dp).toInt(), 0, 0) // صفر هامش يمين ويسار
+                      setPadding(0, (6 * dp).toInt(), 0, 0)
                   }
                   rootLayout.addView(keysContainer)
                   absoluteRoot.addView(rootLayout)
 
-                  // 5. الأيقونة المنبثقة (صغيرة لربح المساحة)
                   popupView = TextView(this).apply {
                       visibility = View.GONE
-                      textSize = 30f // تصغير الخط قليلا
+                      textSize = 30f
                       setTextColor(txtColor)
                       gravity = Gravity.CENTER
                       typeface = Typeface.create("sans-serif", Typeface.NORMAL)
@@ -226,7 +233,7 @@ jobs:
                       val popupShape = GradientDrawable().apply {
                           shape = GradientDrawable.RECTANGLE
                           setColor(keyNormalFace)
-                          cornerRadius = 6f * dp // حواف ناعمة
+                          cornerRadius = 6f * dp 
                       }
                       val shadowShape = GradientDrawable().apply {
                           shape = GradientDrawable.RECTANGLE
@@ -247,7 +254,7 @@ jobs:
               private fun createIosKeyDrawable(faceColor: Int, pressedColor: Int): StateListDrawable {
                   val dp = resources.displayMetrics.density
                   val radius = 5f * dp
-                  val shadowHeight = (1.2f * dp).toInt() // ظل أرق لربح المساحة
+                  val shadowHeight = (1.2f * dp).toInt() 
 
                   val normalFace = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; setColor(faceColor); cornerRadius = radius }
                   val shadow = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; setColor(keyShadow); cornerRadius = radius }
@@ -266,7 +273,6 @@ jobs:
 
               override fun onUpdateSelection(oldSelStart: Int, oldSelEnd: Int, newSelStart: Int, newSelEnd: Int, candidatesStart: Int, candidatesEnd: Int) {
                   super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
-                  // 6. تشغيل التنبؤ في الخلفية لمنع اللاج في الكتابة
                   handler.post { updatePredictions() }
               }
 
@@ -308,7 +314,7 @@ jobs:
                       val r2 = if(currentLanguage == 0) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q","s","d","f","g","h","j","k","l","m")
                       val r3 = if(currentLanguage == 0) listOf("ظ","ز","و","ة","ى","لا","ر","ؤ","ء","ئ") else listOf("w","x","c","v","b","n")
 
-                      keysContainer.addView(createKeysRow(r1, gap, 0.05f)) // هوامش شبه معدومة للوصول للحافة
+                      keysContainer.addView(createKeysRow(r1, gap, 0.05f))
                       keysContainer.addView(Space(rowGap))
                       
                       keysContainer.addView(createKeysRow(r2, gap, if(currentLanguage==0) 0.5f else 0.5f))
@@ -397,7 +403,6 @@ jobs:
                   }
               }
 
-              // 6. Zero-Lag Typing Method
               private fun createKey(char: String, weight: Float = 1f): TextView {
                   val dp = resources.displayMetrics.density
                   return TextView(this).apply {
@@ -415,11 +420,10 @@ jobs:
                                   v.isPressed = true
                                   vibrateAndSound(v)
                                   
-                                  // 5. الانبثاق المصغر لتوفير المساحة
                                   val loc = IntArray(2)
                                   v.getLocationInWindow(loc)
-                                  val popupWidth = v.width + (8 * dp).toInt() // أعرض قليلاً من الزر فقط
-                                  val popupHeight = (50 * dp).toInt() // ارتفاع مناسب جداً
+                                  val popupWidth = v.width + (8 * dp).toInt() 
+                                  val popupHeight = (50 * dp).toInt() 
                                   
                                   popupView.layoutParams = FrameLayout.LayoutParams(popupWidth, popupHeight)
                                   popupView.text = char
@@ -431,7 +435,7 @@ jobs:
                               MotionEvent.ACTION_UP -> {
                                   v.isPressed = false
                                   popupView.visibility = View.GONE
-                                  currentInputConnection?.commitText(text.toString(), 1) // كتابة فورية
+                                  currentInputConnection?.commitText(text.toString(), 1) 
                                   true
                               }
                               MotionEvent.ACTION_CANCEL -> {
@@ -494,7 +498,6 @@ jobs:
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
                   
-                  // الحواف الجانبية الدقيقة (حسب الصورة)
                   if (edgeWeight > 0f) row.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, edgeWeight) })
                   else row.addView(Space((3*dp).toInt(), true))
 
