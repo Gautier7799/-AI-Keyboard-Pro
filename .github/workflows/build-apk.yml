@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V30 iOS Features)
+name: Build AI Keyboard Pro (V31 iOS Final)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard V30
+    name: Generate iOS Clone Keyboard V31
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 30; versionName = "30.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 31; versionName = "31.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -72,7 +72,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V30</string>
+              <string name="ime_name">iOS Keyboard V31</string>
           </resources>
           EOF
 
@@ -145,7 +145,6 @@ jobs:
               private lateinit var predictionContainer: LinearLayout
               private lateinit var keysContainer: LinearLayout
               
-              // Normal popup and Options popup
               private lateinit var popupView: TextView
               private lateinit var optionsContainer: LinearLayout
               private var selectedOptionIndex = -1
@@ -156,7 +155,6 @@ jobs:
               private val dictionaryAr = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله")
               private val dictionaryFr = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "bien", "salut", "je")
 
-              // قاموس الحروف المنبثقة (الحركات والهمزات)
               private val alternateChars = mapOf(
                   "ا" to listOf("أ", "إ", "آ", "ا"),
                   "ي" to listOf("ئ", "ى", "ي"),
@@ -166,7 +164,7 @@ jobs:
                   "ة" to listOf("ه", "ة"),
                   "ه" to listOf("ة", "ه"),
                   "د" to listOf("ذ", "د"),
-                  "ل" to listOf("لأ", "لإ", "لآ", "ل")
+                  "ل" to listOf("لا", "لأ", "لإ", "لآ", "ل") // إضافة "لا" هنا بدلاً من الزر المستقل
               )
 
               override fun onCreateInputView(): View {
@@ -176,10 +174,9 @@ jobs:
 
                   absoluteRoot = FrameLayout(this).apply {
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      setBackgroundColor(Color.TRANSPARENT) // تم التعديل لتظهر الزوايا الدائرية
+                      setBackgroundColor(Color.TRANSPARENT)
                   }
 
-                  // 1. حواف الكيبورد الدائرية العلوية (Corners)
                   val cornerRadius = 14f * dp
                   val roundedBg = GradientDrawable().apply {
                       setColor(kbBgColor)
@@ -196,7 +193,7 @@ jobs:
                   predictionContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (44 * dp).toInt())
-                      setBackgroundColor(Color.TRANSPARENT) // لكي يأخذ شكل الخلفية الدائرية
+                      setBackgroundColor(Color.TRANSPARENT)
                       gravity = Gravity.CENTER_VERTICAL
                   }
                   
@@ -293,7 +290,6 @@ jobs:
                   }
                   absoluteRoot.addView(popupView)
 
-                  // 2. تصميم نافذة الحروف المنبثقة المتعددة (Long-press Popup)
                   optionsContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       visibility = View.GONE
@@ -362,7 +358,6 @@ jobs:
                   }
               }
 
-              // تحديث اختيار الحرف أثناء السحب
               private fun updateOptionsPopupSelection(rawX: Float) {
                   var newSelectedIndex = -1
                   for (i in 0 until optionsContainer.childCount) {
@@ -383,7 +378,7 @@ jobs:
                           (optionsContainer.getChildAt(selectedOptionIndex) as TextView).setTextColor(txtColor)
                       }
                       if (newSelectedIndex != -1 && newSelectedIndex < optionsContainer.childCount) {
-                          (optionsContainer.getChildAt(newSelectedIndex).background as GradientDrawable).setColor(Color.parseColor("#007AFF")) // لون أزرق للآيفون
+                          (optionsContainer.getChildAt(newSelectedIndex).background as GradientDrawable).setColor(Color.parseColor("#007AFF")) 
                           (optionsContainer.getChildAt(newSelectedIndex) as TextView).setTextColor(Color.WHITE)
                       }
                       selectedOptionIndex = newSelectedIndex
@@ -397,14 +392,22 @@ jobs:
                   val rowGap = (10 * dp).toInt() 
                   
                   if (keyboardMode == 0) { 
-                      val r1 = if(currentLanguage == 0) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a","z","e","r","t","y","u","i","o","p")
-                      val r2 = if(currentLanguage == 0) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q","s","d","f","g","h","j","k","l","m")
-                      val r3 = if(currentLanguage == 0) listOf("ظ","ز","و","ة","ى","لا","ر","ؤ","ء","ئ") else listOf("w","x","c","v","b","n")
+                      // 2. تحديث الحروف حسب صورة الآيفون 11, 12, 9
+                      val r1 = if(currentLanguage == 0) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج") else listOf("a","z","e","r","t","y","u","i","o","p")
+                      val r2 = if(currentLanguage == 0) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط","د") else listOf("q","s","d","f","g","h","j","k","l","m")
+                      val r3 = if(currentLanguage == 0) listOf("ظ","ز","و","ة","ى","ر","ؤ","ء","ئ") else listOf("w","x","c","v","b","n")
 
-                      keysContainer.addView(createKeysRow(r1, gap, 0.05f))
+                      // 1. إصلاح تكبير كافة الأسطر للفرنسية بشكل ثابت
+                      val displayR1 = if (isShifted && currentLanguage == 1) r1.map { it.uppercase() } else r1
+                      val displayR2 = if (isShifted && currentLanguage == 1) r2.map { it.uppercase() } else r2
+                      val displayR3 = if (isShifted && currentLanguage == 1) r3.map { it.uppercase() } else r3
+
+                      keysContainer.addView(createKeysRow(displayR1, gap, 0.05f))
                       keysContainer.addView(Space(rowGap))
                       
-                      keysContainer.addView(createKeysRow(r2, gap, if(currentLanguage==0) 0.5f else 0.5f))
+                      // السطر الثاني باللغة العربية به 12 حرف لذا الهامش الجانبي يجب أن يكون صغيراً 0.05f
+                      val r2EdgeWeight = if(currentLanguage == 0) 0.05f else 0.5f
+                      keysContainer.addView(createKeysRow(displayR2, gap, r2EdgeWeight))
                       keysContainer.addView(Space(rowGap))
 
                       val row3Container = LinearLayout(this).apply {
@@ -413,13 +416,26 @@ jobs:
                       }
                       
                       row3Container.addView(Space((3*dp).toInt(), true))
-                      row3Container.addView(createSpecialKey("⇧", keyControlFace, keyControlPressed, 1.3f).apply {
-                          setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); isShifted = !isShifted; text = if(isShifted) "⬆" else "⇧"; renderKeys() }; true }
+                      
+                      // السهم (ثبات اللون والشكل)
+                      val shiftKeyFace = if (isShifted) keyNormalFace else keyControlFace
+                      val shiftKeyPressed = if (isShifted) keyNormalPressed else keyControlPressed
+                      val shiftIcon = if (isShifted) "⬆" else "⇧"
+                      
+                      row3Container.addView(createSpecialKey(shiftIcon, shiftKeyFace, shiftKeyPressed, 1.3f).apply {
+                          setOnTouchListener { v, e -> 
+                              if(e.action==MotionEvent.ACTION_DOWN) {
+                                  vibrateAndSound(v)
+                                  isShifted = !isShifted
+                                  renderKeys() 
+                              }
+                              true 
+                          }
                       })
                       row3Container.addView(Space(gap, true))
                       
-                      r3.forEach { char ->
-                          row3Container.addView(createKey(if(isShifted && currentLanguage == 1) char.uppercase() else char))
+                      displayR3.forEach { char ->
+                          row3Container.addView(createKey(char))
                           row3Container.addView(Space(gap, true))
                       }
                       
@@ -501,14 +517,15 @@ jobs:
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), weight)
                       background = createIosKeyDrawable(keyNormalFace, keyNormalPressed)
                       
-                      val alternates = alternateChars[char] ?: emptyList()
+                      val baseChar = char.lowercase()
+                      val alternates = alternateChars[baseChar] ?: emptyList()
                       var isLongPressActive = false
                       var initialRawX = 0f
 
                       val longPressRunnable = Runnable {
                           if (alternates.isNotEmpty()) {
                               isLongPressActive = true
-                              vibrateAndSound(this) // اهتزاز لنجاح الضغطة المطولة
+                              vibrateAndSound(this) 
                               popupView.visibility = View.GONE
                               
                               optionsContainer.removeAllViews()
@@ -566,7 +583,7 @@ jobs:
                                   popupView.y = loc[1].toFloat() - popupHeight - (2 * dp)
                                   popupView.visibility = View.VISIBLE
                                   
-                                  handler.postDelayed(longPressRunnable, 350) // الضغطة المطولة بعد 350 جزء من الثانية
+                                  handler.postDelayed(longPressRunnable, 350) 
                                   true
                               }
                               MotionEvent.ACTION_MOVE -> {
@@ -633,7 +650,7 @@ jobs:
                   return TextView(this).apply {
                       text = label
                       textSize = if(label == "مسافة" || label == "espace") 16f else 18f
-                      setTextColor(txtColor)
+                      setTextColor(if (label == "⬆" || label == "⇧") (if(isShifted) Color.BLACK else txtColor) else txtColor)
                       gravity = Gravity.CENTER
                       typeface = Typeface.create("sans-serif", Typeface.NORMAL)
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), weight)
