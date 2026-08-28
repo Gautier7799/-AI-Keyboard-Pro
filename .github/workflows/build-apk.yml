@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V29 Final UI)
+name: Build AI Keyboard Pro (V30 iOS Features)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard V29
+    name: Generate iOS Clone Keyboard V30
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 29; versionName = "29.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 30; versionName = "30.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -72,7 +72,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V29</string>
+              <string name="ime_name">iOS Keyboard V30</string>
           </resources>
           EOF
 
@@ -134,7 +134,6 @@ jobs:
               private val keyControlPressed = Color.parseColor("#FFFFFF")
               private val keyShadow = Color.parseColor("#898A8D")
               private val txtColor = Color.parseColor("#000000")
-              private val predictionBgColor = Color.parseColor("#D1D4D9")
               
               private var currentLanguage = 0 
               private var isShifted = false
@@ -145,7 +144,11 @@ jobs:
               private lateinit var rootLayout: LinearLayout
               private lateinit var predictionContainer: LinearLayout
               private lateinit var keysContainer: LinearLayout
+              
+              // Normal popup and Options popup
               private lateinit var popupView: TextView
+              private lateinit var optionsContainer: LinearLayout
+              private var selectedOptionIndex = -1
               
               private val predictionViews = mutableListOf<TextView>()
               private val handler = Handler(Looper.getMainLooper())
@@ -153,20 +156,39 @@ jobs:
               private val dictionaryAr = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله")
               private val dictionaryFr = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "bien", "salut", "je")
 
+              // قاموس الحروف المنبثقة (الحركات والهمزات)
+              private val alternateChars = mapOf(
+                  "ا" to listOf("أ", "إ", "آ", "ا"),
+                  "ي" to listOf("ئ", "ى", "ي"),
+                  "و" to listOf("ؤ", "و"),
+                  "ى" to listOf("ي", "ئ", "ى"),
+                  "ئ" to listOf("ي", "ى", "ئ"),
+                  "ة" to listOf("ه", "ة"),
+                  "ه" to listOf("ة", "ه"),
+                  "د" to listOf("ذ", "د"),
+                  "ل" to listOf("لأ", "لإ", "لآ", "ل")
+              )
+
               override fun onCreateInputView(): View {
                   val dp = resources.displayMetrics.density
                   
-                  // تلوين المنطقة السوداء السفلية (Navigation Bar) لتختفي تماماً وتندمج مع الكيبورد
                   window.window?.navigationBarColor = kbBgColor
 
                   absoluteRoot = FrameLayout(this).apply {
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      setBackgroundColor(kbBgColor) // ضمان تلوين أي فراغ بالأسفل
+                      setBackgroundColor(Color.TRANSPARENT) // تم التعديل لتظهر الزوايا الدائرية
+                  }
+
+                  // 1. حواف الكيبورد الدائرية العلوية (Corners)
+                  val cornerRadius = 14f * dp
+                  val roundedBg = GradientDrawable().apply {
+                      setColor(kbBgColor)
+                      cornerRadii = floatArrayOf(cornerRadius, cornerRadius, cornerRadius, cornerRadius, 0f, 0f, 0f, 0f)
                   }
 
                   rootLayout = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
-                      setBackgroundColor(kbBgColor)
+                      background = roundedBg
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       setPadding(0, 0, 0, (4 * dp).toInt()) 
                   }
@@ -174,11 +196,10 @@ jobs:
                   predictionContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (44 * dp).toInt())
-                      setBackgroundColor(predictionBgColor)
+                      setBackgroundColor(Color.TRANSPARENT) // لكي يأخذ شكل الخلفية الدائرية
                       gravity = Gravity.CENTER_VERTICAL
                   }
                   
-                  // تفعيل زر الإعدادات
                   predictionContainer.addView(TextView(this).apply {
                       text = "⚙️"
                       textSize = 20f
@@ -222,7 +243,6 @@ jobs:
                   }
                   predictionContainer.addView(wordsLayout)
 
-                  // تفعيل زر الذكاء الاصطناعي
                   predictionContainer.addView(TextView(this).apply {
                       text = "✨"
                       textSize = 20f
@@ -272,6 +292,19 @@ jobs:
                       elevation = 4f * dp
                   }
                   absoluteRoot.addView(popupView)
+
+                  // 2. تصميم نافذة الحروف المنبثقة المتعددة (Long-press Popup)
+                  optionsContainer = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      visibility = View.GONE
+                      background = GradientDrawable().apply {
+                          setColor(keyNormalFace)
+                          cornerRadius = 8f * dp
+                      }
+                      elevation = 6f * dp
+                      setPadding((4*dp).toInt(), (4*dp).toInt(), (4*dp).toInt(), (4*dp).toInt())
+                  }
+                  absoluteRoot.addView(optionsContainer)
 
                   renderKeys()
                   return absoluteRoot
@@ -326,6 +359,34 @@ jobs:
                           }
                           true
                       }
+                  }
+              }
+
+              // تحديث اختيار الحرف أثناء السحب
+              private fun updateOptionsPopupSelection(rawX: Float) {
+                  var newSelectedIndex = -1
+                  for (i in 0 until optionsContainer.childCount) {
+                      val child = optionsContainer.getChildAt(i)
+                      val loc = IntArray(2)
+                      child.getLocationOnScreen(loc)
+                      val childStart = loc[0]
+                      val childEnd = childStart + child.width
+                      if (rawX >= childStart && rawX <= childEnd) {
+                          newSelectedIndex = i
+                          break
+                      }
+                  }
+                  
+                  if (newSelectedIndex != selectedOptionIndex) {
+                      if (selectedOptionIndex != -1 && selectedOptionIndex < optionsContainer.childCount) {
+                          (optionsContainer.getChildAt(selectedOptionIndex).background as GradientDrawable).setColor(Color.TRANSPARENT)
+                          (optionsContainer.getChildAt(selectedOptionIndex) as TextView).setTextColor(txtColor)
+                      }
+                      if (newSelectedIndex != -1 && newSelectedIndex < optionsContainer.childCount) {
+                          (optionsContainer.getChildAt(newSelectedIndex).background as GradientDrawable).setColor(Color.parseColor("#007AFF")) // لون أزرق للآيفون
+                          (optionsContainer.getChildAt(newSelectedIndex) as TextView).setTextColor(Color.WHITE)
+                      }
+                      selectedOptionIndex = newSelectedIndex
                   }
               }
 
@@ -440,11 +501,59 @@ jobs:
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), weight)
                       background = createIosKeyDrawable(keyNormalFace, keyNormalPressed)
                       
+                      val alternates = alternateChars[char] ?: emptyList()
+                      var isLongPressActive = false
+                      var initialRawX = 0f
+
+                      val longPressRunnable = Runnable {
+                          if (alternates.isNotEmpty()) {
+                              isLongPressActive = true
+                              vibrateAndSound(this) // اهتزاز لنجاح الضغطة المطولة
+                              popupView.visibility = View.GONE
+                              
+                              optionsContainer.removeAllViews()
+                              alternates.forEach { alt ->
+                                  val altTv = TextView(this@KeyboardService).apply {
+                                      text = alt
+                                      textSize = 26f
+                                      setTextColor(txtColor)
+                                      gravity = Gravity.CENTER
+                                      layoutParams = LinearLayout.LayoutParams((42 * dp).toInt(), (50 * dp).toInt())
+                                      background = GradientDrawable().apply {
+                                          setColor(Color.TRANSPARENT)
+                                          cornerRadius = 6f * dp
+                                      }
+                                  }
+                                  optionsContainer.addView(altTv)
+                              }
+                              
+                              optionsContainer.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+                              val popupWidth = optionsContainer.measuredWidth
+                              val popupHeight = optionsContainer.measuredHeight
+                              
+                              val loc = IntArray(2)
+                              this.getLocationInWindow(loc)
+                              
+                              var popupX = loc[0].toFloat() - (popupWidth - this.width) / 2
+                              val screenWidth = resources.displayMetrics.widthPixels
+                              if (popupX < 4f * dp) popupX = 4f * dp
+                              if (popupX + popupWidth > screenWidth) popupX = screenWidth.toFloat() - popupWidth - (4f * dp)
+                              
+                              optionsContainer.x = popupX
+                              optionsContainer.y = loc[1].toFloat() - popupHeight - (10 * dp)
+                              optionsContainer.visibility = View.VISIBLE
+                              
+                              updateOptionsPopupSelection(initialRawX)
+                          }
+                      }
+                      
                       setOnTouchListener { v, event ->
                           when (event.action) {
                               MotionEvent.ACTION_DOWN -> {
+                                  initialRawX = event.rawX
                                   v.isPressed = true
                                   vibrateAndSound(v)
+                                  isLongPressActive = false
                                   
                                   val loc = IntArray(2)
                                   v.getLocationInWindow(loc)
@@ -456,17 +565,38 @@ jobs:
                                   popupView.x = loc[0].toFloat() - (popupWidth - v.width) / 2
                                   popupView.y = loc[1].toFloat() - popupHeight - (2 * dp)
                                   popupView.visibility = View.VISIBLE
+                                  
+                                  handler.postDelayed(longPressRunnable, 350) // الضغطة المطولة بعد 350 جزء من الثانية
+                                  true
+                              }
+                              MotionEvent.ACTION_MOVE -> {
+                                  if (isLongPressActive) {
+                                      updateOptionsPopupSelection(event.rawX)
+                                  }
                                   true
                               }
                               MotionEvent.ACTION_UP -> {
+                                  handler.removeCallbacks(longPressRunnable)
                                   v.isPressed = false
-                                  popupView.visibility = View.GONE
-                                  currentInputConnection?.commitText(text.toString(), 1) 
+                                  
+                                  if (isLongPressActive) {
+                                      optionsContainer.visibility = View.GONE
+                                      if (selectedOptionIndex != -1 && selectedOptionIndex < alternates.size) {
+                                          currentInputConnection?.commitText(alternates[selectedOptionIndex], 1)
+                                      } else {
+                                          currentInputConnection?.commitText(char, 1)
+                                      }
+                                  } else {
+                                      popupView.visibility = View.GONE
+                                      currentInputConnection?.commitText(char, 1) 
+                                  }
                                   true
                               }
                               MotionEvent.ACTION_CANCEL -> {
+                                  handler.removeCallbacks(longPressRunnable)
                                   v.isPressed = false
                                   popupView.visibility = View.GONE
+                                  optionsContainer.visibility = View.GONE
                                   true
                               }
                               else -> false
