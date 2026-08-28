@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V27 Zero Lag)
+name: Build AI Keyboard Pro (V28 Final)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard V27
+    name: Generate iOS Clone Keyboard V28
     runs-on: ubuntu-latest
 
     steps:
@@ -35,7 +35,7 @@ jobs:
       - name: Generate Keyboard Project
         run: |
           rm -rf app/src/main/res app/src/main/java
-          mkdir -p app/src/main/res/values app/src/main/res/xml app/src/main/res/layout app/src/main/res/drawable app/src/main/java/com/aikeyboard/pro app/src/main/res/mipmap-anydpi-v26
+          mkdir -p app/src/main/res/values app/src/main/res/xml app/src/main/res/layout app/src/main/res/drawable app/src/main/java/com/aikeyboard/pro app/src/main/res/mipmap app/src/main/res/mipmap-anydpi-v26
 
           cat << 'EOF' > gradle.properties
           android.useAndroidX=true
@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 27; versionName = "27.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 28; versionName = "28.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -72,11 +72,10 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V27</string>
+              <string name="ime_name">iOS Keyboard V28</string>
           </resources>
           EOF
-          
-          # الملفات التي كانت مفقودة وتسببت بالخطأ تمت إعادتها هنا:
+
           cat << 'EOF' > app/src/main/res/drawable/ic_launcher_bg.xml
           <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#D1D4D9"/></shape>
           EOF
@@ -86,6 +85,10 @@ jobs:
           EOF
           
           cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          <?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@drawable/ic_launcher_bg"/><foreground android:drawable="@drawable/ic_launcher_fg"/></adaptive-icon>
+          EOF
+          
+          cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
           <?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@drawable/ic_launcher_bg"/><foreground android:drawable="@drawable/ic_launcher_fg"/></adaptive-icon>
           EOF
 
@@ -526,7 +529,7 @@ jobs:
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher">
+              <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round">
                   <service android:name=".KeyboardService" android:exported="true" android:permission="android.permission.BIND_INPUT_METHOD">
                       <intent-filter>
                           <action android:name="android.view.InputMethod" />
