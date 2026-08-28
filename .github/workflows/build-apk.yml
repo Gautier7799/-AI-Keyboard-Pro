@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V31 iOS Final)
+name: Build AI Keyboard Pro (V32 Fixed Build)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard V31
+    name: Generate iOS Clone Keyboard V32
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 31; versionName = "31.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 32; versionName = "32.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -72,7 +72,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V31</string>
+              <string name="ime_name">iOS Keyboard V32</string>
           </resources>
           EOF
 
@@ -164,7 +164,7 @@ jobs:
                   "ة" to listOf("ه", "ة"),
                   "ه" to listOf("ة", "ه"),
                   "د" to listOf("ذ", "د"),
-                  "ل" to listOf("لا", "لأ", "لإ", "لآ", "ل") // إضافة "لا" هنا بدلاً من الزر المستقل
+                  "ل" to listOf("لا", "لأ", "لإ", "لآ", "ل") 
               )
 
               override fun onCreateInputView(): View {
@@ -180,7 +180,8 @@ jobs:
                   val cornerRadius = 14f * dp
                   val roundedBg = GradientDrawable().apply {
                       setColor(kbBgColor)
-                      cornerRadii = floatArrayOf(cornerRadius, cornerRadius, cornerRadius, cornerRadius, 0f, 0f, 0f, 0f)
+                      // الإصلاح هنا: استخدام الدالة بدلاً من علامة التساوي
+                      setCornerRadii(floatArrayOf(cornerRadius, cornerRadius, cornerRadius, cornerRadius, 0f, 0f, 0f, 0f))
                   }
 
                   rootLayout = LinearLayout(this).apply {
@@ -274,14 +275,14 @@ jobs:
                       typeface = Typeface.create("sans-serif", Typeface.NORMAL)
                       
                       val popupShape = GradientDrawable().apply {
-                          shape = GradientDrawable.RECTANGLE
+                          setShape(GradientDrawable.RECTANGLE) // الإصلاح
                           setColor(keyNormalFace)
-                          cornerRadius = 6f * dp 
+                          setCornerRadius(6f * dp) // الإصلاح
                       }
                       val shadowShape = GradientDrawable().apply {
-                          shape = GradientDrawable.RECTANGLE
+                          setShape(GradientDrawable.RECTANGLE) // الإصلاح
                           setColor(keyShadow)
-                          cornerRadius = 6f * dp
+                          setCornerRadius(6f * dp) // الإصلاح
                       }
                       val popupLayer = LayerDrawable(arrayOf(shadowShape, popupShape))
                       popupLayer.setLayerInset(1, 0, 0, 0, (2 * dp).toInt())
@@ -295,7 +296,7 @@ jobs:
                       visibility = View.GONE
                       background = GradientDrawable().apply {
                           setColor(keyNormalFace)
-                          cornerRadius = 8f * dp
+                          setCornerRadius(8f * dp) // الإصلاح
                       }
                       elevation = 6f * dp
                       setPadding((4*dp).toInt(), (4*dp).toInt(), (4*dp).toInt(), (4*dp).toInt())
@@ -311,12 +312,13 @@ jobs:
                   val radius = 5f * dp
                   val shadowHeight = (1.2f * dp).toInt() 
 
-                  val normalFace = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; setColor(faceColor); cornerRadius = radius }
-                  val shadow = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; setColor(keyShadow); cornerRadius = radius }
+                  // الإصلاح هنا في خصائص الرسم
+                  val normalFace = GradientDrawable().apply { setShape(GradientDrawable.RECTANGLE); setColor(faceColor); setCornerRadius(radius) }
+                  val shadow = GradientDrawable().apply { setShape(GradientDrawable.RECTANGLE); setColor(keyShadow); setCornerRadius(radius) }
                   val normalLayer = LayerDrawable(arrayOf(shadow, normalFace))
                   normalLayer.setLayerInset(1, 0, 0, 0, shadowHeight)
 
-                  val pressedFace = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; setColor(pressedColor); cornerRadius = radius }
+                  val pressedFace = GradientDrawable().apply { setShape(GradientDrawable.RECTANGLE); setColor(pressedColor); setCornerRadius(radius) }
                   val pressedLayer = LayerDrawable(arrayOf(shadow, pressedFace))
                   pressedLayer.setLayerInset(1, 0, shadowHeight/2, 0, shadowHeight/2)
 
@@ -392,12 +394,10 @@ jobs:
                   val rowGap = (10 * dp).toInt() 
                   
                   if (keyboardMode == 0) { 
-                      // 2. تحديث الحروف حسب صورة الآيفون 11, 12, 9
                       val r1 = if(currentLanguage == 0) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج") else listOf("a","z","e","r","t","y","u","i","o","p")
                       val r2 = if(currentLanguage == 0) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط","د") else listOf("q","s","d","f","g","h","j","k","l","m")
                       val r3 = if(currentLanguage == 0) listOf("ظ","ز","و","ة","ى","ر","ؤ","ء","ئ") else listOf("w","x","c","v","b","n")
 
-                      // 1. إصلاح تكبير كافة الأسطر للفرنسية بشكل ثابت
                       val displayR1 = if (isShifted && currentLanguage == 1) r1.map { it.uppercase() } else r1
                       val displayR2 = if (isShifted && currentLanguage == 1) r2.map { it.uppercase() } else r2
                       val displayR3 = if (isShifted && currentLanguage == 1) r3.map { it.uppercase() } else r3
@@ -405,7 +405,6 @@ jobs:
                       keysContainer.addView(createKeysRow(displayR1, gap, 0.05f))
                       keysContainer.addView(Space(rowGap))
                       
-                      // السطر الثاني باللغة العربية به 12 حرف لذا الهامش الجانبي يجب أن يكون صغيراً 0.05f
                       val r2EdgeWeight = if(currentLanguage == 0) 0.05f else 0.5f
                       keysContainer.addView(createKeysRow(displayR2, gap, r2EdgeWeight))
                       keysContainer.addView(Space(rowGap))
@@ -417,7 +416,6 @@ jobs:
                       
                       row3Container.addView(Space((3*dp).toInt(), true))
                       
-                      // السهم (ثبات اللون والشكل)
                       val shiftKeyFace = if (isShifted) keyNormalFace else keyControlFace
                       val shiftKeyPressed = if (isShifted) keyNormalPressed else keyControlPressed
                       val shiftIcon = if (isShifted) "⬆" else "⇧"
@@ -538,7 +536,7 @@ jobs:
                                       layoutParams = LinearLayout.LayoutParams((42 * dp).toInt(), (50 * dp).toInt())
                                       background = GradientDrawable().apply {
                                           setColor(Color.TRANSPARENT)
-                                          cornerRadius = 6f * dp
+                                          setCornerRadius(6f * dp) // الإصلاح
                                       }
                                   }
                                   optionsContainer.addView(altTv)
