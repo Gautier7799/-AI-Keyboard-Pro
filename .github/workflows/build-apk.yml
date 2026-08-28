@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V25 Ultimate iOS)
+name: Build AI Keyboard Pro (V26 Zero Lag)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard
+    name: Generate iOS Clone Keyboard V26
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 25; versionName = "25.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 26; versionName = "26.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -72,20 +72,8 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V25</string>
+              <string name="ime_name">iOS Keyboard V26</string>
           </resources>
-          EOF
-
-          cat << 'EOF' > app/src/main/res/drawable/ic_launcher_bg.xml
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"><solid android:color="#D1D4D9"/></shape>
-          EOF
-          
-          cat << 'EOF' > app/src/main/res/drawable/ic_launcher_fg.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#000000" android:pathData="M34,54h40v10h-40zM34,34h40v10h-40zM34,74h20v10h-20z"/></vector>
-          EOF
-          
-          cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
-          <?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@drawable/ic_launcher_bg"/><foreground android:drawable="@drawable/ic_launcher_fg"/></adaptive-icon>
           EOF
 
           cat << 'EOF' > app/src/main/res/xml/method.xml
@@ -105,6 +93,8 @@ jobs:
           import android.graphics.drawable.LayerDrawable
           import android.graphics.drawable.StateListDrawable
           import android.inputmethodservice.InputMethodService
+          import android.os.Handler
+          import android.os.Looper
           import android.view.Gravity
           import android.view.HapticFeedbackConstants
           import android.view.KeyEvent
@@ -127,10 +117,10 @@ jobs:
               private val txtColor = Color.parseColor("#000000")
               private val predictionBgColor = Color.parseColor("#D1D4D9")
               
-              private var currentLanguage = 0 // 0 = Arabic, 1 = French (AZERTY)
+              private var currentLanguage = 0 
               private var isShifted = false
               private var keyboardMode = 0 
-              private var keyHeightDp = 54f // تم تكبير الكيبورد هنا
+              private var keyHeightDp = 52f 
               
               private lateinit var absoluteRoot: FrameLayout
               private lateinit var rootLayout: LinearLayout
@@ -139,14 +129,14 @@ jobs:
               private lateinit var popupView: TextView
               
               private val predictionViews = mutableListOf<TextView>()
+              private val handler = Handler(Looper.getMainLooper())
 
               private val dictionaryAr = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله")
-              private val dictionaryFr = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "bien", "salut", "je", "tu", "il")
+              private val dictionaryFr = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "bien", "salut", "je")
 
               override fun onCreateInputView(): View {
                   val dp = resources.displayMetrics.density
 
-                  // الهيكل الأساسي لحل مشكلة الانبثاق
                   absoluteRoot = FrameLayout(this).apply {
                       layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
@@ -155,16 +145,31 @@ jobs:
                       orientation = LinearLayout.VERTICAL
                       setBackgroundColor(kbBgColor)
                       layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      // إزالة الفراغات الجانبية ليمتد للآخر كما طلبت
-                      setPadding(0, 0, 0, (8 * dp).toInt()) 
+                      setPadding(0, 0, 0, (4 * dp).toInt()) // إلغاء الهوامش السفلية تقريباً
                   }
 
-                  // شريط التنبؤات (من الحافة للحافة)
+                  // 3. & 4. Toolbar Plus AI & Settings
                   predictionContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (44 * dp).toInt())
                       setBackgroundColor(predictionBgColor)
                       gravity = Gravity.CENTER_VERTICAL
+                  }
+                  
+                  // أيقونة الإعدادات (Settings)
+                  predictionContainer.addView(TextView(this).apply {
+                      text = "⚙️"
+                      textSize = 20f
+                      gravity = Gravity.CENTER
+                      layoutParams = LinearLayout.LayoutParams((44 * dp).toInt(), ViewGroup.LayoutParams.MATCH_PARENT)
+                      isClickable = true
+                      setOnTouchListener { v, event -> if(event.action==MotionEvent.ACTION_DOWN) vibrateAndSound(v); true }
+                  })
+
+                  // قسم التنبؤات في المنتصف
+                  val wordsLayout = LinearLayout(this).apply {
+                      orientation = LinearLayout.HORIZONTAL
+                      layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
                   }
                   
                   for (i in 0..2) {
@@ -174,36 +179,46 @@ jobs:
                           setTextColor(txtColor)
                           gravity = Gravity.CENTER
                           layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
-                          isClickable = true
                           typeface = Typeface.create("sans-serif", Typeface.NORMAL)
                       }
                       predictionViews.add(tv)
-                      predictionContainer.addView(tv)
+                      wordsLayout.addView(tv)
                       
                       if (i < 2) {
-                          predictionContainer.addView(View(this).apply {
-                              layoutParams = LinearLayout.LayoutParams((1*dp).toInt(), (24 * dp).toInt())
+                          wordsLayout.addView(View(this).apply {
+                              layoutParams = LinearLayout.LayoutParams((1*dp).toInt(), (24 * dp).toInt()).apply { gravity = Gravity.CENTER_VERTICAL }
                               setBackgroundColor(Color.parseColor("#B4B8C1"))
                           })
                       }
                   }
+                  predictionContainer.addView(wordsLayout)
+
+                  // أيقونة الذكاء الاصطناعي (AI Plus)
+                  predictionContainer.addView(TextView(this).apply {
+                      text = "✨"
+                      textSize = 20f
+                      gravity = Gravity.CENTER
+                      layoutParams = LinearLayout.LayoutParams((44 * dp).toInt(), ViewGroup.LayoutParams.MATCH_PARENT)
+                      isClickable = true
+                      setOnTouchListener { v, event -> if(event.action==MotionEvent.ACTION_DOWN) vibrateAndSound(v); true }
+                  })
                   
                   rootLayout.addView(predictionContainer)
                   rootLayout.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (1*dp).toInt()); setBackgroundColor(Color.parseColor("#B4B8C1")) })
                   
+                  // 1. تكميل الكيبورد للأخير بدون زيادة (إلغاء الهوامش الجانبية بالكامل)
                   keysContainer = LinearLayout(this).apply {
                       orientation = LinearLayout.VERTICAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                      // الفراغ الجانبي فقط للأزرار وليس للشريط العلوي
-                      setPadding((3 * dp).toInt(), (6 * dp).toInt(), (3 * dp).toInt(), 0)
+                      setPadding(0, (6 * dp).toInt(), 0, 0) // صفر هامش يمين ويسار
                   }
                   rootLayout.addView(keysContainer)
                   absoluteRoot.addView(rootLayout)
 
-                  // تصميم نافذة الانبثاق (Popup) الخاصة بـ iOS
+                  // 5. الأيقونة المنبثقة (صغيرة لربح المساحة)
                   popupView = TextView(this).apply {
                       visibility = View.GONE
-                      textSize = 34f
+                      textSize = 30f // تصغير الخط قليلا
                       setTextColor(txtColor)
                       gravity = Gravity.CENTER
                       typeface = Typeface.create("sans-serif", Typeface.NORMAL)
@@ -211,16 +226,17 @@ jobs:
                       val popupShape = GradientDrawable().apply {
                           shape = GradientDrawable.RECTANGLE
                           setColor(keyNormalFace)
-                          cornerRadius = 8f * dp
+                          cornerRadius = 6f * dp // حواف ناعمة
                       }
                       val shadowShape = GradientDrawable().apply {
                           shape = GradientDrawable.RECTANGLE
                           setColor(keyShadow)
-                          cornerRadius = 8f * dp
+                          cornerRadius = 6f * dp
                       }
                       val popupLayer = LayerDrawable(arrayOf(shadowShape, popupShape))
                       popupLayer.setLayerInset(1, 0, 0, 0, (2 * dp).toInt())
                       background = popupLayer
+                      elevation = 4f * dp
                   }
                   absoluteRoot.addView(popupView)
 
@@ -231,7 +247,7 @@ jobs:
               private fun createIosKeyDrawable(faceColor: Int, pressedColor: Int): StateListDrawable {
                   val dp = resources.displayMetrics.density
                   val radius = 5f * dp
-                  val shadowHeight = (1.5f * dp).toInt()
+                  val shadowHeight = (1.2f * dp).toInt() // ظل أرق لربح المساحة
 
                   val normalFace = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; setColor(faceColor); cornerRadius = radius }
                   val shadow = GradientDrawable().apply { shape = GradientDrawable.RECTANGLE; setColor(keyShadow); cornerRadius = radius }
@@ -250,12 +266,13 @@ jobs:
 
               override fun onUpdateSelection(oldSelStart: Int, oldSelEnd: Int, newSelStart: Int, newSelEnd: Int, candidatesStart: Int, candidatesEnd: Int) {
                   super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
-                  updatePredictions()
+                  // 6. تشغيل التنبؤ في الخلفية لمنع اللاج في الكتابة
+                  handler.post { updatePredictions() }
               }
 
               private fun updatePredictions() {
                   val ic = currentInputConnection ?: return
-                  val textBeforeCursor = ic.getTextBeforeCursor(30, 0)?.toString() ?: ""
+                  val textBeforeCursor = ic.getTextBeforeCursor(20, 0)?.toString() ?: ""
                   val lastWord = textBeforeCursor.takeLastWhile { it.isLetter() }
                   val activeDict = if(currentLanguage == 0) dictionaryAr else dictionaryFr
 
@@ -283,18 +300,18 @@ jobs:
               private fun renderKeys() {
                   keysContainer.removeAllViews()
                   val dp = resources.displayMetrics.density
-                  val gap = (5 * dp).toInt() 
-                  val rowGap = (12 * dp).toInt() // مسافة أكبر بين الصفوف
+                  val gap = (4 * dp).toInt() 
+                  val rowGap = (10 * dp).toInt() 
                   
                   if (keyboardMode == 0) { 
                       val r1 = if(currentLanguage == 0) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج","د") else listOf("a","z","e","r","t","y","u","i","o","p")
                       val r2 = if(currentLanguage == 0) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q","s","d","f","g","h","j","k","l","m")
                       val r3 = if(currentLanguage == 0) listOf("ظ","ز","و","ة","ى","لا","ر","ؤ","ء","ئ") else listOf("w","x","c","v","b","n")
 
-                      keysContainer.addView(createKeysRow(r1, gap, 0f))
+                      keysContainer.addView(createKeysRow(r1, gap, 0.05f)) // هوامش شبه معدومة للوصول للحافة
                       keysContainer.addView(Space(rowGap))
                       
-                      keysContainer.addView(createKeysRow(r2, gap, if(currentLanguage==0) 0.5f else 0.8f))
+                      keysContainer.addView(createKeysRow(r2, gap, if(currentLanguage==0) 0.5f else 0.5f))
                       keysContainer.addView(Space(rowGap))
 
                       val row3Container = LinearLayout(this).apply {
@@ -302,6 +319,7 @@ jobs:
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
                       
+                      row3Container.addView(Space((3*dp).toInt(), true))
                       row3Container.addView(createSpecialKey("⇧", keyControlFace, keyControlPressed, 1.3f).apply {
                           setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); isShifted = !isShifted; text = if(isShifted) "⬆" else "⇧"; renderKeys() }; true }
                       })
@@ -313,6 +331,7 @@ jobs:
                       }
                       
                       row3Container.addView(createBackspaceKey())
+                      row3Container.addView(Space((3*dp).toInt(), true))
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space(rowGap))
 
@@ -320,6 +339,7 @@ jobs:
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
+                      bottomRow.addView(Space((3*dp).toInt(), true))
                       bottomRow.addView(createSpecialKey("123", keyControlFace, keyControlPressed, 1.4f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); keyboardMode = 1; renderKeys() }; true } })
                       bottomRow.addView(Space(gap, true))
                       bottomRow.addView(createSpecialKey("🌐", keyControlFace, keyControlPressed, 1.2f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentLanguage = if(currentLanguage == 0) 1 else 0; renderKeys() }; true } })
@@ -328,6 +348,7 @@ jobs:
                       bottomRow.addView(createSpecialKey(spaceLabel, keyNormalFace, keyNormalPressed, 5f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentInputConnection?.commitText(" ", 1) }; true } })
                       bottomRow.addView(Space(gap, true))
                       bottomRow.addView(createSpecialKey("↵", keyControlFace, keyControlPressed, 1.4f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }; true } })
+                      bottomRow.addView(Space((3*dp).toInt(), true))
                       keysContainer.addView(bottomRow)
                       
                   } else { 
@@ -335,15 +356,16 @@ jobs:
                       val r2 = if(keyboardMode == 1) listOf("-","/",":",";","(",")","$","&","@","\"") else listOf("_","\\","|","~","<",">","€","£","¥","•")
                       val r3 = listOf(".",",","?","!","'")
 
-                      keysContainer.addView(createKeysRow(r1, gap, 0f))
+                      keysContainer.addView(createKeysRow(r1, gap, 0.05f))
                       keysContainer.addView(Space(rowGap))
-                      keysContainer.addView(createKeysRow(r2, gap, 0f))
+                      keysContainer.addView(createKeysRow(r2, gap, 0.05f))
                       keysContainer.addView(Space(rowGap))
 
                       val row3Container = LinearLayout(this).apply {
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
+                      row3Container.addView(Space((3*dp).toInt(), true))
                       val symToggle = if(keyboardMode == 1) "#+=" else "123"
                       row3Container.addView(createSpecialKey(symToggle, keyControlFace, keyControlPressed, 1.3f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); keyboardMode = if(keyboardMode == 1) 2 else 1; renderKeys() }; true } })
                       row3Container.addView(Space(gap, true))
@@ -352,6 +374,7 @@ jobs:
                           row3Container.addView(Space(gap, true))
                       }
                       row3Container.addView(createBackspaceKey())
+                      row3Container.addView(Space((3*dp).toInt(), true))
                       keysContainer.addView(row3Container)
                       keysContainer.addView(Space(rowGap))
 
@@ -359,6 +382,7 @@ jobs:
                           orientation = LinearLayout.HORIZONTAL
                           layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                       }
+                      bottomRow.addView(Space((3*dp).toInt(), true))
                       val langLabel = if(currentLanguage == 0) "أ ب ج" else "ABC"
                       bottomRow.addView(createSpecialKey(langLabel, keyControlFace, keyControlPressed, 1.4f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); keyboardMode = 0; renderKeys() }; true } })
                       bottomRow.addView(Space(gap, true))
@@ -368,11 +392,12 @@ jobs:
                       bottomRow.addView(createSpecialKey(spaceLabel, keyNormalFace, keyNormalPressed, 5f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentInputConnection?.commitText(" ", 1) }; true } })
                       bottomRow.addView(Space(gap, true))
                       bottomRow.addView(createSpecialKey("↵", keyControlFace, keyControlPressed, 1.4f).apply { setOnTouchListener { v, e -> if(e.action==MotionEvent.ACTION_DOWN){ vibrateAndSound(v); currentInputConnection?.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) }; true } })
+                      bottomRow.addView(Space((3*dp).toInt(), true))
                       keysContainer.addView(bottomRow)
                   }
               }
 
-              // سر الكتابة السريعة (اللمس المباشر + الانبثاق)
+              // 6. Zero-Lag Typing Method
               private fun createKey(char: String, weight: Float = 1f): TextView {
                   val dp = resources.displayMetrics.density
                   return TextView(this).apply {
@@ -390,24 +415,23 @@ jobs:
                                   v.isPressed = true
                                   vibrateAndSound(v)
                                   
-                                  // إظهار الانبثاق
+                                  // 5. الانبثاق المصغر لتوفير المساحة
                                   val loc = IntArray(2)
                                   v.getLocationInWindow(loc)
-                                  val popupWidth = (50 * dp).toInt()
-                                  val popupHeight = (60 * dp).toInt()
+                                  val popupWidth = v.width + (8 * dp).toInt() // أعرض قليلاً من الزر فقط
+                                  val popupHeight = (50 * dp).toInt() // ارتفاع مناسب جداً
                                   
                                   popupView.layoutParams = FrameLayout.LayoutParams(popupWidth, popupHeight)
                                   popupView.text = char
-                                  // حساب موقع الانبثاق ليكون فوق الزر مباشرة
                                   popupView.x = loc[0].toFloat() - (popupWidth - v.width) / 2
-                                  popupView.y = loc[1].toFloat() - popupHeight - (10 * dp)
+                                  popupView.y = loc[1].toFloat() - popupHeight - (2 * dp)
                                   popupView.visibility = View.VISIBLE
                                   true
                               }
                               MotionEvent.ACTION_UP -> {
                                   v.isPressed = false
                                   popupView.visibility = View.GONE
-                                  currentInputConnection?.commitText(text.toString(), 1)
+                                  currentInputConnection?.commitText(text.toString(), 1) // كتابة فورية
                                   true
                               }
                               MotionEvent.ACTION_CANCEL -> {
@@ -455,30 +479,36 @@ jobs:
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), weight)
                       background = createIosKeyDrawable(faceColor, pressedColor)
                       
-                      // الأنيميشن للزر الخاص
                       setOnTouchListener { v, event ->
                           if (event.action == MotionEvent.ACTION_DOWN) v.isPressed = true
                           else if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) v.isPressed = false
-                          false // السماح للأحداث الأخرى بالمرور
+                          false 
                       }
                   }
               }
 
               private fun createKeysRow(keys: List<String>, gap: Int, edgeWeight: Float): LinearLayout {
+                  val dp = resources.displayMetrics.density
                   val row = LinearLayout(this).apply {
                       orientation = LinearLayout.HORIZONTAL
                       layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                   }
+                  
+                  // الحواف الجانبية الدقيقة (حسب الصورة)
                   if (edgeWeight > 0f) row.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, edgeWeight) })
+                  else row.addView(Space((3*dp).toInt(), true))
+
                   keys.forEachIndexed { index, char ->
                       row.addView(createKey(char))
                       if (index < keys.size - 1) row.addView(Space(gap, true))
                   }
+                  
                   if (edgeWeight > 0f) row.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(0, 1, edgeWeight) })
+                  else row.addView(Space((3*dp).toInt(), true))
+                  
                   return row
               }
 
-              // سرعة التفاعل (Native Android Haptics & Sound) - تحل مشكلة الثقل تماماً وتتبع إعدادات جهازك
               private fun vibrateAndSound(view: View) {
                   view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                   view.playSoundEffect(SoundEffectConstants.CLICK)
