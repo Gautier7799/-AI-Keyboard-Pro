@@ -1,4 +1,4 @@
-name: Build AI Keyboard Pro (V34 Predictions & Icons)
+name: Build AI Keyboard Pro (V35 Icons & Toolbar Fix)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Generate iOS Clone Keyboard V34
+    name: Generate iOS Clone Keyboard V35
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +59,7 @@ jobs:
           android {
               namespace = "com.aikeyboard.pro"
               compileSdk = 34
-              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 34; versionName = "34.0.0" }
+              defaultConfig { applicationId = "com.aikeyboard.pro"; minSdk = 28; targetSdk = 34; versionCode = 35; versionName = "35.0.0" }
               compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
               kotlinOptions { jvmTarget = "17" }
           }
@@ -72,7 +72,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Keyboard Pro iOS</string>
-              <string name="ime_name">iOS Keyboard V34</string>
+              <string name="ime_name">iOS Keyboard V35</string>
           </resources>
           EOF
 
@@ -120,6 +120,7 @@ jobs:
           import android.view.SoundEffectConstants
           import android.view.View
           import android.view.ViewGroup
+          import android.view.inputmethod.EditorInfo
           import android.widget.FrameLayout
           import android.widget.LinearLayout
           import android.widget.TextView
@@ -152,7 +153,6 @@ jobs:
               private val predictionViews = mutableListOf<TextView>()
               private val handler = Handler(Looper.getMainLooper())
 
-              // قاموس أوسع لتحسين تجربة التنبؤات
               private val dictionaryAr = listOf("مرحبا", "شكرا", "السلام", "عليكم", "نعم", "لا", "كيف", "حالك", "إن", "شاء", "الله", "صباح", "الخير", "مساء", "أين", "متى", "لماذا", "جميل", "جدا", "اليوم", "غدا", "الحمد", "لله", "يا", "ما", "هذا", "هنا", "هناك", "من", "هل")
               private val dictionaryFr = listOf("bonjour", "merci", "oui", "non", "comment", "ça", "va", "bien", "salut", "je", "tu", "il", "nous", "vous", "ils", "suis", "est", "sont", "pour", "avec", "dans", "sur", "qui", "que", "quoi", "quand", "où", "pourquoi", "très", "beau", "bon", "c'est")
 
@@ -330,14 +330,24 @@ jobs:
                   }
               }
 
+              // تفعيل وتحديث الشريط بمجرد ظهور الكيبورد في أي تطبيق
+              override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
+                  super.onStartInputView(info, restarting)
+                  handler.post { updatePredictions() }
+              }
+
               override fun onUpdateSelection(oldSelStart: Int, oldSelEnd: Int, newSelStart: Int, newSelEnd: Int, candidatesStart: Int, candidatesEnd: Int) {
                   super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
                   handler.post { updatePredictions() }
               }
 
-              // التحسين الجذري لشريط التنبؤات
               private fun updatePredictions() {
-                  val ic = currentInputConnection ?: return
+                  val ic = currentInputConnection
+                  if (ic == null) {
+                      predictionViews.forEach { it.text = "" }
+                      return
+                  }
+                  
                   val textBeforeCursor = ic.getTextBeforeCursor(20, 0)?.toString() ?: ""
                   val lastWord = textBeforeCursor.takeLastWhile { it.isLetter() }
                   val activeDict = if(currentLanguage == 0) dictionaryAr else dictionaryFr
@@ -345,11 +355,9 @@ jobs:
                   val suggestions = if (lastWord.isEmpty()) {
                       if(currentLanguage == 0) listOf("أنا", "كيف", "نعم") else listOf("Je", "Comment", "Oui")
                   } else {
-                      // جلب كلمتين مقترحتين وتجاهل الكلمة المتطابقة تماماً لكي لا تتكرر
                       val matches = activeDict.filter { it.startsWith(lastWord, ignoreCase = true) && !it.equals(lastWord, ignoreCase = true) }.take(2).toMutableList()
                       val left = if (matches.size > 0) matches[0] else ""
                       val right = if (matches.size > 1) matches[1] else ""
-                      // الكلمة المكتوبة توضع في المنتصف دائماً
                       listOf(left, lastWord, right)
                   }
                   
@@ -403,7 +411,9 @@ jobs:
                   if (keyboardMode == 0) { 
                       val r1 = if(currentLanguage == 0) listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح","ج") else listOf("a","z","e","r","t","y","u","i","o","p")
                       val r2 = if(currentLanguage == 0) listOf("ش","س","ي","ب","ل","ا","ت","ن","م","ك","ط") else listOf("q","s","d","f","g","h","j","k","l","m")
-                      val r3 = if(currentLanguage == 0) listOf("ظ","ز","و","ة","ى","ر","ؤ","د","ئ") else listOf("w","x","c","v","b","n")
+                      
+                      // حذف حروف ؤ و ئ لتقليل التكرار
+                      val r3 = if(currentLanguage == 0) listOf("ظ","ز","و","ة","ى","ر","د") else listOf("w","x","c","v","b","n")
 
                       val displayR1 = if (isShifted && currentLanguage == 1) r1.map { it.uppercase() } else r1
                       val displayR2 = if (isShifted && currentLanguage == 1) r2.map { it.uppercase() } else r2
@@ -612,7 +622,6 @@ jobs:
                                       popupView.visibility = View.GONE
                                       currentInputConnection?.commitText(char, 1) 
                                   }
-                                  // تحديث شريط الكلمات فوراً بعد الكتابة
                                   handler.postDelayed({ updatePredictions() }, 50)
                                   true
                               }
@@ -639,7 +648,7 @@ jobs:
                       gravity = Gravity.CENTER
                       typeface = Typeface.DEFAULT_BOLD 
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), 1.3f)
-                      background = createIosKeyDrawable(keyControlFace, keyControlPressed)
+                      background = createIosKeyDrawable(keyControlFace, keyControlPressed) // الخلفية رمادية (keyControlFace)
                       
                       setOnTouchListener { v, event ->
                           if (event.action == MotionEvent.ACTION_DOWN) {
@@ -655,19 +664,24 @@ jobs:
                   }
               }
 
-              // أيقونة السهم: كبيرة (28)، لون أسود، وعريضة (Bold)
+              // الأيقونات الخاصة (123، السهم، Enter، الكرة الأرضية): أسود عريض وخلفية رمادية
               private fun createSpecialKey(label: String, faceColor: Int, pressedColor: Int, weight: Float): TextView {
                   val dp = resources.displayMetrics.density
                   return TextView(this).apply {
                       text = label
                       textSize = when(label) {
                           "مسافة", "espace" -> 16f
-                          "⬆", "⇧" -> 28f 
-                          else -> 18f
+                          "⬆", "⇧", "⌫" -> 28f 
+                          else -> 20f
                       }
-                      setTextColor(Color.BLACK) 
+                      
+                      // اللون أسود لكل الأزرار ما عدا المسافة
+                      setTextColor(if (label == "مسافة" || label == "espace") txtColor else Color.BLACK) 
                       gravity = Gravity.CENTER
-                      typeface = if (label == "⬆" || label == "⇧") Typeface.DEFAULT_BOLD else Typeface.create("sans-serif", Typeface.NORMAL)
+                      
+                      // الخط عريض لكل الأزرار ما عدا المسافة
+                      typeface = if (label == "مسافة" || label == "espace") Typeface.create("sans-serif", Typeface.NORMAL) else Typeface.DEFAULT_BOLD
+                      
                       layoutParams = LinearLayout.LayoutParams(0, (keyHeightDp * dp).toInt(), weight)
                       background = createIosKeyDrawable(faceColor, pressedColor)
                       
